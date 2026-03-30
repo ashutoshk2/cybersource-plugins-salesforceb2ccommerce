@@ -28,7 +28,7 @@
         <isscript>
 			var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 		</isscript>
-		<isif condition="${(dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL) ? dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL).isActive() : false) &&  dw.system.Site.current.getCustomPreferenceValue('CsEnableExpressPaypal')==true}">
+		<isif condition="${!dw.system.Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2') && (dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL) ? dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL).isActive() : false) &&  dw.system.Site.current.getCustomPreferenceValue('CsEnableExpressPaypal')==true}">
 			<script src="https://www.paypalobjects.com/api/checkout.js"></script>
 		</isif>
 		<script src="${URLUtils.staticURL('/custom/cybersource-custom.js')}"></script>

@@ -118,6 +118,23 @@ if (IsCartridgeEnabled) {
             this.emit('route:Complete', req, res);
             return;
         }
+
+        // Void any active PayPal V2 order when customer switches to a different payment method
+        // This releases the authorization hold on their PayPal account and frees merchant order capacity
+        if (session.privacy.paypalV2RequestID) {
+            try {
+                var Site = require('dw/system/Site');
+                if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2')) {
+                    var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
+                    paypalFacade.VoidOrderServiceV2(session.privacy.paypalV2RequestID);
+                }
+            } catch (e) {
+                require('dw/system/Logger').getLogger('Cybersource').warn('[CheckoutServices] Failed to void PayPal V2 order on payment switch: {0}', e.message);
+            }
+            session.privacy.paypalV2RequestID = null;
+            session.privacy.paypalV2OrderAmount = null;
+        }
+
         return next();
     });
 
@@ -235,6 +252,69 @@ if (IsCartridgeEnabled) {
                 });
             }
         }
+
+        // PayPal V2: Verify basket total still matches the amount the PayPal order was created/updated for.
+        // Catches changes made between callback and Place Order (e.g. user adds items in another tab).
+        // If mismatch: call UpdateOrder to sync, only void as last resort.
+        if (currentBasket && session.privacy.paypalV2OrderAmount !== null
+            && session.privacy.paypalV2OrderAmount !== undefined) {
+            var Resource = require('dw/web/Resource');
+            var Logger = require('dw/system/Logger').getLogger('Cybersource');
+            var basketCalculationHelpers = require('*/cartridge/scripts/helpers/basketCalculationHelpers');
+            var TaxHelper = require('*/cartridge/scripts/helper/TaxHelper');
+            var Transaction = require('dw/system/Transaction');
+            Transaction.wrap(function () {
+                basketCalculationHelpers.calculateTotals(currentBasket);
+                // Re-apply V2 tax rounding — calculateTotals recalculates taxes from scratch,
+                // undoing the rounding. Must re-round before comparing against stored amount
+                // (which was stored after rounding).
+                TaxHelper.RoundUpBasketTaxesForV2(currentBasket);
+            });
+            if (currentBasket.totalGrossPrice.value !== session.privacy.paypalV2OrderAmount) {
+                Logger.warn('[CheckoutServices-PlaceOrder] PayPal V2 amount mismatch. Approved: {0}, Current: {1} - calling UpdateOrder',
+                    session.privacy.paypalV2OrderAmount, currentBasket.totalGrossPrice.value);
+                var updateSucceeded = false;
+                try {
+                    var Site = require('dw/system/Site');
+                    if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2') && session.privacy.paypalV2RequestID) {
+                        var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
+                        var adapter = require(CybersourceConstants.PAYPAL_ADAPTOR);
+                        var updateArgs = {
+                            orderRequestID: session.privacy.paypalV2RequestID,
+                            fundingSource: 'paypal'
+                        };
+                        var updateResult = adapter.UpdateOrder(currentBasket, updateArgs);
+                        if (updateResult.success) {
+                            session.privacy.paypalV2OrderAmount = currentBasket.totalGrossPrice.value;
+                            updateSucceeded = true;
+                            Logger.debug('[CheckoutServices-PlaceOrder] UpdateOrder succeeded - new amount: {0}', currentBasket.totalGrossPrice.value);
+                        }
+                    }
+                } catch (updateErr) {
+                    Logger.error('[CheckoutServices-PlaceOrder] UpdateOrder exception: {0}', updateErr.message);
+                }
+                // If UpdateOrder failed, void and send user back to payment
+                if (!updateSucceeded) {
+                    Logger.error('[CheckoutServices-PlaceOrder] UpdateOrder failed - voiding order');
+                    try {
+                        var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
+                        paypalFacade.VoidOrderServiceV2(session.privacy.paypalV2RequestID);
+                    } catch (voidErr) {
+                        Logger.error('[CheckoutServices-PlaceOrder] Failed to void: {0}', voidErr.message);
+                    }
+                    session.privacy.paypalV2RequestID = null;
+                    session.privacy.paypalV2OrderAmount = null;
+                    res.json({
+                        error: true,
+                        errorStage: { stage: 'payment' },
+                        errorMessage: Resource.msg('paypal.amount.mismatch', 'cybersource', 'Your cart has changed since PayPal approval. Please select a payment method again.')
+                    });
+                    this.emit('route:Complete', req, res);
+                    return;
+                }
+            }
+        }
+
         return next();
     });
 
@@ -243,6 +323,8 @@ if (IsCartridgeEnabled) {
         var klarnaHelper = require('*/cartridge/scripts/klarna/helper/KlarnaHelper');
         session.privacy.paypalShippingIncomplete = '';
         session.privacy.paypalBillingIncomplete = '';
+        session.privacy.paypalV2RequestID = null;
+        session.privacy.paypalV2OrderAmount = null;
 
         //  Reset decision session variable
         session.privacy.CybersourceFraudDecision = '';

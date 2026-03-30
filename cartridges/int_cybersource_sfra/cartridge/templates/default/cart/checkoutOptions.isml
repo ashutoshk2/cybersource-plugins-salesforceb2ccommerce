@@ -3,7 +3,7 @@
 <isscript>
     var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
  </isscript>
-<isif condition="${(dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL) ? dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL).isActive() : false) &&  
+<isif condition="${!dw.system.Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2') && (dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL) ? dw.order.PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL).isActive() : false) &&
 				dw.system.Site.current.getCustomPreferenceValue('CsEnableExpressPaypal')==true}">
 	<div class="row">
 		<div class="col-12 checkout-continue">
@@ -13,11 +13,11 @@
 			<iselse/>
 			    <isset name="paypalClass" value="paypal-button-container-cart1" scope="page"/>
 			</isif>
-			<isif condition="${dw.system.Site.getCurrent().getCustomPreferenceValue('payPalBillingAgreements') && !empty(pdict.CurrentCustomer.profile) && !empty(pdict.CurrentCustomer.profile.custom.billingAgreementID)}"> 
+			<isif condition="${dw.system.Site.getCurrent().getCustomPreferenceValue('payPalBillingAgreements') && !empty(pdict.CurrentCustomer.profile) && !empty(pdict.CurrentCustomer.profile.custom.billingAgreementID)}">
 			    <input type="image" src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="Paypal Express"  class="billingAgreementExpressCheckout" />
 			<iselse/>
 			    <div class="${paypalClass}"></div>
-			</isif>                 
+			</isif>
 		</div>
 	</div>
 </isif>

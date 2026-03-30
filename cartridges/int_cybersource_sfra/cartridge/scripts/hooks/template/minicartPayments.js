@@ -29,9 +29,10 @@ function pageContent(pdict){
     if ((paypalActive && CsEnableExpressPaypal) || (googlePayActive && isGooglePayEnabled)) { 
         output += '<script src="' + URLUtils.staticURL('/custom/lib/jquery/jquery-3.7.1.min.js') + '" type="text/javascript"></script>'; 
     } 
-    // ------------------ PayPal Integration ------------------ 
-      if (paypalActive && CsEnableExpressPaypal) { 
-        output += '<script src="https://www.paypalobjects.com/api/checkout.js"></script>'; 
+    // ------------------ PayPal V1 SDK (skip when V2 is enabled) ------------------
+    var CsEnablePayPalV2 = Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2');
+      if (paypalActive && CsEnableExpressPaypal && !CsEnablePayPalV2) {
+        output += '<script src="https://www.paypalobjects.com/api/checkout.js"></script>';
     } 
     // ------------------ Common CyberSource Script ------------------ 
     output += '<script src="' + URLUtils.staticURL('/custom/cybersource-custom.js') + '"></script>';

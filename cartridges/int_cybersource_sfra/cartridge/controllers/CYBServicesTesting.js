@@ -220,10 +220,10 @@ server.post('CaptureService', function (req, res, next) {
         serviceResponse = VisaCheckoutFacade.VCCaptureRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency, orderid);
         captureReplyTitle = 'VisaCheckout Capture Reply';
         captureReply = 'ccCaptureReply';
-    } else if (paymentType === 'KLI' || paymentType === 'PPL') {
+    } else if (paymentType === 'KLI' || paymentType === 'PPL' || paymentType === 'PYPLP') {
         var PayPalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
         serviceResponse = PayPalFacade.PayPalCaptureService(requestID, merchantRefCode, paymentType, paymentTotal, currency);
-        if (paymentType === 'PPL') {
+        if (paymentType === 'PPL' || paymentType === 'PYPLP') {
             captureReplyTitle = 'PayPal Capture Reply';
         }
         if (paymentType === 'KLI') {
@@ -303,7 +303,7 @@ server.post('CreditService', function (req, res, next) {
         serviceResponse = VisaCheckoutFacade.VCCreditRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency, orderid);
         creditReplyTitle = 'VisaCheckout Credit/Refund Reply';
         refundReply = 'ccCreditReply';
-    } else if (paymentType === 'KLI' || paymentType === 'PPL') {
+    } else if (paymentType === 'KLI' || paymentType === 'PPL' || paymentType === 'PYPLP') {
         var PayPalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
         serviceResponse = PayPalFacade.PayPalRefundService(requestID, merchantRefCode, paymentType, paymentTotal, currency);
         creditReplyTitle = 'PayPal Credit/Refund Reply';
@@ -392,10 +392,10 @@ server.post('CCAuthReversalService', server.middleware.https, function (req, res
         serviceResponse = VisaCheckoutFacade.VCAuthReversalService(requestID, merchantRefCode, paymentType, currency, amount, orderid);
         reversalReplyTitle = 'VisaCheckout Reversal Reply';
         reversalReply = 'ccAuthReversalReply';
-    } else if (paymentType === 'KLI' || paymentType === 'PPL') {
+    } else if (paymentType === 'KLI' || paymentType === 'PPL' || paymentType === 'PYPLP') {
         var PayPalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
         serviceResponse = PayPalFacade.PayPalReversalService(requestID, merchantRefCode, paymentType, amount, currency);
-        if (paymentType === 'PPL') {
+        if (paymentType === 'PPL' || paymentType === 'PYPLP') {
             reversalReplyTitle = 'PayPal Reversal Reply';
         }
         if (paymentType === 'KLI') {

@@ -23,6 +23,23 @@ var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
  * @param {*} order order
  */
 function HandleCheckStatusServiceResponse(order) {
+    var paymentInstrument = null;
+    var paymentType = '';
+
+    // Get payment instrument to determine payment type
+    var paymentInstruments = order.getPaymentInstruments();
+    if (!empty(paymentInstruments) && paymentInstruments.length > 0) {
+        collections.forEach(paymentInstruments, function (pi) {
+            if (pi.paymentMethod === CybersourceConstants.METHOD_PAYPAL ||
+                pi.paymentMethod === CybersourceConstants.METHOD_PAYPAL_CREDIT) {
+                paymentInstrument = pi;
+                if (pi.paymentTransaction && pi.paymentTransaction.custom) {
+                    paymentType = pi.paymentTransaction.custom.apPaymentType || '';
+                }
+            }
+        });
+    }
+
     // Check the existing order payment status and get action to take.
     var paymentResponse = CommonHelper.CheckStatusServiceRequest(order);
 
@@ -33,19 +50,21 @@ function HandleCheckStatusServiceResponse(order) {
             order.setExportStatus(Order.EXPORT_STATUS_READY);
             order.setConfirmationStatus(Order.CONFIRMATION_STATUS_CONFIRMED);
         });
+        Logger.info('[CheckStatusJob] Order {0} confirmed and ready for export', order.orderNo);
     } else if (paymentResponse.pending || paymentResponse.review) {
-        //  No action taken on order.
+        //  No action taken on order - still pending
+        Logger.debug('[CheckStatusJob] Order {0} still pending/under review', order.orderNo);
     } else if (paymentResponse.error) {
         // Fail order and Log event.
+        Logger.warn('[CheckStatusJob] Order {0} check status returned error - cancelling order', order.orderNo);
         try {
             if (order.status !== Order.ORDER_STATUS_CANCELLED) {
                 Transaction.wrap(function () {
-                    // order.setStatus(Order.ORDER_STATUS_CANCELLED);
                     OrderMgr.cancelOrder(order);
                 });
             }
         } catch (e) {
-            Logger.error('[APCheckStatusJob.js] Error failing Order: ' + e.message);
+            Logger.error('[CheckStatusJob] Error failing Order {0}: {1}', order.orderNo, e.message);
         }
     }
 }
@@ -55,10 +74,14 @@ function HandleCheckStatusServiceResponse(order) {
  * @param {*} jobsParam jobParams
  */
 function checkPaymentStatusJob(jobsParam) {
+    Logger.info('[CheckStatusJob] Starting PayPal/APM status polling job with LagTime: {0} minutes', jobsParam.LagTime);
+
     //  Get time X minutes ago, based on job parameter.
     var CreationDate = System.getCalendar();
     // eslint-disable-next-line
     CreationDate.add(dw.util.Calendar.MINUTE, -jobsParam.LagTime);
+
+    Logger.info('[CheckStatusJob] Checking orders created before: {0}', CreationDate.getTime());
 
     // TO-DO: Job should have a parameter that limits the time this looks back to avoid large query results filled with old orders that wont be processed.
     // Find all non-confirmed, non-exported orders before the calculated lag time.
@@ -71,6 +94,9 @@ function checkPaymentStatusJob(jobsParam) {
         CreationDate.getTime(),
         Order.ORDER_STATUS_CANCELLED,
         Order.ORDER_STATUS_FAILED);
+
+    var ordersProcessed = 0;
+    var paypalOrdersProcessed = 0;
 
     // Iterate over Order query result
     // eslint-disable-next-line
@@ -87,6 +113,10 @@ function checkPaymentStatusJob(jobsParam) {
                 if (pi.paymentTransaction.paymentProcessor !== null) {
                     pp = pi.paymentTransaction.paymentProcessor.ID;
                 }
+
+                // Track if this is a PayPal order
+                var isPayPalOrder = (pp === CybersourceConstants.PAYPAL_PROCESSOR);
+
                 var ppList = CybersourceConstants.PAYMENTPROCESSORARR;
                 //  Check if order PI is one defined in the PAYMENTPROCESSORARR list.  Only these will have status checked.
                 // collections.forEach(ppList, function (paymentProcessor) {
@@ -96,12 +126,19 @@ function checkPaymentStatusJob(jobsParam) {
                     if (!empty(pp) && ppList[i].equals(pp)) {
                         //  Call APCheck payment status service and update order status based on response
                         HandleCheckStatusServiceResponse(order);
+                        ordersProcessed++;
+                        if (isPayPalOrder) {
+                            paypalOrdersProcessed++;
+                        }
                         break;
                     }
                 }
             });
         }
     }
+
+    Logger.info('[CheckStatusJob] Job completed. Total orders processed: {0}, PayPal orders: {1}',
+        ordersProcessed, paypalOrdersProcessed);
 }
 
 /** Exported functions * */
