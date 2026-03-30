@@ -264,8 +264,8 @@ function UpdatePriceAdjustment(Basket) {
                 } else if (lineItem instanceof dw.order.ShippingLineItem) {
                     lineItem.updateTax(lineItem.taxRate, lineItem.adjustedNetPrice);
                     // eslint-disable-next-line
-                } else if (!lineItem instanceof dw.order.PriceAdjustment) { // eslint-disable-line no-unsafe-negation
-                    lineItem.updateTax(lineItem.taxRate, lineItem.netPrice);
+                } else if (lineItem instanceof dw.order.PriceAdjustment) { // eslint-disable-line no-unsafe-negation
+                    lineItem.updateTax(0);
                 } else {
                     lineItem.updateTax(lineItem.taxRate, lineItem.netPrice);
                 }
