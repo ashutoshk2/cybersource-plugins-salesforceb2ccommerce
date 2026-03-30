@@ -50,9 +50,10 @@ function pageContent(pdict){
             output += 'var googlepayvariables = {'; 
             output += 'currencyCode: "' + session.getCurrency().getCurrencyCode() + '",'; 
             output += 'totalPriceStatus: "FINAL",'; 
-            output += 'sessionCallBack: "' + URLUtils.url('CheckoutServices-GetGooglePayToken') + '",'; 
-            output += 'returnURL: "' + URLUtils.https('Checkout-Begin', 'stage', 'placeOrder') + '",'; 
-            output += 'cartURL: "' + URLUtils.https('Cart-Show') + '"'; 
+            output += 'sessionCallBack: "' + URLUtils.url('CheckoutServices-GetGooglePayToken') + '",';
+            output += 'returnURL: "' + URLUtils.https('Checkout-Begin', 'stage', 'placeOrder') + '",';
+            output += 'cartURL: "' + URLUtils.https('Cart-Show') + '",';
+            output += 'getCartTotalUrl: "' + URLUtils.url('CheckoutServices-GetCartTotal') + '"';
             output += '};'; 
             output += 'window.googlepayval = googlepayvariables;'; 
             output += '</script>'; 

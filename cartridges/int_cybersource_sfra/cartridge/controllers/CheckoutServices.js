@@ -716,6 +716,35 @@ server.post('SubmitPaymentGP', function (req, res, next) {
     return next();
 });
 
+
+// Returns the current basket total as a plain numeric string for Google Pay
+server.get('GetCartTotal', function (req, res, next) {
+    var BasketMgr = require('dw/order/BasketMgr');
+    var cart = BasketMgr.getCurrentBasket();
+
+    if (!cart) {
+        secureResponseHelper.secureJsonResponse(res, {
+            error: true,
+            totalPrice: '0'
+        });
+        return next();
+    }
+
+    var totalGrossPrice = cart.totalGrossPrice;
+    var currencyCode = totalGrossPrice.currencyCode;
+
+    var totalPrice = totalGrossPrice.value.toFixed(2);
+
+    secureResponseHelper.secureJsonResponse(res, {
+        error: false,
+        totalPrice: totalPrice,
+        currencyCode: currencyCode
+    });
+
+    return next();
+});
+
+
 if (IsCartridgeEnabled) {
     // New route to handle template rendering for some payment methods.
     server.post('ProcessingPayment', server.middleware.https, function (req, res, next) {

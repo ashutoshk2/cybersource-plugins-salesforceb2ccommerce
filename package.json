@@ -17,7 +17,7 @@
     "autoprefixer": "^10.4.14",
     "chai-subset": "^1.6.0",
     "cleave.js": "^1.6.0",
-    "copy-webpack-plugin": "^11.0.0",
+    "copy-webpack-plugin": "^13.0.1",
     "dompurify": "^3.2.6",
     "eslint-plugin-sitegenesis": "^1.0.0",
     "jquery": "^3.7.1",
