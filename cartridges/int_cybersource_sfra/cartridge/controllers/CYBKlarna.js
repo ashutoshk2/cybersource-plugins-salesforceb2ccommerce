@@ -110,14 +110,15 @@ server.post('GetSession', csrfProtection.generateToken, function (req, res, next
     // return the response as per decision and reason code
     if (response.decision === 'ACCEPT' && Number(response.reasonCode) === 100 && !empty(response.apSessionsReply.processorToken)) {
         // set the processor token into session variable
-        session.privacy.processorToken = response.apSessionsReply.processorToken;
+        klarnaHelper.setLargeSessionToken('processorToken',response.apSessionsReply.processorToken);
+
         session.privacy.requestID = response.requestID;
         returnObject.error = false;
         returnObject.decision = response.decision;
         returnObject.reasonCode = Number(response.reasonCode);
         returnObject.sessionToken = response.apSessionsReply.processorToken;
         //  Save token to session in case customer leaves billing page and goes back.
-        session.privacy.klarna_client_token = response.apSessionsReply.processorToken;
+        klarnaHelper.setLargeSessionToken('klarna_client_token', response.apSessionsReply.processorToken);
         // returnObject.reconciliationID = response.apSessionsReply.reconciliationID;
     } else {
         returnObject.error = true;
@@ -200,7 +201,7 @@ server.post('UpdateSession', csrfProtection.generateToken, function (req, res, n
         returnObject.reasonCode = Number(response.reasonCode);
         returnObject.sessionToken = response.apSessionsReply.processorToken;
         //  Save token to session in case customer leaves billing page and goes back.
-        session.privacy.klarna_client_token = response.apSessionsReply.processorToken;
+        klarnaHelper.setLargeSessionToken('klarna_client_token', response.apSessionsReply.processorToken);
         // returnObject.reconciliationID = response.apSessionsReply.reconciliationID;
     } else {
         returnObject.error = true;
@@ -260,7 +261,7 @@ server.post('KlarnaAuthorizationCallback', function (req, res, next) {
         session.privacy.KlarnaPaymentsAuthorizationToken = klarnaResponse.authorization_token;
     }
     if (klarnaResponse.client_token) {
-        session.privacy.klarna_client_token = klarnaResponse.client_token;
+        klarnaHelper.setLargeSessionToken('klarna_client_token', klarnaResponse.client_token);
     }
     session.privacy.Klarna_IsExpressCheckout = true;
     session.privacy.Klarna_IsFinalizeRequired = klarnaResponse.finalize_required;

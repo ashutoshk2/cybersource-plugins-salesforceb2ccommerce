@@ -7,13 +7,18 @@
         <div id="klarna-container" class="klarna-container-for-widget"></div>
         <button class="btn btn-primary btn-block klarna-submit-payment" id = "klarna-submit-paymentButton" type="submit" name="submit" value="submit-payment">
                     ${Resource.msg('button.next.place.order', 'checkout', null)}
-        </button> 
+        </button>
+        <isscript>
+            var klarnaHelperISML = require('*/cartridge/scripts/klarna/helper/KlarnaHelper');
+            var klarnaClientTokenValue = klarnaHelperISML.getLargeSessionToken('klarna_client_token');
+        </isscript>
+ 
     <script>
         // Initialize Klarna variables on window for cross-file access
         window.klarnaVariables = window.klarnaVariables || {};
         window.klarnaVariables.handleExpressCheckoutAuth = "${dw.web.URLUtils.https('CYBKlarna-KlarnaAuthorizationCallback').toString()}";
         window.klarnaVariables.createSessionEndpoint = "${dw.web.URLUtils.https('CYBKlarna-GetSession').toString()}";
-        window.klarnaVariables.klarnaClientToken = "${session.privacy.klarna_client_token}";
+        window.klarnaVariables.klarnaClientToken: "${klarnaClientTokenValue}";
         window.klarnaVariables.KlarnaIsExpressCheckout = "${session.privacy.Klarna_IsExpressCheckout}";
         window.klarnaVariables.KlarnaIsFinalizeRequired = "${session.privacy.Klarna_IsFinalizeRequired}";
         window.klarnaVariables.updateSessionEndpoint = "${dw.web.URLUtils.https('CYBKlarna-UpdateSession').toString()}";
