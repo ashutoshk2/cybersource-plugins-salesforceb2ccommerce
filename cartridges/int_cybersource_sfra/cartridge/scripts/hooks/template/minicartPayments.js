@@ -26,6 +26,8 @@ function pageContent(pdict){
     var paypalActive = PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL) ? PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_PAYPAL).isActive() : false; 
     var googlePayActive = PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_GooglePay) ? PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_GooglePay).isActive() : false;
     
+    var isKlarnaActive = PaymentMgr.getPaymentMethod(CybersourceConstants.KLARNA_PAYMENT_METHOD) ? PaymentMgr.getPaymentMethod(CybersourceConstants.KLARNA_PAYMENT_METHOD).isActive() : false;
+
     if ((paypalActive && CsEnableExpressPaypal) || (googlePayActive && isGooglePayEnabled)) { 
         output += '<script src="' + URLUtils.staticURL('/custom/lib/jquery/jquery-3.7.1.min.js') + '" type="text/javascript"></script>'; 
     } 
@@ -59,8 +61,8 @@ function pageContent(pdict){
     } 
 
     //  Klarna
-    if(isKlarnaExpressCheckoutEnabled){
-        output += '<script src="' + URLUtils.staticURL('/custom/klarna.js') + '"></script>'; 
+    if(isKlarnaActive && isKlarnaExpressCheckoutEnabled){
+        output += '<script defer src="' + URLUtils.staticURL('/custom/klarna.js') + '"></script>'; 
         output += '<script defer src="https://x.klarnacdn.net/kp/lib/v1/api.js"></script>'; 
         output += '<script src="' + URLUtils.staticURL('/custom/lib/jquery/jquery-3.7.1.min.js') + '" type="text/javascript"></script>'; 
     }

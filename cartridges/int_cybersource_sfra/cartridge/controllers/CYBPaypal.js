@@ -3,6 +3,8 @@
 /* eslint-disable no-undef */
 var server = require('server');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
+var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
+var secureJsonResponse = secureResponseHelper.secureJsonResponse;
 /**
  * Controller that handles the Cybersource paypal processing, manages redirection/callback from paypal,
  *
@@ -70,6 +72,7 @@ server.post(
             requestID = args.requestId !== null ? args.requestId : result.requestID;
             // Iterate on All Payment Instruments and select PayPal
             collections.forEach(paymentInstruments, function (paymentInstrument) {
+                // for each(var paymentInstrument in paymentInstruments ){
                 if (paymentInstrument.paymentMethod.equals(CybersourceConstants.METHOD_PAYPAL)
                     || paymentInstrument.paymentMethod.equals(CybersourceConstants.METHOD_PAYPAL_CREDIT)) {
                     pi = paymentInstrument;
@@ -90,6 +93,7 @@ server.post(
                 }
             });
         }
+        // var Transaction = require('dw/system/Transaction');
 
         if (result.success) {
             var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');

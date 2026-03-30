@@ -178,28 +178,23 @@ function checkStatusOrderUpdate(Order, responseObject, paymentType) {
 function capturePaypalOrderUpdate(Order, capturePaypalObject) {
     var order = Order;
     // eslint-disable-next-line
-    if (order != null && capturePaypalObject != null) {
-        var paypalInstruments = order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL);
-        // Check if paypal payment instruments exist and has at least one element
-        if (!empty(paypalInstruments) && paypalInstruments.length > 0) {
-            Transaction.wrap(function () {
-                if (capturePaypalObject.ReasonCode === '100' || capturePaypalObject.ReasonCode === '480') {
-                    var paypalPI = paypalInstruments[0];
-                    paypalPI.paymentTransaction.custom.paypalCaptureTransactionID = capturePaypalObject.CaptureTransactionID;
-                    paypalPI.paymentTransaction.custom.paypalPaymentStatus = capturePaypalObject.PaymentStatus;
-                    paypalPI.paymentTransaction.custom.paypalReceiptId = capturePaypalObject.paypalReceiptId;
-                    paypalPI.paymentTransaction.custom.paypalParentTransactionId = capturePaypalObject.ParentTransactionId;
-                    paypalPI.paymentTransaction.custom.paypalAutorizationId = capturePaypalObject.AuthorizationId;
-                    paypalPI.paymentTransaction.custom.paypalCaptureRequestId = capturePaypalObject.RequestID;
-                    paypalPI.paymentTransaction.custom.paypalCaptureRequestToken = capturePaypalObject.RequestToken;
-                    paypalPI.paymentTransaction.custom.paypalCaptureCorrelationID = capturePaypalObject.CaptureCorrelationID;
-                    paypalPI.paymentTransaction.custom.paypalCaptureFeeAmount = capturePaypalObject.CaptureFeeAmount;
-                    if (capturePaypalObject.ReasonCode === '100') {
-                        order.paymentStatus = 2;
-                    }
+    if (order != null && !empty(order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)) && capturePaypalObject != null) {
+        Transaction.wrap(function () {
+            if (capturePaypalObject.ReasonCode === '100' || capturePaypalObject.ReasonCode === '480') {
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalCaptureTransactionID = capturePaypalObject.CaptureTransactionID;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalPaymentStatus = capturePaypalObject.PaymentStatus;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalReceiptId = capturePaypalObject.paypalReceiptId;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalParentTransactionId = capturePaypalObject.ParentTransactionId;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalAutorizationId = capturePaypalObject.AuthorizationId;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalCaptureRequestId = capturePaypalObject.RequestID;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalCaptureRequestToken = capturePaypalObject.RequestToken;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalCaptureCorrelationID = capturePaypalObject.CaptureCorrelationID;
+                order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)[0].paymentTransaction.custom.paypalCaptureFeeAmount = capturePaypalObject.CaptureFeeAmount;
+                if (capturePaypalObject.ReasonCode === '100') {
+                    order.paymentStatus = 2;
                 }
-            });
-        }
+            }
+        });
     }
 }
 

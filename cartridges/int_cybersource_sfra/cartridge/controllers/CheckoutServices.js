@@ -11,6 +11,9 @@ var consentTracking = require('*/cartridge/scripts/middleware/consentTracking');
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
 
 var IsCartridgeEnabled = Site.getCurrent().getCustomPreferenceValue('IsCartridgeEnabled');
+var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
+var secureJsonResponse = secureResponseHelper.secureJsonResponse;
+var secureRender = secureResponseHelper.secureRender;
 
 server.extend(page);
 /**
@@ -82,8 +85,8 @@ server.post('ValidatePayPalBillingAddress', csrfProtection.validateRequest, serv
     });
 
     if (Object.keys(billingFormErrors).length || Object.keys(pplFormErrors).length) {
-        // respond with form data and errors
-        res.json({
+        // respond with form data and errors - use secure response helper
+        secureJsonResponse(res, {
             form: paymentForm,
             fieldErrors: [billingFormErrors, pplFormErrors],
             serverErrors: [],
@@ -93,7 +96,7 @@ server.post('ValidatePayPalBillingAddress', csrfProtection.validateRequest, serv
         session.privacy.paypalBillingIncomplete = false;
         // Copy over billing address to shipping for Paypal billing agreement
 
-        res.json({
+        secureJsonResponse(res, {
             form: paymentForm,
             fieldErrors: [],
             serverErrors: [],
@@ -177,7 +180,7 @@ server.post('SilentPostAuthorize', server.middleware.https, function (req, res, 
     var silentPostResponse = COHelpers.handleSilentPostAuthorize(order, payerauthArgs);
 
     if (silentPostResponse.sca) {
-        res.render('payerauthentication/3dsRedirect', {
+        secureRender(res, 'payerauthentication/3dsRedirect', {
             action: URLUtils.url('CheckoutServices-PayerAuthSetup'),
             OrderNo: order.orderNo,
         });
@@ -227,7 +230,7 @@ if (IsCartridgeEnabled) {
         // POST-only middleware check
         if (req.httpMethod !== 'POST') {
             res.setStatusCode(405);
-            res.json({
+            secureJsonResponse(res, {
                 error: true,
                 errorMessage: 'POST method required'
             });
@@ -243,7 +246,7 @@ if (IsCartridgeEnabled) {
                 && 'orderId' in session.privacy && session.privacy.orderId !== null) {
                 var order = OrderMgr.getOrder(session.privacy.orderId);
                 var currentBasket = COHelpers.reCreateBasket(order);
-                res.json({
+                secureJsonResponse(res, {
                     error: true,
                     cartError: true,
                     fieldErrors: [],
@@ -345,7 +348,7 @@ server.get('PayerAuthentication', server.middleware.https, function (req, res, n
     session.privacy.AcsURL = '';
     session.privacy.PAReq = '';
     res.setContentType('application/json;charset=utf-8');
-    res.render('cart/cardinalPayerAuthentication', {
+    secureRender(res, 'cart/cardinalPayerAuthentication', {
         AcsURL: AcsURL,
         PAReq: PAReq,
         PAXID: PAXID,
@@ -376,7 +379,7 @@ function handlePayPal(req, res, next) {
 
     if (Object.keys(billingFormErrors).length || Object.keys(pplFormErrors).length) {
         // respond with form data and errors
-        res.json({
+        secureJsonResponse(res, {
             form: paymentForm,
             fieldErrors: [billingFormErrors, pplFormErrors],
             serverErrors: [],
@@ -439,7 +442,7 @@ function handlePayPal(req, res, next) {
             req,
             accountModel
         );
-        res.json({
+        secureJsonResponse(res, {
             renderedPaymentInstruments: renderedStoredPaymentInstrument,
             customer: accountModel,
             order: basketModel,
@@ -487,7 +490,7 @@ function googlePayCheckoutError(req, res, next) {
         COHelpers.recalculateBasket(cart);
 
         var Status = require('dw/system/Status');
-        res.render('cart/cart', {
+        secureRender(res, 'cart/cart', {
             cart: cart,
             RegistrationStatus: false,
             BasketStatus: new Status(Status.ERROR, 'GoogleCheckoutError')
@@ -543,7 +546,7 @@ server.post('GetGooglePayToken', function (req, res, next) {
         }
 
         if (request.httpParameterMap.paymentData != null) {
-            res.json({
+            secureJsonResponse(res, {
                 status: 'success'
             });
             return next();
@@ -580,7 +583,7 @@ server.post('SubmitPaymentGP', function (req, res, next) {
 
     if (Object.keys(billingFormErrors).length) {
         // respond with form data and errors
-        res.json({
+        secureJsonResponse(res, {
             form: paymentForm,
             fieldErrors: [billingFormErrors],
             serverErrors: [],
@@ -626,7 +629,7 @@ server.post('SubmitPaymentGP', function (req, res, next) {
             if (!currentBasket) {
                 delete billingData.paymentInformation;
 
-                res.json({
+                secureJsonResponse(res, {
                     error: true,
                     cartError: true,
                     fieldErrors: [],
@@ -691,7 +694,7 @@ server.post('SubmitPaymentGP', function (req, res, next) {
             var calculatedPaymentTransaction = COHelpers.calculatePaymentTransaction(currentBasket);
 
             if (calculatedPaymentTransaction.error) {
-                res.json({
+                secureJsonResponse(res, {
                     form: paymentForm,
                     fieldErrors: [],
                     serverErrors: [Resource.msg('error.technical', 'checkout', null)],
@@ -703,7 +706,7 @@ server.post('SubmitPaymentGP', function (req, res, next) {
             // return back google
             if (result.success) {
                 if (request.httpParameterMap.paymentData != null) {
-                    res.json({
+                    secureJsonResponse(res, {
                         error: false
                     });
                 }
@@ -744,12 +747,12 @@ if (IsCartridgeEnabled) {
                 var OrderMgr = require('dw/order/OrderMgr');
                 var order = OrderMgr.getOrder(req.form.orderID || req.form.OrderNo);
                 templateData.Order = order;
-                res.render(renderTemplate, templateData);
+                secureRender(res, renderTemplate, templateData);
                 return next();
             }
 
             // Regular case - render the template
-            res.render(renderTemplate, templateData);
+            secureRender(res, renderTemplate, templateData);
             return next();
         } else {
             Logger.error('No renderTemplate parameter found in POST data');
@@ -816,7 +819,7 @@ server.post('PayerAuthSetup', csrfProtection.generateToken, function (req, res, 
         return next();
     }
     res.setContentType('application/json');
-    res.render('payerauthentication/deviceDataCollection', {
+    secureRender(res, 'payerauthentication/deviceDataCollection', {
         jwtToken: result.accessToken,
         referenceID: result.referenceID,
         orderNo: order.orderNo,
@@ -891,7 +894,7 @@ server.post('PayerAuthSubmit', csrfProtection.generateToken, function (req, res,
         return next();
     }
     if (handlePaymentResult.sca) {
-        res.render('payerauthentication/3dsRedirect', {
+        secureRender(res, 'payerauthentication/3dsRedirect', {
             action: URLUtils.url('CheckoutServices-PayerAuthSetup'),
             OrderNo: order.orderNo,
         });

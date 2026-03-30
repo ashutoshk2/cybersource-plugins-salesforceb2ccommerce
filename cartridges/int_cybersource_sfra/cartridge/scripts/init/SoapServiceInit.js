@@ -111,7 +111,7 @@ var CyberSourceTransactionService = LocalServiceRegistry.createService('cybersou
         var CybersourceHelper = libCybersource.getCybersourceHelper();
         var csReference = new CybersourceHelper.getcsReference();
         var service = csReference.getDefaultService();
-        CybersourceHelper.setEndpoint(service, requestObj);
+        CybersourceHelper.setEndpoint(service);
 
         // eslint-disable-next-line
         svc.webReference = csReference;

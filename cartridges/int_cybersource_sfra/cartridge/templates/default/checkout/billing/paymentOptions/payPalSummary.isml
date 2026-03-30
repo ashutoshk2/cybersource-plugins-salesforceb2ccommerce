@@ -1,5 +1,5 @@
 <div class="credit-card-type">
-    <span>${payment.paymentMethod}</span>
+    <span><isprint value="${payment.paymentMethod}" /></span>
 </div>
 <div class="credit-card-number">
 	<span><isprint value="${payment.amount}" /></span>

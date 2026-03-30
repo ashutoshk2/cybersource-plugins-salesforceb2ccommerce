@@ -40,11 +40,14 @@ CybersourceConstants.PAYPAL_ADAPTOR = '~/cartridge/scripts/paypal/adapter/Paypal
 CybersourceConstants.PATH_FACADE = '~/cartridge/scripts/paypal/facade/';
 
 //  Other Constants
+// CybersourceConstants.GUARD = CybersourceConstants.SG_CONTROLLER+'/cartridge/scripts/guard';
+// CybersourceConstants.APP = CybersourceConstants.SG_CONTROLLER +'/cartridge/scripts/app';
 CybersourceConstants.SALE = 'sale';
 CybersourceConstants.ERROR = 'Error';
-CybersourceConstants.AUTHORIZED = 'authorized';
+CybersourceConstants.AUTHORIZED = 'Authorized';
 CybersourceConstants.DECLINED = 'Declined';
 CybersourceConstants.CHECK_STATUS = 'checkstatus';
+CybersourceConstants.AUTHORIZED = 'authorized';
 CybersourceConstants.SESSION = 'session';
 CybersourceConstants.PENDING = 'pending';
 CybersourceConstants.SIGNATURE = 'signature';
@@ -52,9 +55,8 @@ CybersourceConstants.KLARNA_PAYMENT_TYPE = 'KLI';
 CybersourceConstants.PAYPAL_PAYMENT_TYPE = 'PPL';
 CybersourceConstants.KLARNA_PAYMENT_METHOD = 'KLARNA';
 CybersourceConstants.WECHAT_PAYMENT_METHOD = 'WECHAT';
-var paymentProcessorArr = ['CYBERSOURCE_ALIPAY', 'BANK_TRANSFER', 'MCH', 'SOF', 'IDL', 'KLARNA_CREDIT', 'CYBERSOURCE_WECHAT', 'CYBERSOURCE_PAYPAL'];
+var paymentProcessorArr = ['CYBERSOURCE_ALIPAY', 'BANK_TRANSFER', 'MCH', 'SOF', 'IDL', 'KLARNA_CREDIT', 'CYBERSOURCE_WECHAT'];
 CybersourceConstants.PAYMENTPROCESSORARR = paymentProcessorArr;
-CybersourceConstants.PAYPAL_PROCESSOR = 'CYBERSOURCE_PAYPAL';
 CybersourceConstants.METHOD_CREDIT_CARD = 'CREDIT_CARD';
 CybersourceConstants.BANCONTACT_PAYMENT_METHOD = 'BANCONTACT';
 CybersourceConstants.SOFORT_PAYMENT_METHOD = 'SOFORT';

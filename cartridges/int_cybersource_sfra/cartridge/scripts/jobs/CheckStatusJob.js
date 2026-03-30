@@ -50,21 +50,19 @@ function HandleCheckStatusServiceResponse(order) {
             order.setExportStatus(Order.EXPORT_STATUS_READY);
             order.setConfirmationStatus(Order.CONFIRMATION_STATUS_CONFIRMED);
         });
-        Logger.info('[CheckStatusJob] Order {0} confirmed and ready for export', order.orderNo);
     } else if (paymentResponse.pending || paymentResponse.review) {
-        //  No action taken on order - still pending
-        Logger.debug('[CheckStatusJob] Order {0} still pending/under review', order.orderNo);
+        //  No action taken on order.
     } else if (paymentResponse.error) {
         // Fail order and Log event.
-        Logger.warn('[CheckStatusJob] Order {0} check status returned error - cancelling order', order.orderNo);
         try {
             if (order.status !== Order.ORDER_STATUS_CANCELLED) {
                 Transaction.wrap(function () {
+                    // order.setStatus(Order.ORDER_STATUS_CANCELLED);
                     OrderMgr.cancelOrder(order);
                 });
             }
         } catch (e) {
-            Logger.error('[CheckStatusJob] Error failing Order {0}: {1}', order.orderNo, e.message);
+            Logger.error('[APCheckStatusJob.js] Error failing Order: ' + e.message);
         }
     }
 }
@@ -74,14 +72,10 @@ function HandleCheckStatusServiceResponse(order) {
  * @param {*} jobsParam jobParams
  */
 function checkPaymentStatusJob(jobsParam) {
-    Logger.info('[CheckStatusJob] Starting PayPal/APM status polling job with LagTime: {0} minutes', jobsParam.LagTime);
-
     //  Get time X minutes ago, based on job parameter.
     var CreationDate = System.getCalendar();
     // eslint-disable-next-line
     CreationDate.add(dw.util.Calendar.MINUTE, -jobsParam.LagTime);
-
-    Logger.info('[CheckStatusJob] Checking orders created before: {0}', CreationDate.getTime());
 
     // TO-DO: Job should have a parameter that limits the time this looks back to avoid large query results filled with old orders that wont be processed.
     // Find all non-confirmed, non-exported orders before the calculated lag time.
@@ -136,9 +130,6 @@ function checkPaymentStatusJob(jobsParam) {
             });
         }
     }
-
-    Logger.info('[CheckStatusJob] Job completed. Total orders processed: {0}, PayPal orders: {1}',
-        ordersProcessed, paypalOrdersProcessed);
 }
 
 /** Exported functions * */
