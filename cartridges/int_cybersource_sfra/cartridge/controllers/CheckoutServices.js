@@ -307,7 +307,7 @@ if (IsCartridgeEnabled) {
                     }
                     session.privacy.paypalV2RequestID = null;
                     session.privacy.paypalV2OrderAmount = null;
-                    res.json({
+                    secureJsonResponse(res, {
                         error: true,
                         errorStage: { stage: 'payment' },
                         errorMessage: Resource.msg('paypal.amount.mismatch', 'cybersource', 'Your cart has changed since PayPal approval. Please select a payment method again.')

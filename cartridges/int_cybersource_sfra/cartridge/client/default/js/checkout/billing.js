@@ -381,28 +381,28 @@ base.methods.updatePaymentInformation = function (order, options) {
     if (isCSType) {
         if (order.billing.payment && order.billing.payment.selectedPaymentInstruments
             && order.billing.payment.selectedPaymentInstruments.length > 0) {
-            htmlToAppend = htmlToAppend + '<span>Secure Acceptance ' + order.billing.payment.selectedPaymentInstruments[0].paymentMethod.replace('_', ' ') + ''</span>;
+            htmlToAppend = htmlToAppend + '<span>Secure Acceptance ' + order.billing.payment.selectedPaymentInstruments[0].paymentMethod.replace('_', ' ') + '</span>';
         }
     } else if (order.billing.payment && order.billing.payment.selectedPaymentInstruments
             && order.billing.payment.selectedPaymentInstruments.length > 0 && (order.billing.payment.selectedPaymentInstruments[0].paymentMethod === 'PAYPAL' || order.billing.payment.selectedPaymentInstruments[0].paymentMethod === 'PAYPAL_CREDIT')) {
         htmlToAppend = htmlToAppend + '<span>' + order.billing.payment.selectedPaymentInstruments[0].paymentMethod
-             + '<div><span>'</span> + order.billing.payment.selectedPaymentInstruments[0].amount + '</div>'</span>;
+             + '</span><div><span>' + order.billing.payment.selectedPaymentInstruments[0].amount + '</span></div>';
     } else if (order.billing.payment && order.billing.payment.selectedPaymentInstruments
         && order.billing.payment.selectedPaymentInstruments.length > 0 && order.billing.payment.selectedPaymentInstruments[0].paymentMethod === 'CREDIT_CARD') {
         htmlToAppend += '<span>' + order.resources.cardType + ' '
             + order.billing.payment.selectedPaymentInstruments[0].type
-            + '<div>'</span>
+            + '</span><div>'
             + order.billing.payment.selectedPaymentInstruments[0].maskedCreditCardNumber
             + '</div><div><span>'
             + order.resources.cardEnding + ' '
             + order.billing.payment.selectedPaymentInstruments[0].expirationMonth
             + '/' + order.billing.payment.selectedPaymentInstruments[0].expirationYear
-            + '</div>'</span>;
+            + '</span></div>';
     } else if (order.billing.payment && order.billing.payment.selectedPaymentInstruments
             && order.billing.payment.selectedPaymentInstruments.length > 0) {
         $('.paypalDetails').addClass('show');
         removeactivepaypal();
-        htmlToAppend += order.billing.payment.selectedPaymentInstruments[0].paymentMethod + ''</span>;
+        htmlToAppend += order.billing.payment.selectedPaymentInstruments[0].paymentMethod + '</span>';
     }
 
     $paymentSummary.empty().append(htmlToAppend);

@@ -334,7 +334,7 @@ server.post(
         // V1-only route: redirect to InitiatePaypalV2 if V2 is enabled
         if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2')) {
             Logger.error('[CYBPaypal-InitiatePaypalExpress] V2 is enabled - use InitiatePaypalV2 instead');
-            res.json({ success: false, error: true, errorMessage: 'Use PayPal V2 endpoint' });
+            secureJsonResponse(res, { success: false, error: true, errorMessage: 'Use PayPal V2 endpoint' });
             return next();
         }
 
@@ -353,10 +353,10 @@ server.post(
 
         var result = adapter.InitiateExpressCheckout(cart, args);
         if (result.success) {
-            res.json(result);
+            secureJsonResponse(res, result);
         } else {
             Logger.error('[CYBPaypal-InitiatePaypalExpress] Failed to initiate PayPal checkout');
-            res.json({ success: false, error: true, errorMessage: 'Failed to initiate PayPal checkout' });
+            secureJsonResponse(res, { success: false, error: true, errorMessage: 'Failed to initiate PayPal checkout' });
         }
         return next();
     }
@@ -382,7 +382,7 @@ server.post(
             var cart = BasketMgr.getCurrentBasket();
             if (!cart) {
                 Logger.error('[CYBPaypal-InitiatePaypalV2] No basket found');
-                res.json({ success: false, error: true, errorMessage: 'No basket found' });
+                secureJsonResponse(res, { success: false, error: true, errorMessage: 'No basket found' });
                 return next();
             }
 
@@ -390,7 +390,7 @@ server.post(
             var isV2Enabled = Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2');
             if (!isV2Enabled) {
                 Logger.error('[CYBPaypal-InitiatePaypalV2] PayPal V2 is not enabled');
-                res.json({ success: false, error: true, errorMessage: 'PayPal V2 is not enabled' });
+                secureJsonResponse(res, { success: false, error: true, errorMessage: 'PayPal V2 is not enabled' });
                 return next();
             }
 
@@ -433,11 +433,11 @@ server.post(
                     Logger.error('[CYBPaypal-InitiatePaypalV2] No merchantURL in response. Result: {0}', JSON.stringify(result));
                 }
 
-                res.json(result);
+                secureJsonResponse(res, result);
             } else {
                 Logger.error('[CYBPaypal-InitiatePaypalV2] Failed to initiate PayPal V2 checkout. Result: {0}',
                     result ? JSON.stringify(result) : 'null result');
-                res.json({
+                secureJsonResponse(res, {
                     success: false,
                     error: true,
                     errorMessage: 'Failed to initiate PayPal V2 checkout. Please check your basket and try again.'
@@ -445,7 +445,7 @@ server.post(
             }
         } catch (e) {
             Logger.error('[CYBPaypal-InitiatePaypalV2] Exception: {0}\nStack: {1}', e.message, e.stack);
-            res.json({
+            secureJsonResponse(res, {
                 success: false,
                 error: true,
                 errorMessage: 'An error occurred during PayPal checkout initialization. Please try again.'
@@ -472,10 +472,10 @@ server.post(
                 session.privacy.paypalV2RequestID = null;
                 session.privacy.paypalV2OrderAmount = null;
             }
-            res.json({ success: true });
+            secureJsonResponse(res, { success: true });
         } catch (e) {
             Logger.error('[CYBPaypal-VoidOrder] Exception: {0}', e.message);
-            res.json({ success: false });
+            secureJsonResponse(res, { success: false });
         }
         return next();
     }

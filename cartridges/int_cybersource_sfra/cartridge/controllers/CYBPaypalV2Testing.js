@@ -27,6 +27,8 @@ var System = require('dw/system/System');
 var URLUtils = require('dw/web/URLUtils');
 var Logger = require('dw/system/Logger').getLogger('Cybersource');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
+var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
+var secureRender = secureResponseHelper.secureRender;
 
 /**
  * Guard: block on production instances.
@@ -123,7 +125,7 @@ function getOrderPaymentDetails(orderNo) {
 
 server.get('Index', server.middleware.https, function (req, res, next) {
     if (productionGuard(res)) return next();
-    res.render('services/paypalV2Services');
+    secureRender(res, 'services/paypalV2Services');
     next();
 });
 
@@ -134,7 +136,7 @@ server.get('Index', server.middleware.https, function (req, res, next) {
 server.get('TestCapture', server.middleware.https, function (req, res, next) {
     if (productionGuard(res)) return next();
     var form = getCleanForm(server);
-    res.render('services/paypalV2CaptureForm', {
+    secureRender(res, 'services/paypalV2CaptureForm', {
         form: form,
         continueUrl: URLUtils.https('CYBPaypalV2Testing-Capture').toString()
     });
@@ -156,12 +158,12 @@ server.post('Capture', server.middleware.https, function (req, res, next) {
     var details = getOrderPaymentDetails(orderNo);
 
     if (details.error) {
-        res.render('common/scriptError', { log: details.error });
+        secureRender(res, 'common/scriptError', { log: details.error });
         return next();
     }
 
     if (empty(details.authRequestID)) {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: 'No authRequestID found on payment instrument for order ' + orderNo
                 + '. Capture requires a completed authorization.'
         });
@@ -184,13 +186,13 @@ server.post('Capture', server.middleware.https, function (req, res, next) {
     form.clearFormElement();
 
     if (!empty(serviceResponse) && !serviceResponse.error) {
-        res.render('services/transactionResult', {
+        secureRender(res, 'services/transactionResult', {
             serviceReply: 'apCaptureReply',
             response: serviceResponse,
             msgHeader: 'PayPal V2 Capture Reply'
         });
     } else {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: serviceResponse && serviceResponse.errorMsg
                 ? serviceResponse.errorMsg
                 : 'Capture service returned an error. Check CyberSource logs.'
@@ -206,7 +208,7 @@ server.post('Capture', server.middleware.https, function (req, res, next) {
 server.get('TestAuthReversal', server.middleware.https, function (req, res, next) {
     if (productionGuard(res)) return next();
     var form = getCleanForm(server);
-    res.render('services/paypalV2ReversalForm', {
+    secureRender(res, 'services/paypalV2ReversalForm', {
         form: form,
         continueUrl: URLUtils.https('CYBPaypalV2Testing-AuthReversal').toString()
     });
@@ -227,12 +229,12 @@ server.post('AuthReversal', server.middleware.https, function (req, res, next) {
     var details = getOrderPaymentDetails(orderNo);
 
     if (details.error) {
-        res.render('common/scriptError', { log: details.error });
+        secureRender(res, 'common/scriptError', { log: details.error });
         return next();
     }
 
     if (empty(details.authRequestID)) {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: 'No authRequestID found on payment instrument for order ' + orderNo
                 + '. Reversal requires a completed authorization.'
         });
@@ -251,13 +253,13 @@ server.post('AuthReversal', server.middleware.https, function (req, res, next) {
     form.clearFormElement();
 
     if (!empty(serviceResponse) && !serviceResponse.error) {
-        res.render('services/transactionResult', {
+        secureRender(res, 'services/transactionResult', {
             serviceReply: 'apAuthReversalReply',
             response: serviceResponse,
             msgHeader: 'PayPal V2 Auth Reversal Reply'
         });
     } else {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: serviceResponse && serviceResponse.errorMsg
                 ? serviceResponse.errorMsg
                 : 'Auth Reversal service returned an error. Check CyberSource logs.'
@@ -273,7 +275,7 @@ server.post('AuthReversal', server.middleware.https, function (req, res, next) {
 server.get('TestReauth', server.middleware.https, function (req, res, next) {
     if (productionGuard(res)) return next();
     var form = getCleanForm(server);
-    res.render('services/paypalV2ReauthForm', {
+    secureRender(res, 'services/paypalV2ReauthForm', {
         form: form,
         continueUrl: URLUtils.https('CYBPaypalV2Testing-Reauth').toString()
     });
@@ -295,7 +297,7 @@ server.post('Reauth', server.middleware.https, function (req, res, next) {
     var authRequestID = form.authRequestID.htmlValue;
 
     if (empty(authRequestID)) {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: 'Previous Auth Request ID (linkToRequest) is required for Re-Authorization.'
         });
         return next();
@@ -303,12 +305,12 @@ server.post('Reauth', server.middleware.https, function (req, res, next) {
 
     var details = getOrderPaymentDetails(orderNo);
     if (details.error) {
-        res.render('common/scriptError', { log: details.error });
+        secureRender(res, 'common/scriptError', { log: details.error });
         return next();
     }
 
     if (empty(details.orderRequestID)) {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: 'No orderRequestID stored on payment instrument for order ' + orderNo
                 + '. Re-authorization requires the original Create Order requestID.'
         });
@@ -321,13 +323,13 @@ server.post('Reauth', server.middleware.https, function (req, res, next) {
     form.clearFormElement();
 
     if (!empty(serviceResponse) && !serviceResponse.error) {
-        res.render('services/transactionResult', {
+        secureRender(res, 'services/transactionResult', {
             serviceReply: 'apAuthReply',
             response: serviceResponse,
             msgHeader: 'PayPal V2 Re-Authorization Reply'
         });
     } else {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: serviceResponse && serviceResponse.errorMsg
                 ? serviceResponse.errorMsg
                 : 'Re-Authorization service returned an error. Check CyberSource logs.'
@@ -343,7 +345,7 @@ server.post('Reauth', server.middleware.https, function (req, res, next) {
 server.get('TestCheckStatus', server.middleware.https, function (req, res, next) {
     if (productionGuard(res)) return next();
     var form = getCleanForm(server);
-    res.render('services/paypalV2CheckStatusForm', {
+    secureRender(res, 'services/paypalV2CheckStatusForm', {
         form: form,
         continueUrl: URLUtils.https('CYBPaypalV2Testing-CheckStatus').toString()
     });
@@ -373,7 +375,7 @@ server.post('CheckStatus', server.middleware.https, function (req, res, next) {
     if (!empty(orderNo)) {
         var details = getOrderPaymentDetails(orderNo);
         if (details.error) {
-            res.render('common/scriptError', { log: details.error });
+            secureRender(res, 'common/scriptError', { log: details.error });
             return next();
         }
         checkStatusRequestID = details.authRequestID || details.orderRequestID;
@@ -393,7 +395,7 @@ server.post('CheckStatus', server.middleware.https, function (req, res, next) {
     }
 
     if (empty(checkStatusRequestID)) {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: 'Provide either an Order Number or a Request ID for Check Status.'
         });
         return next();
@@ -424,7 +426,7 @@ server.post('CheckStatus', server.middleware.https, function (req, res, next) {
         serviceResponse = service.call(requestWrapper);
     } catch (e) {
         Logger.error('[CYBPaypalV2Testing] CheckStatus error: {0}', e.message);
-        res.render('common/scriptError', { log: 'Check Status error: ' + e.message });
+        secureRender(res, 'common/scriptError', { log: 'Check Status error: ' + e.message });
         return next();
     }
 
@@ -432,13 +434,13 @@ server.post('CheckStatus', server.middleware.https, function (req, res, next) {
 
     if (!empty(serviceResponse) && serviceResponse.status === 'OK') {
         serviceResponse = serviceResponse.object;
-        res.render('services/transactionResult', {
+        secureRender(res, 'services/transactionResult', {
             serviceReply: 'apCheckStatusReply',
             response: serviceResponse,
             msgHeader: 'PayPal V2 Check Status Reply'
         });
     } else {
-        res.render('common/scriptError', {
+        secureRender(res, 'common/scriptError', {
             log: 'Check Status service returned an error. Status: '
                 + (serviceResponse ? serviceResponse.status : 'null')
         });
