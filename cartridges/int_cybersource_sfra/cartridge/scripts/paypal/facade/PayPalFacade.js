@@ -262,13 +262,16 @@ function createBasicRequest(typeofService, request, lineItemCntr, args) {
                 request.shipTo = libCybersource.copyShipTo(shipTo);
             }
         }
-        if (!isPayPalV2()) {
-            billTo = commonHelper.CreateCyberSourceBillToObject(lineItemCntr, true).billTo;
-            if (billTo !== null) {
+        billTo = commonHelper.CreateCyberSourceBillToObject(lineItemCntr, true).billTo;
+        if (billTo !== null) {
+            if(isPayPalV2()) {
+                request.billTo = copyBillToV2(billTo);
+            } else {
                 request.billTo = libCybersource.copyBillTo(billTo);
             }
-        }
+
     }
+}
 }
 
 /** ***************************************************************************
