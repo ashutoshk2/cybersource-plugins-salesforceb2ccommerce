@@ -9,10 +9,6 @@
 <body>
 <div class="container" style="margin-top:30px;">
 	<h1>PayPal V2 - Re-Authorization</h1>
-	<p>Re-authorizes a PayPal payment to refresh the 3-day honor period or update the amount.
-	   Requires the <strong>Order Number</strong> (to retrieve order details and orderRequestID) and the
-	   <strong>Auth Request ID</strong> from the previous authorization.</p>
-	<p><em>Note: Re-authorization refreshes the 3-day honor period for PayPal (PYPLP) authorizations.</em></p>
 	<hr/>
 	<form action="${pdict.continueUrl}" method="post" id="paypalv2-reauth-form">
 		<fieldset>

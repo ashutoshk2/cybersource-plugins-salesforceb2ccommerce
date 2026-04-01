@@ -76,7 +76,7 @@
 		window.klarnaVariables.isKlarnaEnabledForCartAndMinicart = "${dw.system.Site.getCurrent().getCustomPreferenceValue('enableKlarnaExpressCheckout')}";
         window.klarnaVariables.handleExpressCheckoutAuth = "${dw.web.URLUtils.https('CYBKlarna-KlarnaAuthorizationCallback').toString()}";
 		window.klarnaVariables.createSessionEndpoint = "${dw.web.URLUtils.https('CYBKlarna-GetSession').toString()}";
-		window.klarnaVariables.klarnaClientToken: "${klarnaClientTokenValue}";
+		window.klarnaVariables.klarnaClientToken = "${klarnaClientTokenValue}";
 		window.klarnaVariables.currentLocale = "${require('dw/util/Locale').getLocale(request.getLocale())}";
 	</script>
 	</div>

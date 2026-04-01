@@ -737,7 +737,7 @@ server.get('GetCartTotal', function (req, res, next) {
 
     var totalPrice = totalGrossPrice.available
         ? totalGrossPrice.value.toFixed(2)
-        : '0.00';
+        : 'NA';
 
     secureResponseHelper.secureJsonResponse(res, {
         error: false,

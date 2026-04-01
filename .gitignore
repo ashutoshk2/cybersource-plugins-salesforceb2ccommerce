@@ -5,5 +5,3 @@ node_modules
 .DS_Store
 cartridges/int_cybersource_sfra/cartridge/static
 metadata/sfra_meta
-cartridges/int_cybersource_sfra/cartridge/webreferences2
-*.zip
