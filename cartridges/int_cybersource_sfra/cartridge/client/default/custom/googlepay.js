@@ -149,7 +149,7 @@ function getGoogleTransactionInfo() {
                     return;
                 }
                 resolve({
-                    currencyCode: data.currencyCode,
+                    currencyCode: data.currencyCode || window.googlepayval.currencyCode,
                     totalPriceStatus: 'FINAL',
                     totalPrice: data.totalPrice
                 });

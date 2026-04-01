@@ -731,9 +731,13 @@ server.get('GetCartTotal', function (req, res, next) {
     }
 
     var totalGrossPrice = cart.totalGrossPrice;
-    var currencyCode = totalGrossPrice.currencyCode;
+    var currencyCode = totalGrossPrice.available
+        ? totalGrossPrice.currencyCode
+        : session.getCurrency().getCurrencyCode();
 
-    var totalPrice = totalGrossPrice.value.toFixed(2);
+    var totalPrice = totalGrossPrice.available
+        ? totalGrossPrice.value.toFixed(2)
+        : '0.00';
 
     secureResponseHelper.secureJsonResponse(res, {
         error: false,
