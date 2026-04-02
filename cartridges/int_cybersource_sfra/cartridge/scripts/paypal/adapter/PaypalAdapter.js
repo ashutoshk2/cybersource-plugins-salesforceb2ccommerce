@@ -258,6 +258,8 @@ function initPaypalV2Callback(lineItemCntr, args) {
     var requestID = args.requestId;
     try {
         var paypalFacade = require('../facade/PayPalFacade');
+        var commonHelper = require('*/cartridge/scripts/helper/CommonHelper');
+        var CybersourceHelper = require('*/cartridge/scripts/cybersource/libCybersource').getCybersourceHelper();
         var checkStatusResult = paypalFacade.CheckStatusService(lineItemCntr, requestID, args.fundingSource);
 
         result.shippingAddressMissing = false;
@@ -266,7 +268,33 @@ function initPaypalV2Callback(lineItemCntr, args) {
         if (!empty(checkStatusResult) && checkStatusResult.checkStatusResponse
             && Number(checkStatusResult.checkStatusResponse.reasonCode) === 100) {
 
-            // V2 Check Status has no billTo/shipTo — validate existing basket addresses only
+            // If Check Status returned shipping details and the site pref allows
+            // PayPal to override addresses, apply only the shipTo into the basket.
+            var overrideAddressPaypalPreference = !CybersourceHelper.IsPaypalAddressOverride();
+            var hasShipTo = checkStatusResult.checkStatusResponse.shipTo && (!empty(checkStatusResult.checkStatusResponse.shipTo.street1) || !empty(checkStatusResult.checkStatusResponse.shipTo.firstName));
+
+            if (hasShipTo && overrideAddressPaypalPreference) {
+                Transaction.wrap(function () {
+                    var defaultShipment = lineItemCntr.getDefaultShipment();
+                    var shippingAddress = defaultShipment ? defaultShipment.getShippingAddress() : null;
+                    if (shippingAddress === null) {
+                        shippingAddress = defaultShipment.createShippingAddress();
+                    }
+                    var shipTo = checkStatusResult.checkStatusResponse.shipTo;
+                    if (!empty(shipTo.firstName)) { shippingAddress.setFirstName(shipTo.firstName); }
+                    if (!empty(shipTo.lastName)) { shippingAddress.setLastName(shipTo.lastName); }
+                    if (!empty(shipTo.street1)) { shippingAddress.setAddress1(shipTo.street1); }
+                    if (!empty(shipTo.street2)) { shippingAddress.setAddress2(shipTo.street2); }
+                    if (!empty(shipTo.city)) { shippingAddress.setCity(shipTo.city); }
+                    if (!empty(shipTo.postalCode)) { shippingAddress.setPostalCode(shipTo.postalCode); }
+                    if (!empty(shipTo.country)) { shippingAddress.setCountryCode(shipTo.country); }
+                    if (!empty(shipTo.state)) { shippingAddress.setStateCode(shipTo.state); }
+                    // Re-evaluate shipping method after applying shipTo
+                    setShippingMethod(lineItemCntr);
+                });
+            }
+
+            // Validate shipping address completeness (after possible update)
             var defaultShipment = lineItemCntr.getDefaultShipment();
             var shippingAddress = defaultShipment ? defaultShipment.getShippingAddress() : null;
             if (empty(shippingAddress) || empty(shippingAddress.firstName) || empty(shippingAddress.lastName)
@@ -276,6 +304,7 @@ function initPaypalV2Callback(lineItemCntr, args) {
                 result.shippingAddressMissing = true;
             }
 
+            // Do NOT update billTo from check-status here — validate existing billing address only
             var billingAddress = lineItemCntr.getBillingAddress();
             if (empty(billingAddress) || empty(billingAddress.firstName) || empty(billingAddress.lastName)
                 || empty(billingAddress.address1) || empty(billingAddress.city)
@@ -285,7 +314,7 @@ function initPaypalV2Callback(lineItemCntr, args) {
                 result.billingAddressMissing = true;
             }
 
-            // Ensure customer email is set
+            // Ensure customer email is set if missing and customer is authenticated
             if (empty(lineItemCntr.customerEmail) && customer.authenticated) {
                 Transaction.wrap(function () {
                     lineItemCntr.setCustomerEmail(customer.profile.email);
@@ -299,10 +328,6 @@ function initPaypalV2Callback(lineItemCntr, args) {
                     result.billingAddressMissing = false;
                 }
             }
-
-            Transaction.wrap(function () {
-                setShippingMethod(lineItemCntr);
-            });
 
             result.success = true;
             result.transactionProcessorID = checkStatusResult.checkStatusResponse.apCheckStatusReply.processorTransactionID;

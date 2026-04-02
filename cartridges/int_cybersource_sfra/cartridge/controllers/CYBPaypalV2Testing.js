@@ -185,7 +185,7 @@ server.post('Capture', server.middleware.https, function (req, res, next) {
 
     form.clearFormElement();
 
-    if (!empty(serviceResponse) && !serviceResponse.error) {
+    if (!empty(serviceResponse) ) {
         secureRender(res, 'services/transactionResult', {
             serviceReply: 'apCaptureReply',
             response: serviceResponse,

@@ -63,7 +63,8 @@
                             var fundingSource = data.fundingSource || 'paypal';
 
                             // Serialize the billing form to send standard checkout data
-                            var formData = $('form.billing').serialize();
+                            // Use form id fallback - some themes render the form with id #dwfrm_billing
+                            var formData = $('form.billing, #dwfrm_billing').serialize();
 
                             // Append Funding Source to the request
                             formData += '&fundingSource=' + encodeURIComponent(fundingSource);

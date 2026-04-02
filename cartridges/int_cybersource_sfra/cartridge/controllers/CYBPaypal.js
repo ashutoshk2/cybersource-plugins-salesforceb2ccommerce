@@ -401,6 +401,39 @@ server.post(
             // Determine payment method based on credit flag
             var paymentMethod = payPalCreditFlag ? CybersourceConstants.METHOD_PAYPAL_CREDIT : CybersourceConstants.METHOD_PAYPAL;
 
+            // Apply billing form values to basket (if billing form was submitted)
+            var paymentForm = server.forms.getForm('billing');
+            Transaction.wrap(function () {
+                var billingAddress = cart.billingAddress;
+                if (!billingAddress) {
+                    billingAddress = cart.createBillingAddress();
+                }
+                if (!empty(paymentForm.addressFields.firstName.value)) {
+                    billingAddress.setFirstName(paymentForm.addressFields.firstName.value);
+                }
+                if (!empty(paymentForm.addressFields.lastName.value)) {
+                    billingAddress.setLastName(paymentForm.addressFields.lastName.value);
+                }
+                if (!empty(paymentForm.addressFields.address1.value)) {
+                    billingAddress.setAddress1(paymentForm.addressFields.address1.value);
+                }
+                if (!empty(paymentForm.addressFields.address2.value)) {
+                    billingAddress.setAddress2(paymentForm.addressFields.address2.value);
+                }
+                if (!empty(paymentForm.addressFields.city.value)) {
+                    billingAddress.setCity(paymentForm.addressFields.city.value);
+                }
+                if (!empty(paymentForm.addressFields.postalCode.value)) {
+                    billingAddress.setPostalCode(paymentForm.addressFields.postalCode.value);
+                }
+                if (Object.prototype.hasOwnProperty.call(paymentForm.addressFields, 'states')) {
+                    billingAddress.setStateCode(paymentForm.addressFields.states.stateCode.value);
+                }
+                if (!empty(paymentForm.addressFields.country.value)) {
+                    billingAddress.setCountryCode(paymentForm.addressFields.country.value);
+                }
+            });
+
             // Remove any existing payment instruments and create PayPal payment instrument
             var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
             var paymentAmount = CommonHelper.CalculateNonGiftCertificateAmountPaypal(cart);

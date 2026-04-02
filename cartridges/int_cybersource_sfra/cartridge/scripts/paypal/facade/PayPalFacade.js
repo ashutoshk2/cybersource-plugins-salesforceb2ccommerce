@@ -328,7 +328,7 @@ function createOrderServiceV2(lineItemCntr, args) {
     }
 
     libCybersource.setClientData(request, lineItemCntr.UUID);
-    
+    addDecisionManager(request);
     var apOrderService = new csReference.APOrderService();
     apOrderService.run = true;
 
@@ -764,21 +764,15 @@ function PayPalCaptureService(requestID, merchantRefCode, paymentType, purchaseT
     purchaseObject = purchaseObject.purchaseTotals;
     serviceRequest.purchaseTotals = libCybersource.copyPurchaseTotals(purchaseObject);
 
-    stripLeadingZerosV2(serviceRequest.purchaseTotals, currency);
+    
 
     libCybersource.setClientData(serviceRequest, merchantRefCode);
 
     if (isPayPalV2()) {
-        // V2 Capture - per spec: apCaptureService.authRequestID
-        serviceRequest.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
-        var apCaptureService = new CybersourceHelper.getcsReference().APCaptureService();
-        apCaptureService.authRequestID = requestID;
-        apCaptureService.run = true;
-        serviceRequest.apCaptureService = apCaptureService;
-    } else {
-        // V1 Capture
-        CybersourceHelper.payPalCaptureService(serviceRequest, merchantRefCode, requestID, paymentType);
+        //padding like 001000 for capture amount is invalid for paypalv2.
+        stripLeadingZerosV2(serviceRequest.purchaseTotals, currency);
     }
+        CybersourceHelper.payPalCaptureService(serviceRequest, merchantRefCode, requestID, paymentType);
 
     //  Provide ability to customize request object with a hook.
     var HookMgr = require('dw/system/HookMgr');
