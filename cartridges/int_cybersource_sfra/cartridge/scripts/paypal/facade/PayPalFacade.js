@@ -241,7 +241,7 @@ function createBasicRequest(typeofService, request, lineItemCntr, args) {
         var itemTaxSum = 0;
         for (var t = 0; t < items.length; t++) {
             itemTaxSum += Math.round(parseFloat(items[t].taxAmount || 0) * multiplier)
-                        * parseInt(items[t].quantity, 10);
+                * parseInt(items[t].quantity, 10);
         }
         var orderTaxUnits = Math.round(parseFloat(request.purchaseTotals.taxAmount || 0) * multiplier);
         if (itemTaxSum !== orderTaxUnits) {
@@ -264,14 +264,14 @@ function createBasicRequest(typeofService, request, lineItemCntr, args) {
         }
         billTo = commonHelper.CreateCyberSourceBillToObject(lineItemCntr, true).billTo;
         if (billTo !== null) {
-            if(isPayPalV2()) {
+            if (isPayPalV2()) {
                 request.billTo = copyBillToV2(billTo);
             } else {
                 request.billTo = libCybersource.copyBillTo(billTo);
             }
 
+        }
     }
-}
 }
 
 /** ***************************************************************************
@@ -338,14 +338,14 @@ function createOrderServiceV2(lineItemCntr, args) {
 
     request.apOrderService = apOrderService;
     request.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
-    
+
     request.authorizationOptions = new csReference.AuthorizationOptions();
     if (args.orderType === 'STANDARD') {
         request.authorizationOptions.authType = 'CAPTURE';
     } else {
         request.authorizationOptions.authType = 'AUTHORIZE';
     }
-    
+
     // Use nested InvoiceHeader structure
     var descriptorValue = CybersourceConstants.MERCHANT_DESCRIPTOR || dw.system.Site.getCurrent().getName();
     if (!request.invoiceHeader) {
@@ -411,11 +411,11 @@ function addBillingAgreementId(request, lineItemCntr) {
     });
 
     // checking if customer is authenticated
-    if ((!isPayPalCredit || require('dw/system/Site').getCurrent().getCustomPreferenceValue('payPalBillingAgreements')) && customer.authenticated){  
-    /*
-    * If Billing Agreement is not null then add it to service request instead of the
-    * session request ID
-    */
+    if ((!isPayPalCredit || require('dw/system/Site').getCurrent().getCustomPreferenceValue('payPalBillingAgreements')) && customer.authenticated) {
+        /*
+        * If Billing Agreement is not null then add it to service request instead of the
+        * session request ID
+        */
         if (!empty(customer.profile.custom.billingAgreementID)) {
             if (request.ap == null) {
                 var ap = new CybersourceHelper.getcsReference().AP();
@@ -511,7 +511,7 @@ function orderService(lineItemCntr, paymentInstrument) {
     var serviceRequest = new csReference.RequestMessage(); var sessionRequestID;
     createBasicRequest('orderService', serviceRequest, lineItemCntr);
     libCybersource.setClientData(serviceRequest, lineItemCntr.orderNo);
-    
+
     serviceRequest.apPaymentType = 'PPL';
 
     var ap = new CybersourceHelper.getcsReference().AP();
@@ -632,6 +632,7 @@ function saleService(lineItemCntr, paymentInstrument) {
      * param : Request stub ,order object and Payment type
 *************************************************************************** */
 function PayPalRefundService(requestID, merchantRefCode, paymentType, amount, currency) {
+
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
 
     var serviceRequest = new csReference.RequestMessage();
@@ -640,21 +641,14 @@ function PayPalRefundService(requestID, merchantRefCode, paymentType, amount, cu
     purchaseObject = purchaseObject.purchaseTotals;
     serviceRequest.purchaseTotals = libCybersource.copyPurchaseTotals(purchaseObject);
 
-    stripLeadingZerosV2(serviceRequest.purchaseTotals, currency);
-
     libCybersource.setClientData(serviceRequest, merchantRefCode);
 
     if (isPayPalV2()) {
-        // V2 Refund Logic - per spec: apRefundService.refundRequestID
-        serviceRequest.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
-        var apRefundService = new CybersourceHelper.getcsReference().APRefundService();
-        apRefundService.refundRequestID = requestID; // Fixed: was captureRequestID, spec requires refundRequestID
-        apRefundService.run = true;
-        serviceRequest.apRefundService = apRefundService;
-    } else {
-        // V1 Refund Logic
-        CybersourceHelper.payPalRefundService(serviceRequest, merchantRefCode, requestID, paymentType);
+        // V2 Refund does not supports leading zeros
+        stripLeadingZerosV2(serviceRequest.purchaseTotals, currency);
     }
+    // V1 Refund Logic
+    CybersourceHelper.payPalRefundService(serviceRequest, merchantRefCode, requestID, paymentType);
 
     //  Provide ability to customize request object with a hook.
     var HookMgr = require('dw/system/HookMgr');
@@ -764,7 +758,7 @@ function PayPalCaptureService(requestID, merchantRefCode, paymentType, purchaseT
     purchaseObject = purchaseObject.purchaseTotals;
     serviceRequest.purchaseTotals = libCybersource.copyPurchaseTotals(purchaseObject);
 
-    
+
 
     libCybersource.setClientData(serviceRequest, merchantRefCode);
 
@@ -772,7 +766,7 @@ function PayPalCaptureService(requestID, merchantRefCode, paymentType, purchaseT
         //padding like 001000 for capture amount is invalid for paypalv2.
         stripLeadingZerosV2(serviceRequest.purchaseTotals, currency);
     }
-        CybersourceHelper.payPalCaptureService(serviceRequest, merchantRefCode, requestID, paymentType);
+    CybersourceHelper.payPalCaptureService(serviceRequest, merchantRefCode, requestID, paymentType);
 
     //  Provide ability to customize request object with a hook.
     var HookMgr = require('dw/system/HookMgr');
