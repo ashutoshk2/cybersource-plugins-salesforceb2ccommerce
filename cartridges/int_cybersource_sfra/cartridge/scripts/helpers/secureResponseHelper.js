@@ -29,9 +29,7 @@ function setSecurityHeaders(res) {
  */
 function secureJsonResponse(res, data) {
     setSecurityHeaders(res);
-    res.setContentType('application/json');
-    var jsonString = JSON.stringify(data);
-    res.print(jsonString);
+    res.json(data);
 }
  
 /**
