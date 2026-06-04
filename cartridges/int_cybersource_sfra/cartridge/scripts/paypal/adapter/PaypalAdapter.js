@@ -388,8 +388,12 @@ function authorizeService(order, paymentInstrument) {
                     paymentTransaction.custom.authProcessorTID = response.apAuthReply.processorTransactionID;
                     paymentTransaction.custom.authRequestID = response.requestID;
                     paymentTransaction.custom.authRequestToken = response.requestToken;
-                    if (!empty(response.apReply) && !empty(response.apReply.fundingSource)) {
-                        paymentTransaction.custom.fundingSource = response.apReply.fundingSource;
+                    if (paymentTransaction.custom.fundingSource === 'venmo') {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'venmo';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'venmo';
+                    } else {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'payPal';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'payPal';
                     }
                 });
                 result.authorized = true;
@@ -405,6 +409,13 @@ function authorizeService(order, paymentInstrument) {
                     paymentTransaction.custom.authProcessorTID = response.apAuthReply.processorTransactionID;
                     paymentTransaction.custom.authRequestID = response.requestID;
                     paymentTransaction.custom.authRequestToken = response.requestToken;
+                    if (paymentTransaction.custom.fundingSource === 'venmo') {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'venmo';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'venmo';
+                    } else {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'payPal';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'payPal';
+                    }
                 });
                 result.pending = true;
             } else if (!empty(response) && response.decision.equals('REJECT') && Number(response.reasonCode) === 481) {
@@ -431,6 +442,8 @@ function authorizeService(order, paymentInstrument) {
                 if (!empty(response.apReply) && !empty(response.apReply.fundingSource)) {
                     paymentTransaction.custom.fundingSource = response.apReply.fundingSource;
                 }
+                paymentInstrument.custom.cybs__B2C_Payment_Type = 'PAYPAL';
+                paymentTransaction.custom.cybs__B2C_Payment_Type = 'PAYPAL';
             });
             result.authorized = true;
         } else if (!empty(response) && response.decision.equals('ACCEPT') && response.apAuthReply.paymentStatus === 'PENDING' && Number(response.reasonCode) === 100) {
@@ -446,6 +459,8 @@ function authorizeService(order, paymentInstrument) {
                 if (!empty(response.apReply) && !empty(response.apReply.fundingSource)) {
                     paymentTransaction.custom.fundingSource = response.apReply.fundingSource;
                 }
+                paymentInstrument.custom.cybs__B2C_Payment_Type = 'PAYPAL';
+                paymentTransaction.custom.cybs__B2C_Payment_Type = 'PAYPAL';
             });
             result.pending = true;
         } else if (!empty(response) && response.decision.equals('REVIEW') && Number(response.reasonCode) === 480) {
@@ -461,6 +476,8 @@ function authorizeService(order, paymentInstrument) {
                 if (!empty(response.apReply) && !empty(response.apReply.fundingSource)) {
                     paymentTransaction.custom.fundingSource = response.apReply.fundingSource;
                 }
+                paymentInstrument.custom.cybs__B2C_Payment_Type = 'PAYPAL';
+                paymentTransaction.custom.cybs__B2C_Payment_Type = 'PAYPAL';
             });
             result.pending = true;
         } else if (!empty(response) && response.decision.equals('REJECT') && Number(response.reasonCode) === 481) {
@@ -501,6 +518,18 @@ function saleService(Order, paymentInstrument) {
                 if (!empty(response.apReply) && !empty(response.apReply.fundingSource)) {
                     paymentTransaction.custom.fundingSource = response.apReply.fundingSource;
                 }
+                if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2')) {
+                    if (paymentTransaction.custom.fundingSource === 'venmo') {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'venmo';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'venmo';
+                    } else {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'payPal';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'payPal';
+                    }
+                } else {
+                    paymentInstrument.custom.cybs__B2C_Payment_Type = 'PAYPAL';
+                    paymentTransaction.custom.cybs__B2C_Payment_Type = 'PAYPAL';
+                }
                 order.paymentStatus = 2;
             });
             result.authorized = true;
@@ -513,6 +542,18 @@ function saleService(Order, paymentInstrument) {
                 paymentTransaction.custom.saleRequestToken = response.requestToken;
                 if (!empty(response.apReply) && !empty(response.apReply.fundingSource)) {
                     paymentTransaction.custom.fundingSource = response.apReply.fundingSource;
+                }
+                if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2')) {
+                    if (paymentTransaction.custom.fundingSource === 'venmo') {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'venmo';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'venmo';
+                    } else {
+                        paymentInstrument.custom.cybs__B2C_Payment_Type = 'payPal';
+                        paymentTransaction.custom.cybs__B2C_Payment_Type = 'payPal';
+                    }
+                } else {
+                    paymentInstrument.custom.cybs__B2C_Payment_Type = 'PAYPAL';
+                    paymentTransaction.custom.cybs__B2C_Payment_Type = 'PAYPAL';
                 }
             });
             result.pending = true;
@@ -639,6 +680,18 @@ function paymentService(order, paymentInstrument) {
         if (billingAgreementsEnabled && paymentMethod && hasBillingAgreement) {
             orderType = 'BILLINGAGREEMENT';
             Logger.debug('[PaypalAdapter] Using V1 billing agreement flow');
+        }
+    }
+
+    // V2: Update the PayPal order with the SFCC order number so CyberSource
+    // maps the transaction to our order ID (create order only had basket UUID).
+    if (isV2Enabled && order.orderNo && paymentInstrument.paymentTransaction.custom.orderRequestID) {
+        try {
+            var paypalFacade = require(CybersourceConstants.PATH_FACADE + 'PayPalFacade');
+            var fundingSource = paymentInstrument.paymentTransaction.custom.fundingSource || 'paypal';
+            paypalFacade.UpdateOrderServiceV2(order, paymentInstrument.paymentTransaction.custom.orderRequestID, fundingSource);
+        } catch (e) {
+            Logger.error('[PaypalAdapter] UpdateOrder with orderNo failed: {0}', e.message);
         }
     }
 

@@ -57,8 +57,12 @@ server.post('GetSession', csrfProtection.generateToken, function (req, res, next
         // For US addresses, set dummy values if state or postal code is missing. Actual values will be updated later in session update.
         billTo.setState((basket.billingAddress && basket.billingAddress.stateCode) || 'CA');
         billTo.setPostalCode((basket.billingAddress && basket.billingAddress.postalCode) || '94043');
+    } else if (currentLocale.country === 'CA') {
+        // For Canadian addresses, set dummy values if state or postal code is missing. Actual values will be updated later in session update.
+        billTo.setState((basket.billingAddress && basket.billingAddress.stateCode) || 'ON');
+        billTo.setPostalCode((basket.billingAddress && basket.billingAddress.postalCode) || 'M5B 2H1');
     } else {
-        // For non-US addresses, use the billing address values directly
+        // For non-US and non-Canadian addresses, use the billing address values directly
         billTo.setState((basket.billingAddress && basket.billingAddress.stateCode) || '');
         billTo.setPostalCode((basket.billingAddress && basket.billingAddress.postalCode) || '');
     }

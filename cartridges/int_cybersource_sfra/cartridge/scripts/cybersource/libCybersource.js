@@ -492,7 +492,7 @@ var CybersourceHelper = {
 
         // PayPal V2 (PYPLP) uses different CyberSource endpoints than other payment methods
         var paymentType = requestObj && requestObj.apPaymentType ? requestObj.apPaymentType : null;
-        var isPayPalV2 = (paymentType === 'PYPLP');
+        var isPayPalV2 = (paymentType === 'PYPLP'||paymentType === 'VNMOP');
 
         switch (endpoint) {
             case 'Production':
