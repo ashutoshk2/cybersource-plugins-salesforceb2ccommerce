@@ -39,13 +39,19 @@ function stripLeadingZerosV2(purchaseTotals, currency) {
 /**
  * Copy shipTo object with only V2 required fields per spec:
  * firstName, lastName, street1, street2, city, country, postalCode, state
+ * Note: firstName and lastName are required for Venmo orders
  * @param {Object} shipTo - The shipTo object from CommonHelper
  * @returns {Object} - WSDL ShipTo object with only required fields
  */
-function copyShipToV2(shipTo) {
+function copyShipToV2(shipTo, fundingSource) {
     var requestShipTo = new csReference.ShipTo();
     var v2RequiredFields = ['street1', 'street2', 'city', 'state', 'postalCode', 'country'];
 
+    // Venmo includes 'method' field per spec
+    if (fundingSource === 'venmo') {
+        v2RequiredFields.push('method');
+    }
+    
     if (!empty(shipTo)) {
         v2RequiredFields.forEach(function (fieldName) {
             var value = shipTo[fieldName];
@@ -76,8 +82,13 @@ function copyBillToV2(billTo) {
             var value = billTo[fieldName];
             if (value !== null && value !== undefined && value !== '') {
                 requestBillTo[fieldName] = value;
-            } else if (fieldName === 'language') {
-                requestBillTo[fieldName] = 'en';
+            } else {
+                // For email, use a default if not provided
+                if (fieldName === 'email' && billTo.email) {
+                    requestBillTo[fieldName] = billTo.email;
+                } else if (fieldName === 'language') {
+                    requestBillTo[fieldName] = 'en';
+                }
             }
         });
     } else {
@@ -199,6 +210,10 @@ function createBasicRequest(typeofService, request, lineItemCntr, args) {
     var billTo;
     var shipTo;
     var itemList;
+    var fundingSource ='';
+    if(typeofService.equals('createOrderServiceV2')){
+        fundingSource = args && args.fundingSource ? args.fundingSource.toLowerCase().trim() : '';
+    }
     purchase = commonHelper.GetPurchaseTotalPayPal(lineItemCntr);
     // V2: Only use spec-required purchaseTotals fields
     if (isPayPalV2()) {
@@ -256,9 +271,11 @@ function createBasicRequest(typeofService, request, lineItemCntr, args) {
     if (lineItemCntr.defaultShipment.shippingAddress !== null) {
         shipTo = commonHelper.CreateCybersourceShipToObject(lineItemCntr).shipTo;
         if (shipTo !== null) {
-            if (isPayPalV2()) {
-                request.shipTo = copyShipToV2(shipTo);
-            } else {
+            if (isPayPalV2() && fundingSource === 'venmo') {
+                // Venmo: Skip shipTo in create order — address comes from check status response
+            } else if (isPayPalV2()) {
+                request.shipTo = copyShipToV2(shipTo, fundingSource);
+            } else if(fundingSource!='venmo'){
                 request.shipTo = libCybersource.copyShipTo(shipTo);
             }
         }
@@ -337,8 +354,13 @@ function createOrderServiceV2(lineItemCntr, args) {
     apOrderService.cancelURL = URLUtils.https('Checkout-Begin', 'stage', 'payment').toString();
 
     request.apOrderService = apOrderService;
-    request.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
-
+    // Set Payment Type based on Funding Source
+    if (fundingSource === 'venmo') {
+        request.apPaymentType = CybersourceConstants.VENMO_PAYMENT_TYPE;
+    } else {
+        request.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+    }
+    
     request.authorizationOptions = new csReference.AuthorizationOptions();
     if (args.orderType === 'STANDARD') {
         request.authorizationOptions.authType = 'CAPTURE';
@@ -352,6 +374,27 @@ function createOrderServiceV2(lineItemCntr, args) {
         request.invoiceHeader = new csReference.InvoiceHeader();
     }
     request.invoiceHeader.merchantDescriptor = descriptorValue;
+
+    // Per Venmo Create Order spec: invoiceHeader.productDescription is required in the sample
+    // and recommended for Venmo orders. Derive from first line item or use a default.
+    var productDescriptionValue = '';
+    var allLineItems = lineItemCntr.getAllProductLineItems();
+    if (!empty(allLineItems) && allLineItems.length > 0) {
+        var firstItem = allLineItems[0];
+        productDescriptionValue = firstItem.productName || firstItem.lineItemText || descriptorValue;
+        // If multiple items, append count
+        if (allLineItems.length > 1) {
+            productDescriptionValue = productDescriptionValue + ' and ' + (allLineItems.length - 1) + ' more item(s)';
+        }
+    } else {
+        productDescriptionValue = descriptorValue;
+    }
+    // Truncate to 127 chars (PayPal/CyberSource field limit)
+    if (productDescriptionValue.length > 127) {
+        productDescriptionValue = productDescriptionValue.substring(0, 124) + '...';
+    }
+    //request.invoiceHeader.productDescription = productDescriptionValue;
+    Logger.info('[PayPalFacade] V2 invoiceHeader.productDescription = {0}', productDescriptionValue);
 
     if (args.payPalCreditFlag) {
         session.forms.billing.paymentMethod.value = CybersourceConstants.METHOD_PAYPAL_CREDIT;
@@ -454,10 +497,10 @@ function addDecisionManager(request) {
      * Name: checkStatusService
      * Description: Returns customer information. Returns the billing agreement details
      * if you initiated the creation of a billing agreement.
-     * Per V2 spec: Uses checkStatusRequestID and apPaymentType PYPLP.
+     * Per V2 spec: Uses checkStatusRequestID and appropriate apPaymentType (PYPLP or VNMOP).
      * @param {dw.order.LineItemCtnr} lineItemCntr - Order or basket
      * @param {String} requestId - The requestID from a previous service response
-     * @param {String} fundingSource - Optional. Funding source identifier
+     * @param {String} fundingSource - Optional. 'venmo' or 'paypal' to set correct payment type
      * @returns {Object} Check status result with response and billing agreement flag
 *************************************************************************** */
 function checkStatusService(lineItemCntr, requestId, fundingSource) {
@@ -474,7 +517,13 @@ function checkStatusService(lineItemCntr, requestId, fundingSource) {
     if (isPayPalV2()) {
         apCheckStatusService.checkStatusRequestID = requestId;
 
-        request.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+        // Set payment type based on funding source
+        var fs = fundingSource ? fundingSource.toLowerCase().trim() : '';
+        if (fs === 'venmo') {
+            request.apPaymentType = CybersourceConstants.VENMO_PAYMENT_TYPE;
+        } else {
+            request.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+        }
     } else {
         // V1: Use billingAgreementID if available, otherwise use checkStatusRequestID
         request.apPaymentType = 'PPL';
@@ -537,15 +586,16 @@ function authorizeService(lineItemCntr, paymentInstrument) {
     var serviceRequest = new csReference.RequestMessage();
 
     if (isPayPalV2()) {
-        // V2 Auth: Include DM and fingerprint
-        CybersourceHelper.apDecisionManagerService(paymentInstrument.paymentMethod, serviceRequest);
-        if (serviceRequest.decisionManager && serviceRequest.decisionManager.enabled && CybersourceHelper.getDigitalFingerprintEnabled()) {
-            libCybersource.setClientData(serviceRequest, lineItemCntr.orderNo, libCybersource.replaceCharsInSessionID(session.sessionID));
-        } else {
-            libCybersource.setClientData(serviceRequest, lineItemCntr.orderNo);
-        }
+        // V2 Auth: Only send fields documented in paypalv2 spec (section: Required Fields for Authorizing a Payment)
+        // Undocumented fields (billTo, shipTo, items, purchaseTotals, decisionManager) may cause 102 invalidField errors
+        libCybersource.setClientData(serviceRequest, lineItemCntr.orderNo);
 
-        serviceRequest.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+        var fundingSource = paymentInstrument.paymentTransaction.custom.fundingSource;
+        if (fundingSource && fundingSource.toLowerCase() === 'venmo') {
+            serviceRequest.apPaymentType = CybersourceConstants.VENMO_PAYMENT_TYPE;
+        } else {
+            serviceRequest.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+        }
 
         var apAuthService = new CybersourceHelper.getcsReference().APAuthService();
         apAuthService.run = true;
@@ -584,16 +634,16 @@ function saleService(lineItemCntr, paymentInstrument) {
     var serviceRequest = new csReference.RequestMessage();
 
     if (isPayPalV2()) {
-        // V2 Sale: Include DM and fingerprint
-        CybersourceHelper.apDecisionManagerService(paymentInstrument.paymentMethod, serviceRequest);
-        if (serviceRequest.decisionManager && serviceRequest.decisionManager.enabled && CybersourceHelper.getDigitalFingerprintEnabled()) {
-            libCybersource.setClientData(serviceRequest, lineItemCntr.orderNo,
-                libCybersource.replaceCharsInSessionID(session.sessionID));
-        } else {
-            libCybersource.setClientData(serviceRequest, lineItemCntr.orderNo);
-        }
+        // V2 Sale: Only send fields documented in paypalv2 spec (section: Required Fields for Processing a Sale)
+        // Undocumented fields (decisionManager, deviceFingerprintID) may cause 102 invalidField errors
+        libCybersource.setClientData(serviceRequest, lineItemCntr.orderNo);
 
-        serviceRequest.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+        var fundingSource = paymentInstrument.paymentTransaction.custom.fundingSource;
+        if (fundingSource && fundingSource.toLowerCase() === 'venmo') {
+            serviceRequest.apPaymentType = CybersourceConstants.VENMO_PAYMENT_TYPE;
+        } else {
+            serviceRequest.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+        }
 
         var apSaleService = new CybersourceHelper.getcsReference().APSaleService();
         apSaleService.run = true;
@@ -693,6 +743,9 @@ function PayPalReversalService(requestID, merchantRefCode, paymentType, purchase
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
     var serviceRequest = new csReference.RequestMessage();
 
+    var purchaseObject = CommonHelper.CreateCyberSourcePurchaseTotalsObject_UserData(currency, purchaseTotal);
+    purchaseObject = purchaseObject.purchaseTotals;
+    serviceRequest.purchaseTotals = libCybersource.copyPurchaseTotals(purchaseObject);
     libCybersource.setClientData(serviceRequest, merchantRefCode);
 
     if (isPayPalV2()) {
@@ -811,7 +864,7 @@ function billagreementService(requestId, orderRef, paymentType) {
     // V1 vs V2: Set appropriate payment type
     // V1: 'PPL' (default for backward compatibility)
     // V2: 'PYPLP' (passed as parameter when called from V2 context)
-    var isV2 = (paymentType === CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE);
+    var isV2 = (paymentType === CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE || paymentType === CybersourceConstants.VENMO_PAYMENT_TYPE);
     serviceRequest.apPaymentType = paymentType || 'PPL';
 
     var apBillingAgreementService = new CybersourceHelper.getcsReference().APBillingAgreementService();
@@ -838,13 +891,18 @@ function updateOrderServiceV2(lineItemCntr, orderRequestID, fundingSource) {
     var commonHelper = require('*/cartridge/scripts/helper/CommonHelper');
     var shipTo = commonHelper.CreateCybersourceShipToObject(lineItemCntr).shipTo;
     request.shipTo = copyShipToV2(shipTo);
-    libCybersource.setClientData(request, lineItemCntr.UUID);
+    libCybersource.setClientData(request, lineItemCntr.orderNo || lineItemCntr.UUID);
     var apUpdateOrderService = new csReference.APUpdateOrderService();
     apUpdateOrderService.run = true;
     apUpdateOrderService.orderRequestID = orderRequestID;
 
     request.apUpdateOrderService = apUpdateOrderService;
-    request.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+    if(fundingSource.equals('venmo')){
+        request.apPaymentType = CybersourceConstants.VENMO_PAYMENT_TYPE;
+    }else{
+        request.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+    }
+    
 
     return payPalSerivceInterface(request);
 }
@@ -866,7 +924,7 @@ function voidOrderServiceV2(orderRequestID) {
 /**
  * Re-authorize a PayPal Payment
  * Per V2 spec: Re-authorization requires BOTH linkToRequest (previous auth) and orderRequestID (original create order).
- * Note: Cannot re-authorize transactions using saved credentials.
+ * Note: Cannot re-authorize Venmo or transactions using saved credentials.
  * Note: For reversal after re-auth, use the INITIAL authorization requestID.
  * @param {dw.order.LineItemCtnr} lineItemCntr - Order or basket
  * @param {dw.order.PaymentInstrument} paymentInstrument - Payment instrument with orderRequestID
@@ -875,15 +933,7 @@ function voidOrderServiceV2(orderRequestID) {
  */
 function reauthorizeServiceV2(lineItemCntr, paymentInstrument, authRequestID) {
     var request = new csReference.RequestMessage();
-
-    // Per spec (page 68): Re-auth only requires linkToRequest, orderRequestID,
-    // purchaseTotals (currency + grandTotalAmount), apPaymentType, merchantID,
-    // and merchantReferenceCode. Do NOT include items, shipTo, or billTo —
-    // extra fields can cause reasonCode 102 (INVALID_REQUEST).
-    var commonHelper = require('*/cartridge/scripts/helper/CommonHelper');
-    var purchase = commonHelper.GetPurchaseTotalPayPal(lineItemCntr);
-    request.purchaseTotals = copyPurchaseTotalsV2(purchase);
-
+    createBasicRequest('reauthorizeServiceV2', request, lineItemCntr);
     libCybersource.setClientData(request, lineItemCntr.orderNo || lineItemCntr.UUID);
 
     var apAuthService = new csReference.APAuthService();

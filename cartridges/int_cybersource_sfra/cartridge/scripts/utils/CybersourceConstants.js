@@ -55,8 +55,9 @@ CybersourceConstants.KLARNA_PAYMENT_TYPE = 'KLI';
 CybersourceConstants.PAYPAL_PAYMENT_TYPE = 'PPL';
 CybersourceConstants.KLARNA_PAYMENT_METHOD = 'KLARNA';
 CybersourceConstants.WECHAT_PAYMENT_METHOD = 'WECHAT';
-var paymentProcessorArr = ['CYBERSOURCE_ALIPAY', 'BANK_TRANSFER', 'MCH', 'SOF', 'IDL', 'KLARNA_CREDIT', 'CYBERSOURCE_WECHAT'];
+var paymentProcessorArr = ['CYBERSOURCE_ALIPAY', 'BANK_TRANSFER', 'MCH', 'SOF', 'IDL', 'KLARNA_CREDIT', 'CYBERSOURCE_WECHAT', 'CYBERSOURCE_PAYPAL'];
 CybersourceConstants.PAYMENTPROCESSORARR = paymentProcessorArr;
+CybersourceConstants.PAYPAL_PROCESSOR = 'CYBERSOURCE_PAYPAL';
 CybersourceConstants.METHOD_CREDIT_CARD = 'CREDIT_CARD';
 CybersourceConstants.BANCONTACT_PAYMENT_METHOD = 'BANCONTACT';
 CybersourceConstants.SOFORT_PAYMENT_METHOD = 'SOFORT';
@@ -87,5 +88,6 @@ CybersourceConstants.SA_GOTO = 'GOTO';
 CybersourceConstants.SA_CANCEL = 'SA_CANCEL';
 CybersourceConstants.SECUREACCEPTANCEHELPER = CybersourceConstants.CS_CORE_SCRIPT + 'secureacceptance/helper/SecureAcceptanceHelper';
 CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE = 'PYPLP';
+CybersourceConstants.VENMO_PAYMENT_TYPE = 'VNMOP';
 
 module.exports = CybersourceConstants;

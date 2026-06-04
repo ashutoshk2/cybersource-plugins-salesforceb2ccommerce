@@ -276,7 +276,9 @@ server.get(
             pi.paymentTransaction.custom.requestId = requestID;
             pi.paymentTransaction.custom.payerID = payerID;
             pi.paymentTransaction.custom.apSessionProcessorTID = token;
-            pi.paymentTransaction.custom.apPaymentType = CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
+            pi.paymentTransaction.custom.apPaymentType = fundingSource === 'venmo'
+                ? CybersourceConstants.VENMO_PAYMENT_TYPE
+                : CybersourceConstants.PAYPAL_V2_PAYMENT_TYPE;
             // V2: Store orderRequestID so Auth/Sale can reference it
             pi.paymentTransaction.custom.orderRequestID = requestID;
             pi.paymentTransaction.custom.fundingSource = fundingSource;
@@ -329,14 +331,6 @@ server.post(
     function (req, res, next) {
         var adapter = require(CybersourceConstants.PAYPAL_ADAPTOR);
         var Logger = require('dw/system/Logger').getLogger('Cybersource');
-        var Site = require('dw/system/Site');
-
-        // V1-only route: redirect to InitiatePaypalV2 if V2 is enabled
-        if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2')) {
-            Logger.error('[CYBPaypal-InitiatePaypalExpress] V2 is enabled - use InitiatePaypalV2 instead');
-            secureJsonResponse(res, { success: false, error: true, errorMessage: 'Use PayPal V2 endpoint' });
-            return next();
-        }
 
         var BasketMgr = require('dw/order/BasketMgr');
         var cart = BasketMgr.getCurrentBasket();

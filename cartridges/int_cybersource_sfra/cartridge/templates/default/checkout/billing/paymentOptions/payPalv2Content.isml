@@ -13,6 +13,7 @@
 
         <isscript>
             var client_Id = dw.system.Site.getCurrent().getCustomPreferenceValue('CsPaypalClientID');
+            var enableVenmo = dw.system.Site.getCurrent().getCustomPreferenceValue('CsEnableVenmo');
             // Derive currency from session
             var currentCurrency = session.currency.currencyCode || 'USD';
             // buyer-country is a sandbox-only parameter — only include in test mode
@@ -25,10 +26,18 @@
             // Falls back to 'authorize' if CsPaypalOrderType preference is not configured
             var orderTypePref = dw.system.Site.getCurrent().getCustomPreferenceValue('CsPaypalOrderType');
             var sdkIntent = (orderTypePref && orderTypePref.value === 'STANDARD') ? 'capture' : 'authorize';
+            // Build funding parameters: conditionally enable Venmo based on site preference
+            var enableFunding = 'paylater';
+            var disableFunding = 'card';
+            if (enableVenmo) {
+                enableFunding = 'venmo,' + enableFunding;
+            } else {
+                disableFunding += ',venmo';
+            }
         </isscript>
 
-        <!-- Load V5 SDK with PayLater, dynamic currency and locale -->
-        <script src="https://www.paypal.com/sdk/js?client-id=${client_Id}&enable-funding=paylater&components=buttons,messages,funding-eligibility${buyerCountryParam}&currency=${currentCurrency}&disable-funding=card,venmo&intent=${sdkIntent}"></script>
+        <!-- Load V5 SDK with conditional Venmo, dynamic currency and locale -->
+        <script src="https://www.paypal.com/sdk/js?client-id=${client_Id}&enable-funding=${enableFunding}&components=buttons${buyerCountryParam}&currency=${currentCurrency}&disable-funding=${disableFunding}&intent=${sdkIntent}"></script>
 
         <!-- Rendering Script -->
         <script>
@@ -37,6 +46,9 @@
             var initPayPalV2Buttons = function() {
                 if (paypalV2Rendering) return; // Prevent double-render
                 paypalV2Rendering = true;
+
+                // Track which funding source (paypal/venmo) the customer clicked
+                var currentFundingSource = 'paypal';
 
                 // Ensure PayPal section is visible before rendering
                 // checkout-hidden is set server-side when paidWithPayPal=true (after PayPal approval)
@@ -54,13 +66,17 @@
                             color:  'gold',
                             shape:  'rect'
                         },
+                        // onClick: Capture funding source when button is clicked (before createOrder)
+                        onClick: function(data) {
+                            currentFundingSource = data.fundingSource;
+                        },
                         // createOrder: Called when button is clicked - returns order ID for SDK
                         createOrder: function(data, actions) {
                             // Clear any previous error messages
                             if ($('.error-message').length > 0) { $('.error-message').hide(); }
                             if ($.spinner) { $.spinner().start(); }
 
-                            var fundingSource = data.fundingSource || 'paypal';
+                            var fundingSource = currentFundingSource;
 
                             // Serialize the billing form to send standard checkout data
                             // Use form id fallback - some themes render the form with id #dwfrm_billing
@@ -114,7 +130,7 @@
                             if (data.payerID) {
                                 params.push('PayerID=' + encodeURIComponent(data.payerID));
                             }
-                            params.push('fundingSource=paypal');
+                            params.push('fundingSource=' + encodeURIComponent(currentFundingSource));
                             params.push('billingAgreementFlag=false');
                             params.push('isPayPalCredit=false');
 

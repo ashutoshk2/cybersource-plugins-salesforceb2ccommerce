@@ -1355,8 +1355,7 @@ function getItemObject(typeofService, basket) {
             } else {
                 adjustedLineItemFinalPrice = lineItem.getAdjustedPrice().divide(actualQuantity);
             }
-            itemObject.setUnitPrice(StringUtils.formatNumber(Math.abs(adjustedLineItemFinalPrice.getValue()), '#.00', locale));
-            //itemObject.setUnitPrice(StringUtils.formatNumber(Math.abs(adjustedLineItemFinalPrice.getValue()), '0.00', locale));
+            itemObject.setUnitPrice(StringUtils.formatNumber(Math.abs(adjustedLineItemFinalPrice.getValue()), '0.00', locale));
             itemObject.setQuantity(lineItem.quantityValue);
             itemObject.setProductCode('default');
             if (orderLevelTaxAdjustment != null && !empty(orderLevelTaxAdjustment) && orderLevelAdjustmentPrice.value > 0) {
@@ -1366,8 +1365,7 @@ function getItemObject(typeofService, basket) {
             }
             if (dw.order.TaxMgr.taxationPolicy === dw.order.TaxMgr.TAX_POLICY_NET) {
                 if (adjustedLineItemTaxPrice.available && adjustedLineItemTaxPrice.getValue() > 0) {
-                    itemObject.setTaxAmount(StringUtils.formatNumber(Math.abs(adjustedLineItemTaxPrice.getValue()), '#.00', locale));
-                    //itemObject.setTaxAmount(StringUtils.formatNumber(Math.abs(adjustedLineItemTaxPrice.getValue()), '0.00', locale));
+                    itemObject.setTaxAmount(StringUtils.formatNumber(Math.abs(adjustedLineItemTaxPrice.getValue()), '0.00', locale));
                 } else {
                     itemObject.setTaxAmount(StringUtils.formatNumber(0, '0.00', locale));
                 }
@@ -1418,8 +1416,7 @@ function getItemObject(typeofService, basket) {
             itemObject.setProductCode('PRICE_ADJUSTMENT');
             itemObject.setProductName('PRICE_ADJUSTMENT');
             itemObject.setProductSKU('PRICE_ADJUSTMENT');
-            itemObject.setTaxAmount(StringUtils.formatNumber(Math.abs(lineItem.tax.value), '#.00', locale));
-            //itemObject.setTaxAmount(StringUtils.formatNumber(Math.abs(lineItem.tax.value), '0.00', locale));
+            itemObject.setTaxAmount(StringUtils.formatNumber(Math.abs(lineItem.tax.value), '0.00', locale));
             // V2 Requirement: totalAmount for price adjustment
             itemObject.setTotalAmount(StringUtils.formatNumber(lineItem.price.value, '0.00', locale));
             itemObject.setId(count);
