@@ -10,13 +10,13 @@
 function GetWeChatProduct(prodName, prodDesc) {
     var productData = {};
     /* get the substring of product name and description to 35 and 65 as required by alipay initiate payment service */
-    // eslint-disable-next-line
+     
     if (!empty(prodName) && prodName.length > 35) {
         productData.productName = prodName.substr(0, 35);
     } else {
         productData.productName = prodName;
     }
-    // eslint-disable-next-line
+     
     if (!empty(prodDesc) && prodDesc.length > 65) {
         productData.productDescription = prodDesc.substr(0, 65);
     } else {
@@ -44,10 +44,10 @@ function WeChatSetProductParameters(Order) {
         var lineItem = lineItems.next();
         var productData = {};
         // set the value of product name and description if the line item is an instance of product line item
-        // eslint-disable-next-line
+         
         if (lineItem instanceof ProductLineItem && !empty(lineItem.product)) {
             var prodName = lineItem.product.name;
-            // eslint-disable-next-line
+             
             var prodDesc = !empty(lineItem.product.shortDescription) ? lineItem.product.shortDescription.toString() : '';
             /* get the substring of product name and description to 35 and 65 as required by alipay initiate payment service
             in reference with payment type as domestic or international */
@@ -122,7 +122,7 @@ function CreateSaleServiceRequest(Basket) {
     if (response.decision === 'ACCEPT' && Number(response.reasonCode) === 100) {
         // set the processor token into session variable
         if (Number(response.apSaleReply.reasonCode) === 100) {
-            // eslint-disable-next-line
+             
             session.privacy.WeChatSaleRequestId = response.requestID;
             return {
                 submit: true,
@@ -163,7 +163,7 @@ function HandleRequest(Basket) {
 function CheckStatusServiceRequest(orderNo, paymentInstrument) {
     var PaymentInstrument = paymentInstrument;
     var Transaction = require('dw/system/Transaction');
-    // eslint-disable-next-line
+     
     var requestId = session.privacy.WeChatSaleRequestId;
 
     var paymentType = CybersourceConstants.WECHAT_PAYMENT_TYPE;
@@ -173,7 +173,7 @@ function CheckStatusServiceRequest(orderNo, paymentInstrument) {
     if (response.decision === 'ACCEPT' && Number(response.reasonCode) === 100) {
         // set the processor token into session variable
         if (Number(response.apCheckStatusReply.reasonCode) === 100 && response.apCheckStatusReply.paymentStatus === 'settled') {
-            // eslint-disable-next-line
+             
             session.privacy.wechatCheckStatus = true;
             result.submit = true;
         } else if (Number(response.apCheckStatusReply.reasonCode) === 100 && response.apCheckStatusReply.paymentStatus === 'pending') {
@@ -206,7 +206,7 @@ function AuthorizeRequest(orderNo, paymentInstrument, paymentProcessor) {
     // get the payment processor and assign its value in payment transaction object
     var Transaction = require('dw/system/Transaction');
     Transaction.wrap(function () {
-        // eslint-disable-next-line
+         
         paymentInstrument.paymentTransaction.paymentProcessor = paymentProcessor;
     });
     // call authorization service and process the response

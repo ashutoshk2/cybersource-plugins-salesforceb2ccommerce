@@ -17,11 +17,11 @@ var BankTransferHelper = (function () {
     var getBankListJson = function (paymentMethod) {
         var CustomObjectMgr = require('dw/object/CustomObjectMgr');
         var retObj = null;
-        // eslint-disable-next-line
+         
         if (!empty(paymentMethod)) {
             var existingBankList = CustomObjectMgr.queryCustomObjects('BTBankList', 'custom.paymentType = {0}', null, paymentMethod.ID);
             retObj = [];
-            // eslint-disable-next-line
+             
             while (!empty(existingBankList) && existingBankList.hasNext()) {
                 var bank = existingBankList.next();
                 retObj.push({ name: bank.custom.BankName, id: bank.custom.BankID });
@@ -31,7 +31,7 @@ var BankTransferHelper = (function () {
     };
     var isBankListRequired = function (paymentMethodObj) {
         var paymentMethod = paymentMethodObj;
-        // eslint-disable-next-line
+         
         paymentMethod = dw.order.PaymentMgr.getPaymentMethod(paymentMethod);
         if ('isSupportedBankListRequired' in paymentMethod.custom && paymentMethod.custom.isSupportedBankListRequired) {
             return paymentMethod.custom.isSupportedBankListRequired;
@@ -40,7 +40,7 @@ var BankTransferHelper = (function () {
     };
     var isBicRequired = function (paymentMethodObj) {
         var paymentMethod = paymentMethodObj;
-        // eslint-disable-next-line
+         
         paymentMethod = dw.order.PaymentMgr.getPaymentMethod(paymentMethod);
         if ('isBicEnabled' in paymentMethod.custom && paymentMethod.custom.isBicEnabled) {
             return paymentMethod.custom.isBicEnabled;

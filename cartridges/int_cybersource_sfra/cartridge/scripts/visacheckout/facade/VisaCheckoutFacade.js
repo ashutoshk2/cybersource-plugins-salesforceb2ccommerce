@@ -15,22 +15,22 @@ var csReference = new CybersourceHelper.getcsReference();
  * @param orderNo : String
  */
 
-// eslint-disable-next-line
+ 
 function CCAuthRequest(Basket, OrderNo, IPAddress) {
     var basket = Basket;
     var orderNo = OrderNo;
 
-    /* eslint-disable */
+     
     var wrappedKey = session.forms.visaCheckout.encryptedPaymentWrappedKey.value;
     var data = session.forms.visaCheckout.encryptedPaymentData.value;
     var callID = session.forms.visaCheckout.callId.value;
-    /* eslint-enable */
+     
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
     //* *************************************************************************//
     // Set WebReference & Stub
     //* *************************************************************************//
     var CybersourceHelper = libCybersource.getCybersourceHelper();
-    // eslint-disable-next-line
+     
     var serviceRequest = new csReference.RequestMessage();
 
     //* *************************************************************************//
@@ -111,10 +111,10 @@ function CCAuthRequest(Basket, OrderNo, IPAddress) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     Logger.debug(response);
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || !'OK'.equals(serviceResponse.status)) {
         Logger.error('[VisaCheckoutFacade.js] CCAuthRequest Error : null response');
         return { error: true, errorMsg: 'empty or error in test CCAuthRequest response: ' + serviceResponse };
@@ -140,7 +140,7 @@ function VCDecryptRequest(orderNo, wrappedKey, data, callID) {
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    // eslint-disable-next-line
+     
     var serviceRequest = new csReference.RequestMessage();
     CybersourceHelper.addVCDecryptRequestInfo(serviceRequest, orderNo, wrappedKey, data);
     CybersourceHelper.addVCOrderID(serviceRequest, callID);
@@ -159,7 +159,7 @@ function VCDecryptRequest(orderNo, wrappedKey, data, callID) {
         Logger.error('[VisaCheckoutFacade.js] Error in VCDecryptRequest request ( {0} )', e.message);
         return { error: true, errorMsg: e.message };
     }
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || !'OK'.equals(serviceResponse.status)) {
         Logger.error('[VisaCheckoutFacade.js] response in VCDecryptRequest response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in VCDecryptRequest response: ' + serviceResponse };
@@ -171,19 +171,19 @@ function VCDecryptRequest(orderNo, wrappedKey, data, callID) {
     responseObject.ReasonCode = Number(serviceResponse.reasonCode);
     responseObject.Decision = serviceResponse.decision;
     responseObject.MerchantReferenceCode = serviceResponse.merchantReferenceCode;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.purchaseTotals)) {
         responseObject.PurchaseTotalsCurrency = serviceResponse.purchaseTotals.currency;
     }
-    // eslint-disable-next-line
+     
     responseObject.decryptVisaCheckoutDataReply = (!empty(serviceResponse.decryptVisaCheckoutDataReply)) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.decryptVisaCheckoutDataReply)) {
         responseObject.VCDecryptReasonCode = Number(serviceResponse.decryptVisaCheckoutDataReply.reasonCode);
     }
-    // eslint-disable-next-line
+     
     responseObject.vcReply = (!empty(serviceResponse.vcReply)) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.vcReply)) {
         responseObject.VCXID = serviceResponse.vcReply.xid;
         responseObject.VCParesTimeStamp = serviceResponse.vcReply.paresTimeStamp;
@@ -206,26 +206,26 @@ function VCDecryptRequest(orderNo, wrappedKey, data, callID) {
         responseObject.VCPaymentInstrumentID = serviceResponse.vcReply.paymentInstrumentID;
         responseObject.VCCardVerificationStatus = serviceResponse.vcReply.cardVerificationStatus;
         responseObject.VCCardType = serviceResponse.vcReply.cardType;
-        // eslint-disable-next-line
+         
         responseObject.cardArt = (!empty(serviceResponse.vcReply.cardArt)) ? 'exists' : null;
-        // eslint-disable-next-line
+         
         if (!empty(serviceResponse.vcReply.cardArt)) {
             responseObject.VCCardArtFileName = serviceResponse.vcReply.cardArt.fileName;
             responseObject.VCCardArtHeight = serviceResponse.vcReply.cardArt.height;
             responseObject.VCCardArtWidth = serviceResponse.vcReply.cardArt.width;
         }
     }
-    // eslint-disable-next-line
+     
     responseObject.card = (!empty(serviceResponse.card)) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.card)) {
         responseObject.ExpirationMonth = serviceResponse.card.expirationMonth;
         responseObject.ExpirationYear = serviceResponse.card.expirationYear;
         responseObject.CardSuffix = serviceResponse.card.suffix;
     }
-    // eslint-disable-next-line
+     
     responseObject.shipTo = (!empty(serviceResponse.shipTo)) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.shipTo)) {
         responseObject.shipTo_Address1 = serviceResponse.shipTo.street1;
         address2 = serviceResponse.shipTo.street2 != null ? serviceResponse.shipTo.street2 : '';
@@ -248,9 +248,9 @@ function VCDecryptRequest(orderNo, wrappedKey, data, callID) {
         responseObject.shipTo_FirstName = firstName;
         responseObject.shipTo_LastName = lastName;
     }
-    // eslint-disable-next-line
+     
     responseObject.billTo = (!empty(serviceResponse.billTo)) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.billTo)) {
         responseObject.billTo_Address1 = serviceResponse.billTo.street1;
         address2 = serviceResponse.billTo.street2 != null ? serviceResponse.billTo.street2 : '';
@@ -294,7 +294,7 @@ function PayerAuthSetup(orderNo){
         Logger.error('[VisaCheckoutFacade.js] Error in PayerAuthSetUp request ( {0} )', e.message);
         return { error: true, errorMsg: e.message };
     }
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[VisaCheckoutFacade.js] response in PayerAuthSetUp response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in PayerAuthSetUp response: ' + serviceResponse };
@@ -328,7 +328,7 @@ function PayerAuthEnrollCCAuthRequest(LineItemCtnrObj, Amount, OrderNo) {
         return { error: true };
     }
 
-    /* eslint-disable */
+     
     var wrappedKey = session.forms.visaCheckout.encryptedPaymentWrappedKey.value;
     var data = session.forms.visaCheckout.encryptedPaymentData.value;
     var callID = session.forms.visaCheckout.callId.value;
@@ -337,7 +337,7 @@ function PayerAuthEnrollCCAuthRequest(LineItemCtnrObj, Amount, OrderNo) {
     var serviceRequest = new csReference.RequestMessage();
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
     var deviceType = CommonHelper.getDeviceType(request);
-    /* eslint-enable */
+     
     var paymentMethodID = lineItemCtnrObj.paymentInstrument.paymentMethod;
 
     CybersourceHelper.addPayerAuthEnrollInfo(serviceRequest, orderNo, null, null, amount, null, LineItemCtnrObj.billingAddress.phone, deviceType, null, paymentMethodID);
@@ -400,7 +400,7 @@ function PayerAuthEnrollCCAuthRequest(LineItemCtnrObj, Amount, OrderNo) {
         Logger.error('[VisaCheckoutFacade.js] Error in PayerAuthEnrollCheck request ( {0} )', e.message);
         return { error: true, errorMsg: e.message };
     }
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || !'OK'.equals(serviceResponse.status)) {
         Logger.error('[VisaCheckoutFacade.js] response in PayerAuthEnrollCheck response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in PayerAuthEnrollCheck response: ' + serviceResponse };
@@ -411,9 +411,9 @@ function PayerAuthEnrollCCAuthRequest(LineItemCtnrObj, Amount, OrderNo) {
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     result = CardHelper.ProcessCardAuthResponse(serviceResponse, shipTo, billTo);
     responseObject = result.responseObject;
-    // eslint-disable-next-line
+     
     responseObject.payerAuthEnrollReply = (!empty(serviceResponse.payerAuthEnrollReply)) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.payerAuthEnrollReply)) {
         responseObject.PAReasonCode = Number(serviceResponse.payerAuthEnrollReply.reasonCode);
         responseObject.PACommerceIndicator = serviceResponse.payerAuthEnrollReply.commerceIndicator;
@@ -443,7 +443,7 @@ function PayerAuthValidationCCAuthRequest(LineItemCtnrObj, PaRes, Amount, OrderN
     var lineItemCtnrObj = LineItemCtnrObj;
     var orderNo = OrderNo;
     var amount = Amount;
-    // eslint-disable-next-line
+     
     var signedPaRes = !empty(PaRes) ? dw.util.StringUtils.trim(PaRes) : '';
     // var signedPaRes : String =PaRes;
     signedPaRes = signedPaRes.replace('/[^a-zA-Z0-9/+=]/g', '');
@@ -453,12 +453,12 @@ function PayerAuthValidationCCAuthRequest(LineItemCtnrObj, PaRes, Amount, OrderN
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    /* eslint-disable */
+     
     var wrappedKey = session.forms.visaCheckout.encryptedPaymentWrappedKey.value;
     var data = session.forms.visaCheckout.encryptedPaymentData.value;
     var callID = session.forms.visaCheckout.callId.value;
     var serviceRequest = new csReference.RequestMessage();
-    /* eslint-enable */
+     
 
     CybersourceHelper.addPayerAuthValidateInfo(serviceRequest, orderNo, signedPaRes, null, amount, null, processorTransactionId);
 
@@ -501,7 +501,7 @@ function PayerAuthValidationCCAuthRequest(LineItemCtnrObj, PaRes, Amount, OrderN
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[VisaCheckoutFacade.js] response in PayerAuthValidation response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in PayerAuthValidation response: ' + serviceResponse };
@@ -512,9 +512,9 @@ function PayerAuthValidationCCAuthRequest(LineItemCtnrObj, PaRes, Amount, OrderN
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     result = CardHelper.ProcessCardAuthResponse(serviceResponse, shipTo, billTo);
     responseObject = result.responseObject;
-    // eslint-disable-next-line
+     
     responseObject.payerAuthValidateReply = (!empty(serviceResponse.payerAuthValidateReply)) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.payerAuthValidateReply)) {
         responseObject.AuthenticationResult = serviceResponse.payerAuthValidateReply.authenticationResult;
         responseObject.AuthenticationStatusMessage = serviceResponse.payerAuthValidateReply.authenticationStatusMessage;
@@ -563,7 +563,7 @@ function VCCaptureRequest(requestID, merchantRefCode, paymentType, purchaseTotal
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    // eslint-disable-next-line
+     
     var serviceRequest = new csReference.RequestMessage();
 
     var purchaseObject = CommonHelper.CreateCyberSourcePurchaseTotalsObject_UserData(currency, purchaseTotal);
@@ -573,11 +573,11 @@ function VCCaptureRequest(requestID, merchantRefCode, paymentType, purchaseTotal
     serviceRequest.paymentSolution = paymentType;
     libCybersource.setClientData(serviceRequest, merchantRefCode);
     // get the order object from OrderMgr class
-    // eslint-disable-next-line
+     
     var order = dw.order.OrderMgr.getOrder(orderid);
     // Fetch the payment Instrument for the placed order
     var paymentinstr = CardHelper.getNonGCPaymemtInstument(order);
-    // eslint-disable-next-line
+     
     if (!empty(order.getPaymentInstruments(CybersourceConstants.METHOD_VISA_CHECKOUT))) {
         CybersourceHelper.addVCOrderID(serviceRequest, paymentinstr.custom.callId);
     }
@@ -587,7 +587,7 @@ function VCCaptureRequest(requestID, merchantRefCode, paymentType, purchaseTotal
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'Capture', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -606,7 +606,7 @@ function VCCaptureRequest(requestID, merchantRefCode, paymentType, purchaseTotal
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[VisaCheckoutFacade.js] response in VCCaptureRequest response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in VCCaptureRequest response: ' + serviceResponse };
@@ -630,7 +630,7 @@ function VCAuthReversalService(requestID, merchantRefCode, paymentType, currency
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    // eslint-disable-next-line
+     
     var serviceRequest = new csReference.RequestMessage();
     var purchaseTotals = CardHelper.CreateCyberSourcePurchaseTotalsObject_UserData(currency, amount);
     purchaseTotals = libCybersource.copyPurchaseTotals(purchaseTotals.purchaseTotals);
@@ -638,11 +638,11 @@ function VCAuthReversalService(requestID, merchantRefCode, paymentType, currency
     // Adding Payment Solution in Request For Visa Checkout
     serviceRequest.paymentSolution = paymentType;
     // get the order object from OrderMgr class
-    // eslint-disable-next-line
+     
     var order = dw.order.OrderMgr.getOrder(orderid);
     // Fetch the payment Instrument for the placed order
     var paymentinstr = CardHelper.getNonGCPaymemtInstument(order);
-    // eslint-disable-next-line
+     
     if (!empty(order.getPaymentInstruments(CybersourceConstants.METHOD_VISA_CHECKOUT))) {
         CybersourceHelper.addVCOrderID(serviceRequest, paymentinstr.custom.callId);
     }
@@ -653,7 +653,7 @@ function VCAuthReversalService(requestID, merchantRefCode, paymentType, currency
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'AuthReversal', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -674,11 +674,11 @@ function VCAuthReversalService(requestID, merchantRefCode, paymentType, currency
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in VC auth reversal service response: ' + serviceResponse };
     }
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse)) {
         serviceResponse = serviceResponse.object;
     }
@@ -702,7 +702,7 @@ function VCCreditRequest(requestID, merchantRefCode, paymentType, purchaseTotal,
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    // eslint-disable-next-line
+     
     var serviceRequest = new csReference.RequestMessage();
 
     var purchaseObject = CommonHelper.CreateCyberSourcePurchaseTotalsObject_UserData(currency, purchaseTotal);
@@ -711,11 +711,11 @@ function VCCreditRequest(requestID, merchantRefCode, paymentType, purchaseTotal,
     // Adding Payment Solution in Request For Visa Checkout
     serviceRequest.paymentSolution = paymentType;
     // get the order object from OrderMgr class
-    // eslint-disable-next-line
+     
     var order = dw.order.OrderMgr.getOrder(orderid);
     // Fetch the payment Instrument for the placed order
     var paymentinstr = CardHelper.getNonGCPaymemtInstument(order);
-    // eslint-disable-next-line
+     
     if (!empty(order.getPaymentInstruments(CybersourceConstants.METHOD_VISA_CHECKOUT))) {
         CybersourceHelper.addVCOrderID(serviceRequest, paymentinstr.custom.callId);
     }
@@ -726,7 +726,7 @@ function VCCreditRequest(requestID, merchantRefCode, paymentType, purchaseTotal,
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'Credit', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -745,7 +745,7 @@ function VCCreditRequest(requestID, merchantRefCode, paymentType, purchaseTotal,
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[VisaCheckoutFacade.js] response in VCCreditRequest response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in VCCreditRequest response: ' + serviceResponse };

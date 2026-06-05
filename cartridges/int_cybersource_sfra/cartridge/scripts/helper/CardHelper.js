@@ -41,7 +41,7 @@ function HandleDAVResponse(ResponseObject) {
  * @param {Object} serviceResponse
  * @returns response as authorized, error, declined
  */
-// eslint-disable-next-line
+ 
 function ProcessCardAuthResponse(serviceResponse, shipTo, billTo) {
     var responseObject = {};
     responseObject.RequestID = serviceResponse.requestID;
@@ -49,7 +49,7 @@ function ProcessCardAuthResponse(serviceResponse, shipTo, billTo) {
     responseObject.ReasonCode = Number(serviceResponse.reasonCode);
     responseObject.Decision = serviceResponse.decision;
     responseObject.ccAuthReply = (serviceResponse.ccAuthReply !== null) ? 'exists' : null;
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.paySubscriptionCreateReply) && !empty(serviceResponse.paySubscriptionCreateReply.subscriptionID)) {
         responseObject.SubscriptionID = serviceResponse.paySubscriptionCreateReply.subscriptionID;
     }
@@ -63,11 +63,11 @@ function ProcessCardAuthResponse(serviceResponse, shipTo, billTo) {
     /** ******************************************* */
     /* DAV-related WebService response processing */
     /** ******************************************* */
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.missingField)) {
         responseObject.MissingFieldsArray = serviceResponse.missingField;
     }
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.invalidField)) {
         responseObject.InvalidFieldsArray = serviceResponse.invalidField;
     }
@@ -75,7 +75,7 @@ function ProcessCardAuthResponse(serviceResponse, shipTo, billTo) {
         responseObject.DAVReasonCode = Number(serviceResponse.davReply.reasonCode);
 
         var updateShipAddress = Site.getCurrent().getCustomPreferenceValue('CsCorrectShipAddress');
-        // eslint-disable-next-line
+         
         if (updateShipAddress && !empty(serviceResponse.davReply.standardizedAddress1)) {
             var stdAddress = {};
             stdAddress.firstName = shipTo.firstName;
@@ -152,13 +152,13 @@ function HandleCardResponse(ResponseObject, paymentInstrument) {
  */
 function writeOutDebugLog(serviceRequest) {
     // Do not allow debug logging on production.
-    // eslint-disable-next-line
+     
     if (!dw.system.Logger.isDebugEnabled() || dw.system.System.getInstanceType() !== dw.system.System.DEVELOPMENT_SYSTEM) return;
 
-    // eslint-disable-next-line
+     
     var debug = dw.system.Site.getCurrent().getCustomPreferenceValue('CsDebugCybersource');
     if (debug) {
-        // eslint-disable-next-line
+         
         var log = dw.system.Logger.getLogger('CsDebugCybersource');
         log.debug('REQUEST DATA SENT TO CYBERSOURCE');
         log.debug('billTo.firstName {0}', serviceRequest.billTo.firstName);
@@ -188,7 +188,7 @@ function writeOutDebugLog(serviceRequest) {
 function returnCardType(cardType) {
     var cardTypeNew = '';
     if (cardType) {
-        // eslint-disable-next-line
+         
         switch (cardType.toLowerCase()) {
             case 'visa':
                 cardTypeNew = '001';
@@ -242,7 +242,7 @@ function CreateCybersourcePaymentCardObject(formType, SubscriptionID) {
     var cardObject;
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
 
-    /* eslint-disable */
+     
     switch (formType) {
         case 'subscription':
             fullName = session.forms.subscription.firstName.htmlValue + ' ' + session.forms.subscription.lastName.htmlValue;
@@ -278,12 +278,12 @@ function CreateCybersourcePaymentCardObject(formType, SubscriptionID) {
             subscriptionToken = CommonHelper.GetSubscriptionToken(session.forms.creditCard.selectedCardID.value, customer);
             break;
     }
-    /* eslint-enable */
-    // eslint-disable-next-line
+     
+     
     if (!empty(cardType)) {
         var CardObject = require('*/cartridge/scripts/cybersource/CybersourceCardObject');
         cardObject = new CardObject();
-        // eslint-disable-next-line
+         
         if (empty(subscriptionToken)) {
             cardObject.setAccountNumber(accounNumber.replace(/\s/g, ''));
             cardObject.setCvNumber(cvnNumber);
@@ -319,7 +319,7 @@ function CreateCyberSourcePurchaseTotalsObjectUserData(currency, Amount) {
  * @returns {*} obj
  */
 function PayerAuthEnable(cardType) {
-    // eslint-disable-next-line
+     
     var paymentMethod = dw.order.PaymentMgr.getPaymentMethod(dw.order.PaymentInstrument.METHOD_CREDIT_CARD);
     if (paymentMethod === null) { return { error: true, errorMsg: 'Payment method CREDIT_CARD not found' }; }
     var paymentCard;
@@ -395,9 +395,9 @@ function getCardType(cardTypeValue) {
  * If debug value id true then the response is printed in logs.
  * @param serviceResponse : Response from the service
  */
-// eslint-disable-next-line
+ 
 function protocolResponse(serviceResponse) {
-    // eslint-disable-next-line
+     
     var debug = dw.system.Site.getCurrent().getCustomPreferenceValue('CsDebugCybersource');
     var checkValue = true;
     if (checkValue || debug) {
@@ -409,7 +409,7 @@ function protocolResponse(serviceResponse) {
             arr.put(xx, serviceResponse[xx]);
         });
 
-        // eslint-disable-next-line
+         
         if (!empty(serviceResponse.payPalPaymentReply)) {
             Object.keys(serviceResponse.payPalPaymentReply).forEach(function (xx) {
                 // trace('checking ' + xx);
@@ -463,7 +463,7 @@ function CardResponse(order, paymentInstrument, serviceResponse) {
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    // eslint-disable-next-line
+     
     if (!(CybersourceHelper.getDavEnable() && CybersourceHelper.getDavOnAddressVerificationFailure() === 'REJECT' && serviceResponse.ReasonCode !== 100 && !empty(serviceResponse.DAVReasonCode) && serviceResponse.DAVReasonCode !== 100)) {
         // simply logging detail response not utilized
         HandleDAVResponse(serviceResponse);
@@ -480,11 +480,11 @@ function CardResponse(order, paymentInstrument, serviceResponse) {
         var PaymentInstrumentUtils = require('*/cartridge/scripts/utils/PaymentInstrumentUtils');
         PaymentInstrumentUtils.UpdatePaymentTransactionCardAuthorize(paymentInstrument, serviceResponse);
         if (serviceResponse.StandardizedAddress && (serviceResponse.ReasonCode === '100' || serviceResponse.ReasonCode === '480')) {
-            // eslint-disable-next-line
+             
             CommonHelper.UpdateOrderShippingAddress(serviceResponse.StandardizedAddress, order, session.forms.shipping.shippingAddress.shippingAddressUseAsBillingAddress.value);
         }
         if (serviceResponse.ReasonCode === '100' || serviceResponse.ReasonCode === '480') {
-            // eslint-disable-next-line
+             
             addOrUpdateToken(paymentInstrument, customer.authenticated ? customer : null);
         }
         // returns response as authorized, error, declined based on ReasonCode

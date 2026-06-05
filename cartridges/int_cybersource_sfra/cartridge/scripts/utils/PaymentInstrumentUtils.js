@@ -34,29 +34,29 @@ function UpdateMobilePaymentTransactionCardAuthorize(paymentInstrmt, responseObj
     if (paymentInstrument != null && svcResponse != null) {
         Transaction.wrap(function () {
             paymentInstrument.paymentTransaction.transactionID = svcResponse.RequestID;
-            // eslint-disable-next-line
+             
             if (!empty(responseObject.CardType)) {
                 paymentInstrument.paymentTransaction.custom.cardType = svcResponse.CardType;
             }
 
-            // eslint-disable-next-line
+             
             if (!empty(responseObject.requestParam)) {
                 var PaymentMgr = require('dw/order/PaymentMgr');
                 var paymentProcessor = PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor();
                 paymentInstrument.paymentTransaction.paymentProcessor = paymentProcessor;
-                /* eslint-disable */
+                 
                 paymentInstrument.creditCardNumber = !empty(responseObject.requestParam.NetworkToken) === true ? responseObject.requestParam.NetworkToken : 'N/A';
                 paymentInstrument.creditCardType = !empty(responseObject.requestParam.CardType) === true ? responseObject.requestParam.CardType : 'N/A';
                 paymentInstrument.creditCardExpirationMonth = !empty(responseObject.requestParam.TokenExpirationMonth) === true ? responseObject.requestParam.TokenExpirationMonth : 'N/A';
                 paymentInstrument.creditCardExpirationYear = !empty(responseObject.requestParam.TokenExpirationYear) === true ? responseObject.requestParam.TokenExpirationYear : 'N/A';
-                /* eslint-enable */
+                 
             }
             paymentInstrument.paymentTransaction.custom.requestId = svcResponse.RequestID;
             paymentInstrument.paymentTransaction.custom.requestToken = svcResponse.RequestToken;
             paymentInstrument.paymentTransaction.custom.authAmount = svcResponse.AuthorizationAmount;
             paymentInstrument.paymentTransaction.custom.authCode = svcResponse.AuthorizationCode;
             paymentInstrument.paymentTransaction.custom.approvalStatus = svcResponse.AuthorizationReasonCode;
-            // eslint-disable-next-line
+             
             if ((svcResponse.ReasonCode === '100' || svcResponse.ReasonCode === '480') && !empty(svcResponse.SubscriptionID) && empty(paymentInstrument.creditCardToken)) {
                 paymentInstrument.setCreditCardToken(responseObject.SubscriptionID);
             }
@@ -74,7 +74,7 @@ function UpdatePaymentTransactionCardAuthorize(paymentInstrmt, responseObject) {
     if (paymentInstrument != null && responseObject != null) {
         Transaction.wrap(function () {
             paymentInstrument.paymentTransaction.transactionID = responseObject.RequestID;
-            // eslint-disable-next-line
+             
             if (!empty(responseObject.CardType)) {
                 paymentInstrument.paymentTransaction.custom.cardType = responseObject.CardType;
             }
@@ -90,10 +90,10 @@ function UpdatePaymentTransactionCardAuthorize(paymentInstrmt, responseObject) {
             //  Also note, that on a fraud rejection, this function will return error:true back to handlePayments,
             //  which will cause the Order to be immediately canceled, skipping the fraud detection hook.
             //  We only need to save the fraud status, and use the hook to handle the Review state.
-            // eslint-disable-next-line
+             
             session.privacy.CybersourceFraudDecision = responseObject.Decision;
 
-            // eslint-disable-next-line
+             
             if ((responseObject.ReasonCode === '100' || responseObject.ReasonCode === '480') && !empty(responseObject.SubscriptionID) && empty(paymentInstrument.creditCardToken)) {
                 paymentInstrument.setCreditCardToken(responseObject.SubscriptionID);
             }
@@ -152,7 +152,7 @@ function checkStatusOrderUpdate(Order, responseObject, paymentType) {
             if (responseObject.apCheckStatusReply !== null) {
                 paymentInstrument.paymentTransaction.custom.apPaymentStatus = responseObject.apCheckStatusReply.paymentStatus;
                 paymentInstrument.paymentTransaction.custom.apInitiatePaymentReconciliationID = responseObject.apCheckStatusReply.reconciliationID;
-                // eslint-disable-next-line
+                 
                 switch (paymentType) {
                     case 'APY':
                     case 'APD':
@@ -177,7 +177,7 @@ function checkStatusOrderUpdate(Order, responseObject, paymentType) {
  */
 function capturePaypalOrderUpdate(Order, capturePaypalObject) {
     var order = Order;
-    // eslint-disable-next-line
+     
     if (order != null && !empty(order.getPaymentInstruments(CybersourceConstants.METHOD_PAYPAL)) && capturePaypalObject != null) {
         Transaction.wrap(function () {
             if (capturePaypalObject.ReasonCode === '100' || capturePaypalObject.ReasonCode === '480') {
@@ -209,11 +209,11 @@ function updatePaymentInstrumentVisaDecrypt(basket, decryptedPaymentData, visaCh
     // Retrieve the inputs
     var visa = decryptedPaymentData;
 
-    // eslint-disable-next-line
+     
     Transaction.wrap(function () {
         var instrument = cart.createPaymentInstrument(CybersourceConstants.METHOD_VISA_CHECKOUT, cart.totalGrossPrice);
         var billingAddress;
-        // eslint-disable-next-line
+         
         var vcCurrentPage = session.privacy.cyb_CurrentPage;
         if (vcCurrentPage !== 'CybBilling') {
             billingAddress = cart.createBillingAddress();
@@ -225,7 +225,7 @@ function updatePaymentInstrumentVisaDecrypt(basket, decryptedPaymentData, visaCh
             throw new Error('Invalid payment instrument for Visa Checkout');
         }
         var cardType;
-        // eslint-disable-next-line
+         
         switch (visa.VCCardType) {
             case 'VISA':
                 cardType = 'Visa';
@@ -315,7 +315,7 @@ function UpdatePaymentTransactionSecureAcceptanceAuthorize(order, responseObject
             //  Also note, that on a fraud rejection, this function will return error:true back to handlePayments,
             //  which will cause the Order to be immediately canceled, skipping the fraud detection hook.
             //  We only need to save the fraud status, and use the hook to handle the Review state.
-            // eslint-disable-next-line
+             
             session.privacy.CybersourceFraudDecision = responseObject.Decision;
         });
     }
@@ -337,7 +337,7 @@ function UpdateOrderBillingShippingDetails(Order, responseHttpMap, isOverrideShi
         Transaction.wrap(function () {
             if (isOverrideBilling) {
                 order.billingAddress.address1 = responseMap.req_bill_to_address_line1;
-                // eslint-disable-next-line
+                 
                 order.billingAddress.address2 = !empty(responseMap.req_bill_to_address_line2) ? responseMap.req_bill_to_address_line2 : null;
                 order.customerEmail = responseMap.req_bill_to_email;
                 order.billingAddress.phone = responseMap.req_bill_to_phone;
@@ -351,7 +351,7 @@ function UpdateOrderBillingShippingDetails(Order, responseHttpMap, isOverrideShi
             if (isOverrideShipping) {
                 var shippingAddress = order.defaultShipment.shippingAddress;
                 shippingAddress.address1 = responseMap.req_ship_to_address_line1;
-                // eslint-disable-next-line
+                 
                 shippingAddress.address2 = !empty(responseMap.req_ship_to_address_line2) ? responseMap.req_ship_to_address_line2 : null;
                 shippingAddress.firstName = responseMap.req_ship_to_forename;
                 shippingAddress.phone = responseMap.req_ship_to_phone;
@@ -379,39 +379,39 @@ function UpdateOrderBillingShippingDetails(Order, responseHttpMap, isOverrideShi
  */
 function updatePaymentInstumenSACard(paymentInstrument, expiryDateString, maskedNumber, cardType, cardToken, firstname, lastName) {
     var dateFieldsArr = [];
-    // eslint-disable-next-line
+     
     if (!empty(expiryDateString)) {
         dateFieldsArr = expiryDateString.split('-');
     }
     var cardtype = CardHelper.getCardType(cardType);
-    /* eslint-disable */
+     
     if (empty(paymentInstrument.getCreditCardType()) || empty(paymentInstrument.getCreditCardExpirationMonth())
         || empty(paymentInstrument.getCreditCardNumber()) || empty(paymentInstrument.getCreditCardHolder())) {
-        /* eslint-enable */
+         
         Transaction.wrap(function () {
             paymentInstrument.setCreditCardType(cardtype);
             if (dateFieldsArr.length === 2) {
                 var mon = dateFieldsArr[0];
                 if (mon.charAt(0).equals('0')) { mon = mon.substr(1); }
-                // eslint-disable-next-line
+                 
                 paymentInstrument.setCreditCardExpirationMonth(parseInt(mon));
-                // eslint-disable-next-line
+                 
                 paymentInstrument.setCreditCardExpirationYear(parseInt(dateFieldsArr[1]));
             }
-            // eslint-disable-next-line
+             
             if (empty(paymentInstrument.getCreditCardNumber())) {
                 paymentInstrument.setCreditCardNumber(maskedNumber);
             }
             paymentInstrument.setCreditCardHolder(firstname + ' ' + lastName);
-            // eslint-disable-next-line
+             
             if (!empty(cardToken)) {
                 paymentInstrument.setCreditCardToken(cardToken);
             }
         });
     }
-    // eslint-disable-next-line
+     
     session.forms.billing.creditCardFields.cardType.value = cardtype;
-    // eslint-disable-next-line
+     
     session.forms.billing.creditCardFields.selectedCardID.value = cardToken;
 }
 
@@ -436,7 +436,7 @@ function MobilePaymentOrderUpdate(order, serviceResponse) {
                 return false;
             }
 
-            // eslint-disable-next-line
+             
             order.setConfirmationStatus(dw.order.Order.CONFIRMATION_STATUS_CONFIRMED);
             return true;
         });
@@ -457,7 +457,7 @@ function MobilePaymentOrderUpdate(order, serviceResponse) {
  * @param {Object} creditCardFields creditCardFields
  */
 function removeDuplicates(creditCardFields) {
-    // eslint-disable-next-line
+     
     var wallet = customer.getProfile().getWallet();
     
     var ccNumber;
@@ -466,7 +466,7 @@ function removeDuplicates(creditCardFields) {
     if (!creditCardFields.CreditCardFields) {
         ccNumber = creditCardFields.cardNumber;
         fieldcardType = CardHelper.getCardType(creditCardFields.cardType);
-        // eslint-disable-next-line
+         
         paymentInstruments = wallet.getPaymentInstruments(dw.order.PaymentInstrument.METHOD_CREDIT_CARD).toArray().sort(function (a, b) {
             return b.getCreationDate() - a.getCreationDate();
         });
@@ -507,7 +507,7 @@ function removeDuplicates(creditCardFields) {
  */
 function updatePaymentInstrumentGP(basket, cardInfo, email) {
     var cart = basket;
-    // eslint-disable-next-line
+     
     Transaction.wrap(function () {
         var instrument = cart.createPaymentInstrument(CybersourceConstants.METHOD_GooglePay, cart.totalGrossPrice);
 
@@ -516,7 +516,7 @@ function updatePaymentInstrumentGP(basket, cardInfo, email) {
             throw new Error('Invalid payment instrument for Google Pay Checkout');
         }
         var cardType;
-        // eslint-disable-next-line
+         
         switch (cardInfo.cardNetwork) {
             case 'VISA':
                 cardType = 'Visa';
@@ -531,7 +531,7 @@ function updatePaymentInstrumentGP(basket, cardInfo, email) {
                 cardType = 'Discover';
                 break;
         }
-        // eslint-disable-next-line
+         
         session.forms.billing.creditCardFields.cardType.value = cardType;
         // Populate payment instrument values
         instrument.setCreditCardType(cardType);
@@ -631,7 +631,7 @@ function getDetailsObject(paymentForm) {
  * @param {Object} paymentForm - form object
  * @returns {Object} a plain object of payment instrument
  */
-// eslint-disable-next-line
+ 
 function setDetailsObject(paymentForm) {
     return {
         name: '',

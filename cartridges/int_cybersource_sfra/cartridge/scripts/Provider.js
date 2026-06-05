@@ -13,13 +13,13 @@ var Cybersource = require('*/cartridge/scripts/Cybersource');
 /**
  * Process redirect url response of secure acceptance redirect
  */
-// eslint-disable-next-line
+ 
 function saredirect(args) {
     var secureAcceptanceAdapter = require('*/cartridge/scripts/secureacceptance/adapter/SecureAcceptanceAdapter');
-    // eslint-disable-next-line
+     
     var secureAcceptanceResponse = secureAcceptanceAdapter.SAResponse(request.httpParameterMap);
     var returnVariable;
-    // eslint-disable-next-line
+     
     session.privacy.orderId = request.httpParameterMap.req_reference_number.stringValue;
     switch (secureAcceptanceResponse.nextStep) {
         case CybersourceConstants.SA_SUBMITORDER: returnVariable = { submit: true, Order: secureAcceptanceResponse.data };
@@ -54,13 +54,13 @@ function saredirect(args) {
 /**
  * Process redirect url response of secure acceptance iframe
  */
-// eslint-disable-next-line
+ 
 function saiframe(args) {
     var secureAcceptanceAdapter = require('*/cartridge/scripts/secureacceptance/adapter/SecureAcceptanceAdapter');
-    // eslint-disable-next-line
+     
     var secureAcceptanceResponse = secureAcceptanceAdapter.SAResponse(request.httpParameterMap);
     var returnVariable;
-    // eslint-disable-next-line
+     
     session.privacy.orderId = request.httpParameterMap.req_reference_number.stringValue;
     switch (secureAcceptanceResponse.nextStep) {
         case CybersourceConstants.SA_SUBMITORDER: returnVariable = { submit: true, Order: secureAcceptanceResponse.data };
@@ -88,7 +88,7 @@ function saiframe(args) {
 /**
  * Process redirect url response of alipay
  */
-// eslint-disable-next-line
+ 
 function alipay(Order) {
     var order = Order;
     var commonHelper = require('*/cartridge/scripts/helper/CommonHelper');
@@ -114,7 +114,7 @@ function alipay(Order) {
 /**
  * Process redirect url response of bank transfer
  */
-// eslint-disable-next-line
+ 
 function banktransfer(Order) {
     var order = Order;
     var bankAdaptor = require('*/cartridge/scripts/banktransfer/adaptor/BankTransferAdaptor');
@@ -193,11 +193,11 @@ function klarna(Order) {
 /**
  * Process cancel or fail response from bank transfer
  */
-// eslint-disable-next-line
+ 
 function cancelfail(Order) {
     var order = Order;
     var orderResult = {};
-    // eslint-disable-next-line
+     
     if (!request.httpParameterMap.cfk.booleanValue) {
         orderResult = Cybersource.GetOrder(order);
     } else {
@@ -209,7 +209,7 @@ function cancelfail(Order) {
     if (orderResult.error) {
         return { carterror: true };
     }
-    // eslint-disable-next-line
+     
     session.privacy.SkipTaxCalculation = false;
     var Transaction = require('dw/system/Transaction');
     var OrderMgr = require('dw/order/OrderMgr');
@@ -236,7 +236,7 @@ function card(args) {
         return { carterror: true };
     }
     var order = orderResult.Order;
-    /* eslint-disable */
+     
     if (session.privacy.process3DRequest) {
         session.privacy.process3DRequest = false;
         session.privacy.process3DRequestParent = true;
@@ -255,7 +255,7 @@ function card(args) {
             return { sca: true, Order: order };
         }
     }
-    /* eslint-enable */
+     
     return { submit: true, Order: order };
 }
 
@@ -304,7 +304,7 @@ function safail(order) {
  * @returns {*} obj
  */
 function check(args) {
-    // eslint-disable-next-line
+     
     var providerParam = request.httpParameterMap.provider.stringValue;
     var result = {};
     switch (providerParam) {

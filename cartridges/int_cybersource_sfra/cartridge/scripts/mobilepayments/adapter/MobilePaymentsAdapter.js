@@ -31,7 +31,7 @@ function processPayment(order) {
             MobilePaymentType: result.MobilePaymentType
         };
         var Bytes = require('dw/util/Bytes');
-        // eslint-disable-next-line
+         
         if (!empty(result.PaymentData)) {
             paymentAPIRequestParams.data = require('dw/crypto/Encoding').toBase64(new Bytes(JSON.stringify(result.PaymentData)));
             result.ServiceResponse = MobilePaymentFacade.mobilePaymentAuthRequest(paymentAPIRequestParams);
@@ -56,11 +56,11 @@ function processPayment(order) {
         }
 
         //  Save fraud response to session.
-        // eslint-disable-next-line
+         
         if (!empty(result.ServiceResponse.serviceResponse) && !empty(result.ServiceResponse.serviceResponse.Decision)) {
             var Transaction = require('dw/system/Transaction');
             Transaction.wrap(function () {
-                // eslint-disable-next-line
+                 
                 session.privacy.CybersourceFraudDecision = result.ServiceResponse.serviceResponse.Decision;
             });
         }
@@ -94,9 +94,9 @@ function processPaymentGP(order) {
         MobilePaymentType: CybersourceConstants.METHOD_GooglePay
     };
     // var Bytes = require('dw/util/Bytes');
-    // eslint-disable-next-line
+     
     if (!empty(result.PaymentData)) {
-        // eslint-disable-next-line
+         
         paymentAPIRequestParams.data = paymentInstrument.custom.GooglePayEncryptedData;
         // paymentAPIRequestParams.data = require('dw/crypto/Encoding').toBase64(new Bytes(JSON.stringify(result.PaymentData)));
         result.ServiceResponse = MobilePaymentFacade.mobilePaymentAuthRequest(paymentAPIRequestParams);
@@ -113,11 +113,11 @@ function processPaymentGP(order) {
     }
 
     //  Save fraud response to session.
-    // eslint-disable-next-line
+     
     if (!empty(result.ServiceResponse.serviceResponse) && !empty(result.ServiceResponse.serviceResponse.Decision)) {
         var Transaction = require('dw/system/Transaction');
         Transaction.wrap(function () {
-            // eslint-disable-next-line
+             
             session.privacy.CybersourceFraudDecision = result.ServiceResponse.serviceResponse.Decision;
         });
     }
@@ -139,12 +139,12 @@ function UpdateShipping(shippingDetails) {
     var logger = require('dw/system/Logger');
     var Resource = require('dw/web/Resource');
 
-    // eslint-disable-next-line
+     
     if (!empty(shipment.getShippingAddress())) {
         return { success: true };
     }
     try {
-        // eslint-disable-next-line
+         
         Transaction.wrap(function () {
             // Create or replace the shipping address
             shippingAddress = shipment.createShippingAddress();
@@ -187,7 +187,7 @@ function UpdateBilling(Basket, GPCheckoutPaymentData, email) {
         if (PaymentMgr.getPaymentMethod(Resource.msg('paymentmethodname.googlepay', 'cybersource', null)).isActive()) {
             var basket = BasketMgr.getCurrentOrNewBasket();
             // Retrieve the inputs
-            // eslint-disable-next-line
+             
             if (!empty(Basket)) {
                 Transaction.wrap(function () {
                     CommonHelper.removeExistingPaymentInstruments(basket);

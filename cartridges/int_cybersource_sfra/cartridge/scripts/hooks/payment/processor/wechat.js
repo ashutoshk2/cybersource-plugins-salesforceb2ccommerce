@@ -20,12 +20,12 @@ function Handle(args) {
     return CommonHelper.HandleRequest(args);
 }
 
-// eslint-disable-next-line
+ 
 function Authorize(orderNumber, paymentInstrument, paymentProcessor) {
     // declare local variables
     var BasketMgr = require('dw/order/BasketMgr');
     var OrderMgr = require('dw/order/OrderMgr');
-    // eslint-disable-next-line
+     
     var currentBasket = !empty(BasketMgr.getCurrentBasket()) ? BasketMgr.getCurrentBasket() : OrderMgr.getOrder(orderNumber);
     CommonHelper.HandleRequest(currentBasket);
     var response = WeChatAdaptor.HandleRequest(currentBasket, true);

@@ -21,13 +21,13 @@ var Site = require('dw/system/Site');
 function GetAlipayProduct(prodName, prodDesc) {
     var productData = {};
     /* get the substring of product name and description to 35 and 65 as required by alipay initiate payment service */
-    // eslint-disable-next-line
+     
     if (!empty(prodName) && prodName.length > 35) {
         productData.productName = prodName.substr(0, 35);
     } else {
         productData.productName = prodName;
     }
-    // eslint-disable-next-line
+     
     if (!empty(prodDesc) && prodDesc.length > 65) {
         productData.productDescription = prodDesc.substr(0, 65);
     } else {
@@ -53,10 +53,10 @@ function AlipaySetProductParameters(Order) {
         var lineItem = lineItems.next();
         var productData = {};
         // set the value of product name and description if the line item is an instance of product line item
-        // eslint-disable-next-line
+         
         if (lineItem instanceof dw.order.ProductLineItem && !empty(lineItem.product)) {
             var prodName = lineItem.product.name;
-            // eslint-disable-next-line
+             
             var prodDesc = !empty(lineItem.product.shortDescription) ? lineItem.product.shortDescription.toString() : '';
             /* get the substring of product name and description to 35 and 65 as required by alipay initiate payment service
             in reference with payment type as domestic or international */
@@ -94,7 +94,7 @@ function CreateCSPurchaseTotalForAlipay(Order) {
     var alipayPaymentType = Site.getCurrent().getCustomPreferenceValue('apPaymentType');
 
     // set the currency code on basis of international and domestic payment type
-    // eslint-disable-next-line
+     
     if (!empty(alipayPaymentType) && alipayPaymentType.value.equals(Resource.msg('alipaycheckout.domesticpaymenttype', 'cybersource', null))
         && !(amount.currencyCode.equals(Resource.msg('alipaycheckout.currency', 'cybersource', null)))) {
         purchaseObject.setCurrency(Resource.msg('alipaycheckout.currency', 'cybersource', null));
@@ -111,7 +111,7 @@ function CreateCSPurchaseTotalForAlipay(Order) {
  *  This function is used to handle Alipay initiate response and return
  *  respective status back to Authorize call
  */
-// eslint-disable-next-line
+ 
 function handleAlipayInitiatePaymentResponse(order, alipayReturnUrl, alipayResponse) {
     // var Site = require('dw/system/Site');
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
@@ -123,7 +123,7 @@ function handleAlipayInitiatePaymentResponse(order, alipayReturnUrl, alipayRespo
             if (Number(alipayResponse.reasonCode) === 100) {
                 var PaymentInstrumentUtils = require('*/cartridge/scripts/utils/PaymentInstrumentUtils');
                 PaymentInstrumentUtils.authorizeAlipayOrderUpdate(order, alipayResponse, alipayPaymentType.value);
-                // eslint-disable-next-line
+                 
                 session.privacy.orderId = order.orderNo;
                 if (Site.getCurrent().getCustomPreferenceValue('CsEndpoint').value.equals('Test')) {
                     return { pending: true, alipayReturnUrl: alipayReturnUrl };
@@ -174,7 +174,7 @@ function AuthorizeAlipay(args) {
     var paymentProcessor = PaymentMgr.getPaymentMethod(args.PaymentInstrument.getPaymentMethod()).getPaymentProcessor();
     var Transaction = require('dw/system/Transaction');
     Transaction.wrap(function () {
-        // eslint-disable-next-line
+         
         args.PaymentInstrument.paymentTransaction.paymentProcessor = paymentProcessor;
     });
     // get Alipay Purchase total and product request details

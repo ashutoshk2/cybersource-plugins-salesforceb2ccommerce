@@ -21,11 +21,11 @@ var LocalServiceRegistry = require('dw/svc/LocalServiceRegistry');
  */
 function filterServiceLog(msg) {
     //  Filter Logging on production system.
-    // eslint-disable-next-line
+     
     if (dw.system.System.getInstanceType() === dw.system.System.PRODUCTION_SYSTEM) {
         //  Filter Logic.
         try {
-            // eslint-disable-next-line
+             
             if (empty(msg)) {
                 return 'Message Missing';
             }
@@ -105,7 +105,7 @@ var CyberSourceTransactionService = LocalServiceRegistry.createService('cybersou
     * @returns {Object} requestObj updated service Request
     */
     createRequest: function (svc, requestObj) {
-        // eslint-disable-next-line
+         
 
         var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
         var CybersourceHelper = libCybersource.getCybersourceHelper();
@@ -113,9 +113,9 @@ var CyberSourceTransactionService = LocalServiceRegistry.createService('cybersou
         var service = csReference.getDefaultService();
         CybersourceHelper.setEndpoint(service);
 
-        // eslint-disable-next-line
+         
         svc.webReference = csReference;
-        // eslint-disable-next-line
+         
         svc.serviceClient = service;
 
         if (requestObj) {

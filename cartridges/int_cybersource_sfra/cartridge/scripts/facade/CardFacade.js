@@ -4,7 +4,7 @@ var Logger = require('dw/system/Logger');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var CSServices = require('*/cartridge/scripts/init/SoapServiceInit');
 var Cybersource = require('*/cartridge/scripts/Cybersource');
-// eslint-disable-next-line
+ 
 var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
 var CybersourceHelper = libCybersource.getCybersourceHelper();
 var csReference = new CybersourceHelper.getcsReference();
@@ -44,6 +44,7 @@ function CCAuthRequest(Basket, OrderNo, IPAddress, SubscriptionID, payerEnrollRe
     var shipTo;
     var purchaseObject;
     var cardObject;
+    var paymentInstrument = null;
     var result = CommonHelper.CreateCyberSourceBillToObject(basket, ReadFromBasket);
     billTo = result.billTo;
     result = CommonHelper.CreateCybersourceShipToObject(basket);
@@ -65,13 +66,12 @@ function CCAuthRequest(Basket, OrderNo, IPAddress, SubscriptionID, payerEnrollRe
     //* *************************************************************************//
     // the request object holds the input parameter for the OnDemand Subscription request
     //* *************************************************************************//
-    // eslint-disable-next-line
+     
     if (!empty(SubscriptionID)) {
         CybersourceHelper.addOnDemandSubscriptionInfo(SubscriptionID, serviceRequest, purchaseObject, orderNo);
     } else if (CybersourceHelper.getSubscriptionTokenizationEnabled().equals('YES')) {
         // Check if payment method exists and is available before subscription creation
-        var paymentInstrument = null;
-        // eslint-disable-next-line
+         
         if (!empty(basket.getPaymentInstruments())) {
             paymentInstrument = basket.getPaymentInstruments()[0];
         }
@@ -93,8 +93,8 @@ function CCAuthRequest(Basket, OrderNo, IPAddress, SubscriptionID, payerEnrollRe
     var enableDAV = CybersourceHelper.getDavEnable();
     var approveDAV = CybersourceHelper.getDavOnAddressVerificationFailure();
     //  lineItemCtnr.paymentInstrument field is deprecated.  Get default payment method.
-    var paymentInstrument = null;
-    // eslint-disable-next-line
+    paymentInstrument = null;
+     
     if (!empty(basket.getPaymentInstruments())) {
         paymentInstrument = basket.getPaymentInstruments()[0];
     }
@@ -121,7 +121,7 @@ function CCAuthRequest(Basket, OrderNo, IPAddress, SubscriptionID, payerEnrollRe
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'CCAuth', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -137,7 +137,7 @@ function CCAuthRequest(Basket, OrderNo, IPAddress, SubscriptionID, payerEnrollRe
         if (paymentInstrument.paymentMethod === CybersourceConstants.METHOD_GooglePay) {
             serviceRequest.paymentSolution = '012';
             var requestEncryptedPayment = new csReference.EncryptedPayment();
-            // eslint-disable-next-line
+             
             requestEncryptedPayment.data = paymentInstrument.custom.GooglePayEncryptedData;
             serviceRequest.encryptedPayment = requestEncryptedPayment;
         }
@@ -153,14 +153,14 @@ function CCAuthRequest(Basket, OrderNo, IPAddress, SubscriptionID, payerEnrollRe
 
     Logger.debug(serviceResponse);
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] CCAuthRequest Error : null response');
         return { error: true, errorMsg: 'empty or error in test CCAuthRequest response: ' + serviceResponse };
     }
     serviceResponse = serviceResponse.object;
     if (serviceResponse.paySubscriptionCreateReply != null) {
-        // eslint-disable-next-line
+         
         session.privacy.subscriptionID = serviceResponse.paySubscriptionCreateReply.subscriptionID;
         Cybersource.SaveCreditCard();
     }
@@ -211,7 +211,7 @@ function DAVRequest(Basket, billTo, shipTo) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] response in DAV response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in DAV response: ' + serviceResponse };
@@ -240,8 +240,7 @@ function DAVRequest(Basket, billTo, shipTo) {
 function PayerAuthSetup(paymentInstrument, OrderNo, CreditCardForm, basket) {
     var creditCardForm = CreditCardForm;
     var orderNo = OrderNo;
-    var paymentInstrument = paymentInstrument;
-    // eslint-disable-next-line
+     
 
     if (creditCardForm === null) {
         Logger.error('[CardFacade.js] Please provide the credit card form element!');
@@ -257,8 +256,8 @@ function PayerAuthSetup(paymentInstrument, OrderNo, CreditCardForm, basket) {
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     var serviceRequest = new csReference.RequestMessage();
     var SubscriptionID = paymentInstrument.getCreditCardToken();
-    var result = CardHelper.CreateCybersourcePaymentCardObject('billing', SubscriptionID);
-    var cardObject = result.card;
+    result = CardHelper.CreateCybersourcePaymentCardObject('billing', SubscriptionID);
+    // var cardObject = result.card;
     CybersourceHelper.addPayerAuthSetupInfo(serviceRequest, creditCardForm, orderNo, paymentInstrument.getCreditCardToken(), billTo, paymentInstrument);
     var serviceResponse = null;
     // send request
@@ -272,7 +271,7 @@ function PayerAuthSetup(paymentInstrument, OrderNo, CreditCardForm, basket) {
         Logger.error('[CardFacade.js] Error in PayerAuthSetUp request ( {0} )', e.message);
         return { error: true, errorMsg: e.message };
     }
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] response in PayerAuthSetUp response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in PayerAuthSetUp response: ' + serviceResponse };
@@ -314,7 +313,7 @@ function PayerAuthEnrollCheck(LineItemCtnrObj, Amount, OrderNo, CreditCardForm, 
     var paymentInstrument = CardHelper.getNonGCPaymemtInstument(lineItemCtnrObj);
     var SubscriptionID = paymentInstrument.getCreditCardToken();
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
-    // eslint-disable-next-line
+     
     var deviceType = CommonHelper.getDeviceType(request);
     var billTo;
     var result = CommonHelper.CreateCyberSourceBillToObject(lineItemCtnrObj, true);
@@ -334,13 +333,13 @@ function PayerAuthEnrollCheck(LineItemCtnrObj, Amount, OrderNo, CreditCardForm, 
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'PayerAuthEnroll', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
     }
 
-    // eslint-disable-next-line
+     
     if (!empty(SubscriptionID)) {
         CybersourceHelper.addOnDemandSubscriptionInfo(SubscriptionID, serviceRequest, purchaseObject, orderNo);
     } else if (CybersourceHelper.getSubscriptionTokenizationEnabled().equals('YES')) {
@@ -363,7 +362,7 @@ function PayerAuthEnrollCheck(LineItemCtnrObj, Amount, OrderNo, CreditCardForm, 
         Logger.error('[CardFacade.js] Error in PayerAuthEnrollCheck request ( {0} )', e.message);
         return { error: true, errorMsg: e.message };
     }
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] response in PayerAuthEnrollCheck response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in PayerAuthEnrollCheck response: ' + serviceResponse };
@@ -377,11 +376,11 @@ function PayerAuthEnrollCheck(LineItemCtnrObj, Amount, OrderNo, CreditCardForm, 
     responseObject.AuthorizationReasonCode = Number(serviceResponse.reasonCode);
     
     if (!empty(serviceResponse.ccAuthReply)) {
-        // eslint-disable-next-line
+         
         if (!empty(serviceResponse.ccAuthReply.authorizationCode)) {
             responseObject.AuthorizationCode = serviceResponse.ccAuthReply.authorizationCode;
         }
-        // eslint-disable-next-line
+         
         if (!empty(serviceResponse.ccAuthReply.amount)) {
             responseObject.AuthorizationAmount = serviceResponse.ccAuthReply.amount;
         }
@@ -410,7 +409,7 @@ function PayerAuthEnrollCheck(LineItemCtnrObj, Amount, OrderNo, CreditCardForm, 
         responseObject.challengeCancelCode = serviceResponse.payerAuthEnrollReply.challengeCancelCode;
         responseObject.jwt = serviceResponse.payerAuthEnrollReply.accessToken;
         responseObject.stepUpUrl = serviceResponse.payerAuthEnrollReply.stepUpUrl;
-        // eslint-disable-next-line
+         
         responseObject.authenticationStatusReason = (!empty(serviceResponse.payerAuthEnrollReply.authenticationStatusReason)) && ((serviceResponse.payerAuthEnrollReply.authenticationStatusReason).toString().length === 1) ? '0' + serviceResponse.payerAuthEnrollReply.authenticationStatusReason : serviceResponse.payerAuthEnrollReply.authenticationStatusReason;
     }
 
@@ -437,11 +436,11 @@ function PayerAuthValidation(PaRes, Amount, OrderNo, CreditCardForm, CreditCardT
     var amount = Amount;
     var creditCardForm = CreditCardForm;
     // var billTo = billTo;
-    // eslint-disable-next-line
+     
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     var SubscriptionID = paymentInstrument.getCreditCardToken();
     var cardObject = CardHelper.CreateCybersourcePaymentCardObject('billing', SubscriptionID);
-    // eslint-disable-next-line
+     
     var signedPaRes = !empty(PaRes) ? dw.util.StringUtils.trim(PaRes) : '';
     signedPaRes = signedPaRes.replace('/[^a-zA-Z0-9/+=]/g', '');
     //* *************************************************************************//
@@ -458,12 +457,12 @@ function PayerAuthValidation(PaRes, Amount, OrderNo, CreditCardForm, CreditCardT
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'PayerAuthValidation', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
     }
-    // eslint-disable-next-line
+     
     if (!empty(SubscriptionID)) {
         CybersourceHelper.addOnDemandSubscriptionInfo(SubscriptionID, serviceRequest, purchaseObject, orderNo);
     } else if (CybersourceHelper.getSubscriptionTokenizationEnabled().equals('YES')) {
@@ -489,7 +488,7 @@ function PayerAuthValidation(PaRes, Amount, OrderNo, CreditCardForm, CreditCardT
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] response in PayerAuthValidation response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in PayerAuthValidation response: ' + serviceResponse };
@@ -502,13 +501,13 @@ function PayerAuthValidation(PaRes, Amount, OrderNo, CreditCardForm, CreditCardT
     responseObject.ReasonCode = Number(serviceResponse.reasonCode);
     responseObject.AuthorizationReasonCode = Number(serviceResponse.reasonCode);
     responseObject.DAVReasonCode = Number(serviceResponse.reasonCode);
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.ccAuthReply)) {
-        // eslint-disable-next-line
+         
         if (!empty(serviceResponse.ccAuthReply.authorizationCode)) {
             responseObject.AuthorizationCode = serviceResponse.ccAuthReply.authorizationCode;
         }
-        // eslint-disable-next-line
+         
         if (!empty(serviceResponse.ccAuthReply.amount)) {
             responseObject.AuthorizationAmount = serviceResponse.ccAuthReply.amount;
         }
@@ -530,7 +529,7 @@ function PayerAuthValidation(PaRes, Amount, OrderNo, CreditCardForm, CreditCardT
         responseObject.cavvAlgorithm = serviceResponse.payerAuthValidateReply.cavvAlgorithm;
         responseObject.effectiveAuthenticationType = serviceResponse.payerAuthValidateReply.effectiveAuthenticationType;
         responseObject.challengeCancelCode = serviceResponse.payerAuthValidateReply.challengeCancelCode;
-        // eslint-disable-next-line
+         
         responseObject.authenticationStatusReason = (!empty(serviceResponse.payerAuthValidateReply.authenticationStatusReason)) && ((serviceResponse.payerAuthValidateReply.authenticationStatusReason).toString().length === 1) ? '0' + serviceResponse.payerAuthValidateReply.authenticationStatusReason : serviceResponse.payerAuthValidateReply.authenticationStatusReason;
         responseObject.acsTransactionID = serviceResponse.payerAuthValidateReply.acsTransactionID;
         responseObject.authorizationPayload = serviceResponse.payerAuthValidateReply.authorizationPayload;
@@ -564,7 +563,7 @@ function CCAuthReversalService(requestID, merchantRefCode, paymentType, currency
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'AuthReversal', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -585,11 +584,11 @@ function CCAuthReversalService(requestID, merchantRefCode, paymentType, currency
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in CC auth reversal service response: ' + serviceResponse };
     }
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse)) {
         serviceResponse = serviceResponse.object;
     }
@@ -624,7 +623,7 @@ function CCCaptureRequest(requestID, merchantRefCode, paymentType, purchaseTotal
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'Capture', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -643,7 +642,7 @@ function CCCaptureRequest(requestID, merchantRefCode, paymentType, purchaseTotal
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] response in CCCaptureRequest response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in CCCaptureRequest response: ' + serviceResponse };
@@ -679,7 +678,7 @@ function CCCreditRequest(requestID, merchantRefCode, paymentType, purchaseTotal,
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'Credit', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -698,7 +697,7 @@ function CCCreditRequest(requestID, merchantRefCode, paymentType, purchaseTotal,
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] response in CCCaptureRequest response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in CCCaptureRequest response: ' + serviceResponse };
@@ -750,7 +749,7 @@ function decisionManager(Basket, OrderNo, ReadFromBasket) {
     //* *************************************************************************//
     // the request object holds the input parameter for the DM request
     //* *************************************************************************//
-    // eslint-disable-next-line
+     
     var paymentMethod = session.forms.billing.paymentMethod.value;
     CybersourceHelper.apDecisionManagerService(paymentMethod, serviceRequest, billTo, shipTo, orderNo, CybersourceHelper.getDigitalFingerprintEnabled(), items);
 
@@ -770,7 +769,7 @@ function decisionManager(Basket, OrderNo, ReadFromBasket) {
         return { error: true, errorMsg: e.message };
     }
     Logger.debug(serviceResponse);
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[CardFacade.js] DM service Error : null response');
         return { error: true, errorMsg: 'empty or error in test DM service response: ' + serviceResponse };

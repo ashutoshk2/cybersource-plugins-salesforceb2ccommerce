@@ -101,7 +101,7 @@ CardObject.prototype = {
         return this.bin;
     },
     setCreditCardToken: function (value) {
-        // eslint-disable-next-line
+         
         if (!empty(value)) {
             this.creditCardToken = value;
         }

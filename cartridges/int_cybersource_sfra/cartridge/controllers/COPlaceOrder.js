@@ -1,17 +1,16 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var server = require('server');
 
 var OrderMgr = require('dw/order/OrderMgr');
 var URLUtils = require('dw/web/URLUtils');
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
-var OrderModel = require('*/cartridge/models/order');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
 var secureRender = secureResponseHelper.secureRender;
 
-// eslint-disable-next-line
+ 
 server.use('Submit', csrfProtection.generateToken, function (req, res, next) {
     var order;
     var orderID = req.querystring.orderID || req.querystring.order_id;

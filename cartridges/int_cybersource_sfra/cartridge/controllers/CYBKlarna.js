@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var server = require('server');
 var BasketMgr = require('dw/order/BasketMgr');
 var Transaction = require('dw/system/Transaction');
@@ -68,8 +68,9 @@ server.post('GetSession', csrfProtection.generateToken, function (req, res, next
     }
 
     // Create billto, shipto, item and purchase total object
+    var result;
     if (!empty(basket.billingAddress && basket.billingAddress.address1) || !empty(basket.defaultShipment && basket.defaultShipment.shippingAddress)) {
-        var result = CommonHelper.CreateCyberSourceBillToObject(basket, true);
+        result = CommonHelper.CreateCyberSourceBillToObject(basket, true);
         billTo = result.billTo;
     }
     var shipTo;
@@ -78,7 +79,7 @@ server.post('GetSession', csrfProtection.generateToken, function (req, res, next
         shipTo = result.shipTo;
     }
 
-    var result = CommonHelper.CreateCybersourcePurchaseTotalsObject(basket);
+    result = CommonHelper.CreateCybersourcePurchaseTotalsObject(basket);
     purchaseObject = result.purchaseTotals;
     if (purchaseObject.currency === 'N/A' || purchaseObject.grandTotalAmount == 0) {
         var PurchaseTotalsObject = require('*/cartridge/scripts/cybersource/CybersourcePurchaseTotalsObject');
@@ -230,8 +231,6 @@ server.post('KlarnaAuthorizationCallback', function (req, res, next) {
     var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
     var validationHelpers = require('*/cartridge/scripts/helpers/basketValidationHelpers');
     var collections = require('*/cartridge/scripts/util/collections');
-
-    var Site = require('dw/system/Site');
 
     // Parse Klarna response from the request body
     var klarnaResponse = req.body ? JSON.parse(req.body) : null;

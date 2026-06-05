@@ -68,7 +68,7 @@ function ProcessResponse(response, serviceReply, heading) {
     var Resource = require('dw/web/Resource');
     var responseObject = {};
 
-    /* eslint-disable */
+     
     if (!empty(response.object.requestID)) { responseObject.RequestID = response.object.requestID; }
 
     if (!empty(response.object.requestToken)) { responseObject.RequestToken = response.object.requestToken; }
@@ -84,9 +84,9 @@ function ProcessResponse(response, serviceReply, heading) {
     if (!empty(response.object.missingField)) { responseObject.missingField = response.object.missingField; }
 
     if (!empty(heading)) { responseObject.title = Resource.msg(heading, 'cybersource', null); }
-    /* eslint-enable */
+     
 
-    // eslint-disable-next-line
+     
     if (serviceReply in response.object && !empty(response.object[serviceReply])) {
         if ('reconciliationID' in response.object[serviceReply]) {
             responseObject.ReconciliationID = response.object[serviceReply].reconciliationID;
@@ -104,7 +104,7 @@ function ProcessResponse(response, serviceReply, heading) {
             responseObject.ServiceReplyReasonCode = Number(response.object[serviceReply].reasonCode);
         }
     }
-    // eslint-disable-next-line
+     
     session.forms.genericTestInterfaceForm.clearFormElement();
     return responseObject;
 }
@@ -142,7 +142,7 @@ function TestCCAuth(billTo, shipTo, card, purchaseTotals) {
     var cardObject = card;
     var purchaseObject = purchaseTotals;
     var paymentMethod = PaymentInstrument.METHOD_CREDIT_CARD;
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
 
     var serviceRequest = new csReference.RequestMessage();
@@ -189,7 +189,7 @@ function TestCCAuth(billTo, shipTo, card, purchaseTotals) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in test ccauth response: ' + serviceResponse };
     }
@@ -262,7 +262,7 @@ function TestCreateSubscription(billTo, card, purchaseTotals) {
  * @returns {Object} obj
 */
 function TestDAVRequest(billTo, shipTo) {
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
     var paymentMethod = PaymentInstrument.METHOD_CREDIT_CARD;
@@ -278,25 +278,25 @@ function TestDAVRequest(billTo, shipTo) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in TestDAVCheck response: ' + serviceResponse };
     }
     var serviceReply = '';
     var heading = '';
     var responseObject = ProcessResponse(serviceResponse, serviceReply, heading);
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.object.missingField)) {
         responseObject.MissingFieldsArray = serviceResponse.object.missingField;
     }
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse.object.invalidField)) {
         responseObject.InvalidFieldsArray = serviceResponse.object.invalidField;
     }
     responseObject.davReply = (serviceResponse.object.davReply !== null) ? 'exists' : null;
     if (serviceResponse.object.davReply !== null) {
         responseObject.DAVReasonCode = Number(serviceResponse.object.davReply.reasonCode);
-        // eslint-disable-next-line
+         
         if (!empty(serviceResponse.object.davReply.standardizedAddress1)) {
             var stdAddress = {};
             stdAddress.firstName = shipTo.firstName;
@@ -305,13 +305,13 @@ function TestDAVRequest(billTo, shipTo) {
             stdAddress.address2 = serviceResponse.object.davReply.standardizedAddress2;
             stdAddress.city = serviceResponse.object.davReply.standardizedCity;
             // Defect fix: CYB-92 : DAV Country province code
-            /* eslint-disable */
+             
             if ('CsCorrectShipState' in dw.system.Site.getCurrent().getPreferences().getCustom() && dw.system.Site.getCurrent().getCustomPreferenceValue('CsCorrectShipState') === true) {
                 stdAddress.state = serviceResponse.object.davReply.standardizedState;
             } else if (!empty(shipTo.state)) { stdAddress.state = shipTo.state; } else {
                 stdAddress.state = billTo.state;
             }
-            /* eslint-enable */
+             
             stdAddress.postalCode = serviceResponse.object.davReply.standardizedPostalCode;
             // Fix for CYB-91: DAV Country code
             stdAddress.country = serviceResponse.object.davReply.standardizedISOCountry;
@@ -355,15 +355,15 @@ function TestDAVRequest(billTo, shipTo) {
  */
 function TestOnDemandSubscription() {
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
-    // eslint-disable-next-line
+     
     var subscriptionID = session.forms.subscription.subscriptionID.htmlValue;
-    // eslint-disable-next-line
+     
     var currency = session.forms.subscription.currency.htmlValue;
-    // eslint-disable-next-line
+     
     var amount = session.forms.subscription.amount.htmlValue;
     var purchaseObject = CommonHelper.CreateCyberSourcePurchaseTotalsObject_UserData(currency, amount).purchaseTotals;
     // var purchaseObject = purchaseTotals;
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
     var paymentMethod = PaymentInstrument.METHOD_CREDIT_CARD;
@@ -381,7 +381,7 @@ function TestOnDemandSubscription() {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: serviceResponse.status };
     }
@@ -406,7 +406,7 @@ function TestOnDemandSubscription() {
  * @returns {Object} obj
  */
 function TestPayerAuthEnrollCheck(CreditCard) {
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
     var paymentMethod = PaymentInstrument.METHOD_CREDIT_CARD;
@@ -421,7 +421,7 @@ function TestPayerAuthEnrollCheck(CreditCard) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in test PAEnrollCheck response: ' + serviceResponse };
     }
@@ -451,11 +451,11 @@ function TestPayerAuthEnrollCheck(CreditCard) {
  * @returns {Object} obj
  */
 function TestPayerAuthValidation(PaRes, CreditCard) {
-    // eslint-disable-next-line
+     
     var signedPaRes = dw.util.StringUtils.trim(PaRes);
     var paymentMethod = PaymentInstrument.METHOD_CREDIT_CARD;
     signedPaRes = signedPaRes.replace('/[^a-zA-Z0-9/+=]/g', '');
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
     CybersourceHelper.addTestPayerAuthValidateInfo(serviceRequest, signedPaRes, CreditCard);
@@ -467,7 +467,7 @@ function TestPayerAuthValidation(PaRes, CreditCard) {
         Logger.error('[TestFacade.js] Error in PayerAuthValidation request ( {0} )', e.message);
         return { error: true, errorMsg: e.message };
     }
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in TestPayerAuthValidation response: ' + serviceResponse };
     }
@@ -502,7 +502,7 @@ function TestTax(cart) {
     var TaxFacade = require('*/cartridge/scripts/facade/TaxFacade');
     serviceResponse = TaxFacade.TaxationRequest(cart);
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.error || empty(serviceResponse.response)) {
         return { success: false, error: true, errorMsg: 'empty or error in test ccauth response: ' + serviceResponse };
     }
@@ -582,11 +582,11 @@ function TestSACreateToken(billToObject, shipToObject, purchaseObject) {
         var secureAcceptanceHelper = require(CybersourceConstants.SECUREACCEPTANCEHELPER);
         var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
 
-        // eslint-disable-next-line
+         
         sitePreference.access_key = dw.system.Site.getCurrent().getCustomPreferenceValue('SA_Redirect_AccessKey');
-        // eslint-disable-next-line
+         
         sitePreference.profile_id = dw.system.Site.getCurrent().getCustomPreferenceValue('SA_Redirect_ProfileID');
-        // eslint-disable-next-line
+         
         sitePreference.secretKey = dw.system.Site.getCurrent().getCustomPreferenceValue('SA_Redirect_SecretKey');
         sitePreference.formAction = 'https://testsecureacceptance.cybersource.com/token/create';
         sitePreference.signed_field_names = 'access_key,profile_id,transaction_uuid,signed_field_names,unsigned_field_names,signed_date_time,locale,transaction_type,reference_number,amount,currency,ignore_cvn,ignore_avs,skip_decision_manager,bill_to_email,bill_to_address_line1,bill_to_address_line2,bill_to_address_city,bill_to_address_postal_code,bill_to_address_state,bill_to_address_country,bill_to_forename,bill_to_surname,bill_to_phone,ship_to_address_city,ship_to_address_line1,ship_to_address_line2,ship_to_forename,ship_to_phone,ship_to_surname,ship_to_address_state,ship_to_address_postal_code,ship_to_address_country,override_custom_cancel_page,override_custom_receipt_page,payment_method';
@@ -617,9 +617,9 @@ function TestSACreateToken(billToObject, shipToObject, purchaseObject) {
         requestMap.put('signed_date_time', signedDateTime);
         requestMap.put('signed_field_names', sitePreference.signed_field_names);
         requestMap.put('unsigned_field_names', sitePreference.unsigned_field_names);
-        // eslint-disable-next-line
+         
         requestMap.put('override_custom_cancel_page', dw.web.URLUtils.https('CYBServicesTesting-TestSATokenCreateResponse'));
-        // eslint-disable-next-line
+         
         requestMap.put('override_custom_receipt_page', dw.web.URLUtils.https('CYBServicesTesting-TestSATokenCreateResponse'));
 
         var dataToSign = secureAcceptanceHelper.BuildDataToSign(requestMap);
@@ -670,14 +670,14 @@ function createPurchaseTotalObject(CurrentForms, request) {
  */
 function TestSaleService() {
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
 
-    /* eslint-disable */
+     
     var requestID = session.forms.genericTestInterfaceForm.orderRequestID.htmlValue;
     var merchantRefCode = session.forms.genericTestInterfaceForm.merchantReferenceCode.htmlValue;
     var paymentType = session.forms.genericTestInterfaceForm.paymenttype.htmlValue;
-    /* eslint-enable */
+     
     var paymentMethod = getPaymentMethod(paymentType);
 
     var request = new csReference.RequestMessage();
@@ -690,13 +690,13 @@ function TestSaleService() {
     // set the merchant reference code and client data for request
     libCybersource.setClientData(request, merchantRefCode);
 
-    // eslint-disable-next-line
+     
     var Order = dw.order.OrderMgr.getOrder(session.forms.genericTestInterfaceForm.merchantReferenceCode.value);
     var result = CommonHelper.CreateCyberSourceBillToObject(Order, true);
     var billTo = result.billTo;
     request.billTo = libCybersource.copyBillTo(billTo);
 
-    // eslint-disable-next-line
+     
     request = createPurchaseTotalObject(session.forms, request);
     // set the Payment Type
     request.apPaymentType = paymentType;
@@ -716,11 +716,11 @@ function TestSaleService() {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(response) || response.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in test sale service response: ' + response };
     }
-    // eslint-disable-next-line
+     
     if (!empty(response)) {
         responseObject = ProcessResponse(response, serviceReply, heading);
     }
@@ -733,7 +733,7 @@ function TestSaleService() {
  * @returns {Object} obj
  */
 function TestAuthorizeService() {
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var request = new csReference.RequestMessage();
     var response = {};
@@ -745,27 +745,27 @@ function TestAuthorizeService() {
     var apAuthService = {};
 
     // Helper Part
-    // eslint-disable-next-line
+     
     request = createPurchaseTotalObject(session.forms, request); // set the merchant reference code and client data for request
-    // eslint-disable-next-line
+     
     libCybersource.setClientData(request, session.forms.genericTestInterfaceForm.merchantReferenceCode.htmlValue);
 
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
-    // eslint-disable-next-line
+     
     var Order = dw.order.OrderMgr.getOrder(session.forms.genericTestInterfaceForm.merchantReferenceCode.value);
     var result = CommonHelper.CreateCyberSourceBillToObject(Order, true);
     var billTo = result.billTo;
     request.billTo = libCybersource.copyBillTo(billTo);
 
     // set the Payment Type
-    // eslint-disable-next-line
+     
     request.apPaymentType = session.forms.genericTestInterfaceForm.paymenttype.htmlValue;
     ap = new CybersourceHelper.csReference.AP();
     request.ap = ap;
     apAuthService = new CybersourceHelper.csReference.APAuthService();
     serviceReply = 'apAuthReply';
     // set the request ID
-    // eslint-disable-next-line
+     
     apAuthService.orderRequestID = session.forms.genericTestInterfaceForm.orderRequestID.htmlValue;
     request.apAuthService = apAuthService;
     request.apAuthService.run = true;
@@ -779,12 +779,12 @@ function TestAuthorizeService() {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(response) || response.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in test sale service response: ' + response };
     }
 
-    // eslint-disable-next-line
+     
     if (!empty(response)) {
         responseObject = ProcessResponse(response, serviceReply, heading);
     }
@@ -796,7 +796,7 @@ function TestAuthorizeService() {
  * @returns {Object} obj
  */
 function TestRefundService() {
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
 
     var request = new csReference.RequestMessage();
@@ -805,14 +805,14 @@ function TestRefundService() {
     var responseObject = {};
     var heading = 'test.refundserviceresult';
     var apRefundService = {};
-    /* eslint-disable */
+     
     var requestID = session.forms.genericTestInterfaceForm.refundRequestID.htmlValue;
     var merchantRefCode = session.forms.genericTestInterfaceForm.merchantReferenceCode.htmlValue;
     var paymentType = session.forms.genericTestInterfaceForm.refundpaymenttype.htmlValue;
     var paymentMethod = getPaymentMethod(paymentType);
 
     request = createPurchaseTotalObject(session.forms, request);
-    /* eslint-enable */
+     
     // set the merchant reference code and client data for request
     libCybersource.setClientData(request, merchantRefCode);
     // set the Payment Type
@@ -832,11 +832,11 @@ function TestRefundService() {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(response) || response.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in refund service response: ' + response };
     }
-    // eslint-disable-next-line
+     
     if (!empty(response)) {
         responseObject = ProcessResponse(response, serviceReply, heading);
     }
@@ -848,7 +848,7 @@ function TestRefundService() {
  * @returns {Object} obj
  */
 function TestCancelService() {
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var request = new csReference.RequestMessage();
 
@@ -857,11 +857,11 @@ function TestCancelService() {
     var responseObject = {};
     var heading = 'test.cancelserviceresult';
 
-    /* eslint-disable */
+     
     var requestID = session.forms.genericTestInterfaceForm.orderRequestID.htmlValue;
     var merchantRefCode = session.forms.genericTestInterfaceForm.merchantReferenceCode.htmlValue;
     var paymentType = session.forms.genericTestInterfaceForm.paymenttype.htmlValue;
-    /* eslint-enable */
+     
     var paymentMethod = getPaymentMethod(paymentType);
     var apCancelService = {};
 
@@ -884,11 +884,11 @@ function TestCancelService() {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(response) || response.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in cancel service response: ' + response };
     }
-    // eslint-disable-next-line
+     
     if (!empty(response)) {
         responseObject = ProcessResponse(response, serviceReply, heading);
     }
@@ -901,14 +901,14 @@ function TestCancelService() {
  * @returns {Object} obj
  */
 function TestCaptureService() {
-    /* eslint-disable */
+     
     var csReference = new CybersourceHelper.getcsReference();
     var request = new csReference.RequestMessage();
 
     var requestID = session.forms.genericTestInterfaceForm.authRequestID.htmlValue;
     var merchantRefCode = session.forms.genericTestInterfaceForm.merchantReferenceCode.htmlValue;
     var paymentType = session.forms.genericTestInterfaceForm.capturepaymenttype.htmlValue;
-    /* eslint-enable */
+     
     var paymentMethod = getPaymentMethod(paymentType);
     var ccCaptureService = {};
     var apCaptureService = {};
@@ -918,7 +918,7 @@ function TestCaptureService() {
     var responseObject = {};
     var heading = 'test.captureserviceresult';
 
-    // eslint-disable-next-line
+     
     request = createPurchaseTotalObject(session.forms, request);
     // set the merchant reference code and client data for request
     libCybersource.setClientData(request, merchantRefCode);
@@ -927,11 +927,11 @@ function TestCaptureService() {
     if (paymentType.equals('visacheckout')) {
         var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
         // get the order object from OrderMgr class
-        // eslint-disable-next-line
+         
         var order = dw.order.OrderMgr.getOrder(merchantRefCode);
         // Fetch the payment Instrument for the placed order
         var paymentinstr = CardHelper.getNonGCPaymemtInstument(order);
-        // eslint-disable-next-line
+         
         if (!empty(order.getPaymentInstruments(CybersourceConstants.METHOD_VISA_CHECKOUT))) {
             CybersourceHelper.addVCOrderID(request, paymentinstr.custom.callId);
         }
@@ -965,11 +965,11 @@ function TestCaptureService() {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(response) || response.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in capture service response: ' + response };
     }
-    // eslint-disable-next-line
+     
     if (!empty(response)) {
         responseObject = ProcessResponse(response, serviceReply, heading);
     }
@@ -982,7 +982,7 @@ function TestCaptureService() {
  * @returns {Object} obj
  */
 function TestAuthReversalService() {
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var request = new csReference.RequestMessage();
 
@@ -991,18 +991,18 @@ function TestAuthReversalService() {
     var responseObject = {};
     var heading = 'test.authreversalserviceresult';
 
-    /* eslint-disable */
+     
     var requestID = session.forms.genericTestInterfaceForm.authRequestID.htmlValue;
     var merchantRefCode = session.forms.genericTestInterfaceForm.merchantReferenceCode.htmlValue;
     var paymentType = session.forms.genericTestInterfaceForm.authreversalpaymenttype.htmlValue;
-    /* eslint-enable */
+     
     var paymentMethod = getPaymentMethod(paymentType);
     var ccAuthReversalService = {};
     var apAuthReversalService = {};
 
     if (paymentType.equals('KLI')) {
         // create billto, shipto for Klarna only
-        // eslint-disable-next-line
+         
         var Order = dw.order.OrderMgr.getOrder(merchantRefCode);
         var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
         if (Order != null) {
@@ -1014,7 +1014,7 @@ function TestAuthReversalService() {
     }
 
     if (paymentType.equals('KLI') || paymentType.equals('CC')) {
-        // eslint-disable-next-line
+         
         request = createPurchaseTotalObject(session.forms, request);
     }
 
@@ -1048,11 +1048,11 @@ function TestAuthReversalService() {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(response) || response.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in test auth reversal service response: ' + response };
     }
-    // eslint-disable-next-line
+     
     if (!empty(response)) {
         responseObject = ProcessResponse(response, serviceReply, heading);
     }
@@ -1072,15 +1072,15 @@ function TestCheckStatusService() {
     var responseObject = {};
     var response = {};
 
-    /* eslint-disable */
+     
     if (!empty(session.forms.genericTestInterfaceForm.merchantReferenceCode.value)) {
         Order = dw.order.OrderMgr.getOrder(session.forms.genericTestInterfaceForm.merchantReferenceCode.value);
     }
-    /* eslint-enable */
+     
 
     if (Order !== null) { response.object = commonFacade.CheckPaymentStatusRequest(Order); }
 
-    // eslint-disable-next-line
+     
     if (!empty(response)) {
         responseObject = ProcessResponse(response, serviceReply, heading);
     }

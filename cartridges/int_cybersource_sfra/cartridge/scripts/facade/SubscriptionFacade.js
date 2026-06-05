@@ -4,7 +4,6 @@ var Logger = require('dw/system/Logger');
 // var dwsvc = require('dw/svc');
 var UUIDUtils = require('dw/util/UUIDUtils');
 var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
-var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var CSServices = require('*/cartridge/scripts/init/SoapServiceInit');
 
 /**
@@ -20,7 +19,7 @@ function CreateSubscription(billTo, card, purchaseTotals) {
     var purchaseObject = purchaseTotals;
 
     var CybersourceHelper = libCybersource.getCybersourceHelper();
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
 
@@ -39,7 +38,7 @@ function CreateSubscription(billTo, card, purchaseTotals) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true, errorMsg: 'empty or error in CreateSubscription response: ' + serviceResponse };
     }
@@ -65,7 +64,7 @@ function CreateSubscription(billTo, card, purchaseTotals) {
  */
 function DeleteSubscription(subscriptionID) {
     var CybersourceHelper = libCybersource.getCybersourceHelper();
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
 
@@ -84,7 +83,7 @@ function DeleteSubscription(subscriptionID) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true };
     }
@@ -116,7 +115,7 @@ function UpdateSubscription(billTo, card, purchaseTotals, storedSubscriptionID) 
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     var subscriptionObject = {};
 
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
 
@@ -135,7 +134,7 @@ function UpdateSubscription(billTo, card, purchaseTotals, storedSubscriptionID) 
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[UpdateSubscription.js] response is null');
         return { error: true };
@@ -165,7 +164,7 @@ function ViewSubscription(subscriptionID) {
     var subscriptionObject = {};
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
 
@@ -184,7 +183,7 @@ function ViewSubscription(subscriptionID) {
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         return { error: true };
     }

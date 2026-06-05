@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var page = module.superModule;
 var server = require('server');
 
@@ -64,11 +64,9 @@ server.append('SubmitShipping', function (req, res, next) {
 
 server.append('UpdateShippingMethodsList', function (req, res, next) {
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
-    var BasketMgr = require('dw/order/BasketMgr');
     var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
-    var currentBasket = BasketMgr.getCurrentBasket();
     var address = ShippingHelper.getAddressFromRequest(req);
-    var billingAddress = CommonHelper.UpdateBillingAddress(address);
+    CommonHelper.UpdateBillingAddress(address);
     next();
 });
 

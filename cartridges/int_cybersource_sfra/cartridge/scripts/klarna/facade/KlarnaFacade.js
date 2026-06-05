@@ -43,7 +43,7 @@ function klarnaInitSessionService(sessionObject) {
     // declare helper variable
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     // declare soap reference variable
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     // create reference of request object
     var request = new csReference.RequestMessage();
@@ -65,7 +65,7 @@ function klarnaInitSessionService(sessionObject) {
     }
     // set item object
     var items = [];
-    // eslint-disable-next-line
+     
     if (!empty(sessionObject.items)) {
         var iter = sessionObject.items.iterator();
         while (iter.hasNext()) {
@@ -103,7 +103,7 @@ function klarnaUpdateSessionService(sessionObject) {
     // declare helper variable
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     // declare soap reference variable
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     // create reference of request object
     var request = new csReference.RequestMessage();
@@ -123,7 +123,7 @@ function klarnaUpdateSessionService(sessionObject) {
     }
     // set item object
     var items = [];
-    // eslint-disable-next-line
+     
     if (!empty(sessionObject.items)) {
         var iter = sessionObject.items.iterator();
         while (iter.hasNext()) {
@@ -138,7 +138,7 @@ function klarnaUpdateSessionService(sessionObject) {
     if (sessionObject.billTo != null && sessionObject.shipTo != null) {
         apSessionsService.sessionsType = 'U';
     }
-    // eslint-disable-next-line
+     
     apSessionsService.sessionsRequestID = session.privacy.requestID;
     request.apSessionsService = apSessionsService;
     request.apSessionsService.run = true;
@@ -164,7 +164,7 @@ function klarnaAuthorizationService(authorizationObject) {
     // declare helper variable
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     // declare soap reference variable
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     // create reference of request object
     var request = new csReference.RequestMessage();
@@ -185,7 +185,7 @@ function klarnaAuthorizationService(authorizationObject) {
     }
     // set item object
     var items = [];
-    // eslint-disable-next-line
+     
     if (!empty(authorizationObject.items)) {
         var iter = authorizationObject.items.iterator();
         while (iter.hasNext()) {
@@ -198,7 +198,7 @@ function klarnaAuthorizationService(authorizationObject) {
     decisionManager.enabled = authorizationObject.decisionManagerRequired;
     // set client data
     if (decisionManager.enabled && CybersourceHelper.getDigitalFingerprintEnabled()) {
-        // eslint-disable-next-line
+         
         libCybersource.setClientData(request, authorizationObject.orderNo, libCybersource.replaceCharsInSessionID(session.sessionID));
     } else {
         libCybersource.setClientData(request, authorizationObject.orderNo);

@@ -27,7 +27,7 @@ function WeChatSaleService(sessionObject) {
     // declare helper variable
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     // declare soap reference variable
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     // create reference of request object
     var request = new csReference.RequestMessage();
@@ -49,7 +49,7 @@ function WeChatSaleService(sessionObject) {
 
     // set item object
     var items = [];
-    // eslint-disable-next-line
+     
     if (!empty(sessionObject.items)) {
         var iter = sessionObject.items.iterator();
         while (iter.hasNext()) {
@@ -82,7 +82,7 @@ function WeChatCheckStatusService(requestId, paymentType, orderNo) {
     // declare helper variable
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     // declare soap reference variable
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     // create reference of request object
     var request = new csReference.RequestMessage();
@@ -94,7 +94,7 @@ function WeChatCheckStatusService(requestId, paymentType, orderNo) {
     var testReconciliationID = CybersourceHelper.getTestWeChatReconciliationID() ? CybersourceHelper.getTestWeChatReconciliationID().value : null;
     CybersourceHelper.apCheckStatusService(request, orderNo, requestId, 'WQR', testReconciliationID);
     var response = WeChatServiceInterface(request);
-    // eslint-disable-next-line
+     
     session.privacy.CybersourceFraudDecision = response.decision;
     // return response
     return response;

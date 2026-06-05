@@ -45,11 +45,11 @@ var CyberSourceFlexTokenService = LocalServiceRegistry.createService('cybersourc
     },
     filterLogMessage: function (msg) {
         //  Filter Logging on production system.
-        // eslint-disable-next-line
+         
         if (dw.system.System.getInstanceType() === dw.system.System.PRODUCTION_SYSTEM) {
             //  Filter Logic.
             try {
-                // eslint-disable-next-line
+                 
                 if (empty(msg)) {
                     return 'Message Missing';
                 }
@@ -91,7 +91,7 @@ var CyberSourceAssymentricKeyManagement = LocalServiceRegistry.createService('cy
             //  for each (var key in requestObj.keySet()) {
             svc.addHeader(key, requestObj.get(key));
         });
-        // eslint-disable-next-line
+         
         svc.URL += "/" + keyId;
     },
     parseResponse: function (svc, client) {
@@ -114,7 +114,7 @@ var CyberSourceDMService = LocalServiceRegistry.createService('cybersource.conve
             //  for each (var key in requestObj.keySet()) {
             svc.addHeader(key, requestObj.get(key));
         });
-        // eslint-disable-next-line
+         
         svc.URL += '?startTime=' + starttime + '&endTime=' + endtime + '&organizationId=' + merchantId;
     },
     parseResponse: function (svc, client) {

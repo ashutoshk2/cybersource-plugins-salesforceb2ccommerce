@@ -65,7 +65,7 @@ function initiateExpressCheckout(lineItemCntr, args) {
         Logger.debug('[PaypalAdapter] Initiating PayPal V1 Session Service');
         response = paypalFacade.SessionService(lineItemCntr, args);
     }
-    
+
     // process response received from service
     if (!empty(response) && Number(response.reasonCode) === 100) {
         result.success = true;
@@ -164,13 +164,13 @@ function orderService(order, pi) {
 function billingAgreementService(requestId, order) {
     var result = {};
     var collections = require('*/cartridge/scripts/util/collections');
-   var paypalFacade = require('../facade/PayPalFacade'); var response;
+    var paypalFacade = require('../facade/PayPalFacade'); var response;
     response = paypalFacade.BillingAgreement(requestId, order.UUID);
     if (!empty(response) && Number(response.reasonCode) === 100) {
         var paymentInstruments = order.paymentInstruments; var pi;
         collections.forEach(paymentInstruments, function (paymentInstrument) {
             if (paymentInstrument.paymentMethod.equals(CybersourceConstants.METHOD_PAYPAL)) {
-                // eslint-disable-next-line
+
                 pi = paymentInstrument;
             }
         });
@@ -582,7 +582,7 @@ function saleService(Order, paymentInstrument) {
  */
 function customOrder(order, paymentInstrument) {
     var result = {};
-    
+
     // V2 Check: If V2 is enabled, we skip the separate OrderService step because
     // the order was already created in the initial session/createOrder step.
     // We proceed directly to Authorization.
@@ -627,7 +627,7 @@ function customOrder(order, paymentInstrument) {
  */
 function standardOrder(order, paymentInstrument) {
     var result = {}; var saleOrderResponse;
-    
+
     // V2 Check: If V2 is enabled, skip OrderService and go straight to Sale
     if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2')) {
         saleOrderResponse = saleService(order, paymentInstrument);
@@ -751,7 +751,7 @@ function voidOrder(orderRequestID) {
     }
     var paypalFacade = require(CybersourceConstants.PATH_FACADE + 'PayPalFacade');
     var response = paypalFacade.VoidOrderServiceV2(orderRequestID);
-    
+
     if (!empty(response) && Number(response.reasonCode) === 100 && response.apCancelReply && response.apCancelReply.status === 'VOIDED') {
         result.success = true;
     } else {
@@ -783,7 +783,7 @@ function reauthorize(lineItemCntr, paymentInstrument, authRequestID) {
     var paypalFacade = require(CybersourceConstants.PATH_FACADE + 'PayPalFacade');
     // Updated call signature to include paymentInstrument per V2 spec
     var response = paypalFacade.ReauthorizeServiceV2(lineItemCntr, paymentInstrument, authRequestID);
-    
+
     // Per V2 spec: COMPLETED status indicates successful re-auth (not just AUTHORIZED)
     if (!empty(response) && Number(response.reasonCode) === 100) {
         var paymentStatus = response.apAuthReply && response.apAuthReply.paymentStatus;

@@ -4,7 +4,7 @@
 * CybersourcePurchaseTotalsObject.js
 * This Object is used for the Cybersource PurchaseTotals xsd
 */
-/* eslint-disable */
+ 
 function PurchaseTotalsObject() {
     this.grandTotalAmount;
     this.currency;
@@ -16,7 +16,7 @@ function PurchaseTotalsObject() {
     this.subtotalAmount;
     this.shippingDiscountAmount;
 }
-/* eslint-enable */
+ 
 
 PurchaseTotalsObject.prototype = {
     setGrandTotalAmount: function (value) {
@@ -58,21 +58,21 @@ PurchaseTotalsObject.prototype = {
     setShippingAmount: function (value) {
         this.shippingAmount = value;
     },
-    // eslint-disable-next-line
+     
     getShippingAmount: function (value) {
         return this.shippingAmount;
     },
     setSubtotalAmount: function (value) {
         this.subtotalAmount = value;
     },
-    // eslint-disable-next-line
+     
     getSubtotalAmount: function (value) {
         return this.subtotalAmount;
     },
     setShippingDiscountAmount: function (value) {
         this.shippingDiscountAmount = value;
     },
-    // eslint-disable-next-line
+     
     getShippingDiscountAmount: function (value) {
         return this.shippingDiscountAmount;
     }

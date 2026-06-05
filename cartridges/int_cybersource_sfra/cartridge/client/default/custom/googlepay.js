@@ -190,7 +190,7 @@ function onGooglePaymentButtonClicked() {
         })
         .catch(function (err) {
         // show error in developer console for debugging
-            console.error(err); // eslint-disable-line
+            console.error(err);  
         });
 }
 

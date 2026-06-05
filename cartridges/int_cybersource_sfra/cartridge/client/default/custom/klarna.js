@@ -41,14 +41,14 @@ KlarnaHelper.handleStageChange = function (newStage) {
         try {
             this.initStage(newStage);
         } catch (e) {
-            console.debug(e); // eslint-disable-line
+            console.debug(e);  
         }
         this.initStages[newStage] = true;
     }
 };
 
 KlarnaHelper.initStage = function (stage) {
-    var defer = $.Deferred(); // eslint-disable-line
+    var defer = $.Deferred();  
 
     switch (stage) {
         case 'shipping':

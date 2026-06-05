@@ -94,7 +94,7 @@ function CreateSaleServiceRequest(Order, testMethod) {
     var successURL = URLUtils.https('COPlaceOrder-Submit', 'provider', 'banktransfer', 'orderID', Order.orderNo).toString();
     var failureURL = URLUtils.https('COPlaceOrder-Submit', 'provider', 'cancelfail', 'cfk', false, 'orderID', Order.orderNo).toString();
     // setting the value of payment type after getting from payment method
-    // eslint-disable-next-line
+     
     paymentType = session.forms.billing.paymentMethod.value;
     // create billto, shipto, item and purchase total object
     var result = CommonHelper.CreateCyberSourceBillToObject(Order, true);
@@ -130,13 +130,13 @@ function CreateSaleServiceRequest(Order, testMethod) {
     saleObject.merchantDescriptorCountry = customPref.merchantDescriptorCountry;
     saleObject.orderNo = Order.orderNo;
     if (paymentType === 'IDL') {
-        // eslint-disable-next-line
+         
         if (bankTransferHelper.isBankListRequired(session.forms.billing.paymentMethod.value)) {
-            // eslint-disable-next-line
+             
             saleObject.paymentOptionID = session.forms.billing.bankListSelection.value;
         }
     }
-    // eslint-disable-next-line
+     
     var paymentMethod = session.forms.billing.paymentMethod.value || testMethod;
     // call session method of libCybersourceHelper to create session request
     var saleResponse = bankTransferFacade.BankTransferSaleService(saleObject, paymentMethod);
@@ -146,7 +146,7 @@ function CreateSaleServiceRequest(Order, testMethod) {
     /* return the response as per decision and reason code, redirect the user to
     merchant site for payment completion */
     if (saleResponse.decision === 'ACCEPT' && Number(saleResponse.reasonCode) === 100) {
-        // eslint-disable-next-line
+         
         session.privacy.orderId = Order.orderNo;
         switch (saleResponse.apSaleReply.paymentStatus) {
             case 'pending':
@@ -215,9 +215,9 @@ function AuthorizeRequest(orderNo, paymentInstrumentObj, testMethod) {
     });
     // call sale service and process the response
     var response = CreateSaleServiceRequest(Order, testMethod);
-    // eslint-disable-next-line
+     
     session.privacy.isPaymentRedirectInvoked = true;
-    // eslint-disable-next-line
+     
     session.privacy.orderId = orderNo;
     return response;
 }

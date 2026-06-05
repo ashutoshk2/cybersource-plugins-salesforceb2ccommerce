@@ -37,7 +37,7 @@ function HandleRequest(Basket, isHandleRequired, paymentMethod) {
 }
 
 /* Common function to update transaction level details */
-// eslint-disable-next-line
+ 
 function ProcessResponse(responseObject, pi, order) {
     var paymentInstrument = pi;
     // update instrument level variables
@@ -108,11 +108,11 @@ function AuthorizationServiceRequest(Order, preApprovalToken) {
 
     //  Use Klarna languge set in payment method custom attribute.
     var language = CommonHelper.GetRequestLocale();
-    // eslint-disable-next-line
+     
     var paymentMethod = dw.order.PaymentMgr.getPaymentMethod(Order.getPaymentInstruments()[0].paymentMethod);
-    // eslint-disable-next-line
+     
     if (!empty(paymentMethod) && paymentMethod.custom !== null && 'klarnaLocale' in paymentMethod.custom) {
-        // eslint-disable-next-line
+         
         if (!empty(paymentMethod.custom.klarnaLocale.value)) {
             language = paymentMethod.custom.klarnaLocale.value;
         }
@@ -125,7 +125,7 @@ function AuthorizationServiceRequest(Order, preApprovalToken) {
     purchaseObject = result.purchaseTotals;
     result = CommonHelper.CreateKlarnaItemObject(Order);
     var items = result.items;
-    // eslint-disable-next-line
+     
     var decisionManagerRequired = dw.system.Site.getCurrent().getCustomPreferenceValue('isKlarnaDecisionManagerRequired');
     // create auth object and set the value of different object
     var authorizationObject = {};
@@ -144,16 +144,16 @@ function AuthorizationServiceRequest(Order, preApprovalToken) {
     AuthorizeKlarnaOrderUpdate(Order, authResponse);
 
     // Save decision so fraud handling hook can adjust order status later.
-    // eslint-disable-next-line
+     
     session.privacy.CybersourceFraudDecision = authResponse.decision;
 
     /* return the response as per decision and reason code, redirect the user to
      merchant site for payment completion */
     if ((authResponse.decision === 'ACCEPT' && Number(authResponse.reasonCode) === 100) || (authResponse.decision === 'REVIEW' && Number(authResponse.reasonCode) === 480)) {
-        // eslint-disable-next-line
+         
         session.privacy.orderId = Order.orderNo;
         var isRedirectionRequired = true; // dw.system.Site.getCurrent().getCustomPreferenceValue('isKlarnaRedirectionRequired');
-        // eslint-disable-next-line
+         
         switch (authResponse.apAuthReply.paymentStatus) {
             case 'authorized':
                 if (isRedirectionRequired) {
@@ -191,7 +191,7 @@ function AuthorizationServiceRequest(Order, preApprovalToken) {
 function AuthorizeRequest(orderNo, pi, token) {
     var paymentInstrument = pi;
     // set the value of processor token session variable as empty
-    // eslint-disable-next-line
+     
     var klarnaHelper = require('*/cartridge/scripts/klarna/helper/KlarnaHelper');
     klarnaHelper.setLargeSessionToken('processorToken', '');
     // create object of OrderMgr to get the order
@@ -207,9 +207,9 @@ function AuthorizeRequest(orderNo, pi, token) {
     // call authorization service and process the response
     var response = AuthorizationServiceRequest(Order, token);
 
-    // eslint-disable-next-line
+     
     session.privacy.SkipTaxCalculation = false;
-    // eslint-disable-next-line
+     
     session.privacy.cartStateString = null;
 
     return response;
@@ -306,7 +306,7 @@ function AuthorizeRequest(orderNo, pi, token) {
  */
 function CreateKlarnaSecureKey(Basket) {
     // declare variables to create signature
-    // eslint-disable-next-line
+     
     var sessionId = session.sessionID;
     var paymentType = CybersourceConstants.KLARNA_PAYMENT_TYPE;
     var merchantId = CybersourceHelper.getMerchantID();
@@ -325,19 +325,19 @@ function CreateKlarnaSecureKey(Basket) {
  */
 function GetKlarnaOrder(Order) {
     var order = Order;
-    // eslint-disable-next-line
+     
     if (empty(order)) {
-        // eslint-disable-next-line
+         
         if (session.privacy.orderId !== null) {
             // GetOrder
             var OrderMgr = require('dw/order/OrderMgr');
-            // eslint-disable-next-line
+             
             order = OrderMgr.getOrder(session.privacy.orderId);
-            // eslint-disable-next-line
+             
             delete session.privacy.orderId;
         }
         var signature = CreateKlarnaSecureKey(order);
-        // eslint-disable-next-line
+         
         var netSignature = decodeURIComponent(request.httpParameterMap.signature.stringValue);
         if (order && signature === netSignature) {
             return { success: true, Order: order };

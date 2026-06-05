@@ -244,7 +244,7 @@ function getServiceResponse(request, paymentMethod) {
     if (!empty(serviceResponse.object.invalidField)) {
         collections.forEach(serviceResponse.object.invalidField, function (iField) {
         // for each (var iField in serviceResponse.object.invalidField) {
-            invalidField = invalidFields.push(iField.toString());
+            invalidFields.push(iField.toString());
         });
     }
     responseObject.invalidField = invalidFields;

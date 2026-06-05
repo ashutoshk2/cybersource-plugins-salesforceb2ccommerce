@@ -23,7 +23,7 @@ var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 /**
  * Index page with links to test individual services.
  */
-// eslint-disable-next-line
+ 
 server.get('Index', server.middleware.https, function (req, res, next) {
     //  When in production, Redirect to home page.
     if (System.getInstanceType() === System.PRODUCTION_SYSTEM) {
@@ -38,7 +38,7 @@ server.get('Index', server.middleware.https, function (req, res, next) {
 /**
  * Page displays results for all unit test cases executed in series
  */
-// eslint-disable-next-line
+ 
 server.get('RunTests', server.middleware.https, function (req, res, next) {
     //  When in production, Redirect to home page.
     if (System.getInstanceType() === System.PRODUCTION_SYSTEM) {
@@ -101,7 +101,7 @@ server.get('RunTests', server.middleware.https, function (req, res, next) {
  * Controller function to unit test the credit card authorization service.
  * With the hard coded data.
  */
-// eslint-disable-next-line
+ 
 server.get('TestCCAuth', server.middleware.https, function (req, res, next) {
     //  When in production, Redirect to home page.
     if (System.getInstanceType() === System.PRODUCTION_SYSTEM) {
@@ -146,7 +146,7 @@ server.get('TestCCAuth', server.middleware.https, function (req, res, next) {
 /**
  * Controller function to unit test the tax service with hard coded data.
  */
-// eslint-disable-next-line
+ 
 server.get('TestTax', server.middleware.https, function (req, res, next) {
     //  When in production, Redirect to home page.
     if (System.getInstanceType() === System.PRODUCTION_SYSTEM) {
@@ -172,7 +172,7 @@ server.get('TestTax', server.middleware.https, function (req, res, next) {
 /**
  * Renders Test Capture Service Form.
  */
-// eslint-disable-next-line
+ 
 server.get('TestCaptureService', function (req, res, next) {
     //  When in production, Redirect to home page.
     if (System.getInstanceType() === System.PRODUCTION_SYSTEM) {
@@ -429,7 +429,7 @@ server.post('CCAuthReversalService', server.middleware.https, function (req, res
 /**
  * Renders Check Status Form.
  */
-// eslint-disable-next-line
+ 
 server.get('TestCheckStatusService', function (req, res, next) {
     //  When in production, Redirect to home page.
     if (System.getInstanceType() === System.PRODUCTION_SYSTEM) {

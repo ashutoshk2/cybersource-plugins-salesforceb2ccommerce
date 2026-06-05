@@ -7,7 +7,7 @@ module.exports = function () {
             if (applePayButton.length !== 0) {
                 applePayButton.attr('sku', response.product.id);
             } else {
-                if ($('.apple-pay-pdp').length === 0) { // eslint-disable-line no-lonely-if
+                if ($('.apple-pay-pdp').length === 0) {  
                     $('.cart-and-ipay').append('<isapplepay class="apple-pay-pdp btn"'
                         + 'sku=' + response.product.id + '></isapplepay>');
                 }

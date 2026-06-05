@@ -242,7 +242,7 @@ function ResetPaymentForms(args) {
 /**
  * Create Subscription for checkout billing.
  */
-// eslint-disable-next-line
+ 
 function createSubscriptionBilling(args) {
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     var cardObject = CardHelper.CreateCybersourcePaymentCardObject('billing');
@@ -255,7 +255,7 @@ function createSubscriptionBilling(args) {
                 var subscriptionResult = SubscriptionFacade.CreateSubscription(billToResult.billTo, cardObject.card, purchaseTotalsResult.purchaseTotals);
                 if (subscriptionResult.success && !empty(subscriptionResult.serviceResponse)) {
                     cardObject = null;// null  the card object CyberSourcePaymentCard
-                    // eslint-disable-next-line
+                     
                     if (parseInt(subscriptionResult.serviceResponse.reasonCode) === 100 || parseInt(subscriptionResult.serviceResponse.reasonCode) === 480) {
                         return {
                             ok: true, decision: subscriptionResult.serviceResponse.decision, reasonCode: subscriptionResult.serviceResponse.reasonCode, subscriptionID: subscriptionResult.serviceResponse.SubscriptionIDToken
@@ -330,7 +330,7 @@ function saveCreditCard() {
 /**
  * Create Subscription for my account.
  */
-// eslint-disable-next-line
+ 
 function createSubscriptionMyAccount(args) {
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     var cardObject = CardHelper.CreateCybersourcePaymentCardObject('paymentinstruments');
@@ -344,7 +344,7 @@ function createSubscriptionMyAccount(args) {
                 var subscriptionResult = SubscriptionFacade.CreateSubscription(billToResult.billTo, cardObject.card, purchaseTotalsResult.purchaseTotals);
                 if (subscriptionResult.success && subscriptionResult.serviceResponse !== null) {
                     cardObject = null;// null  the card object CyberSourcePaymentCard
-                    // eslint-disable-next-line
+                     
                     if (parseInt(subscriptionResult.serviceResponse.reasonCode) === 100 || parseInt(subscriptionResult.serviceResponse.reasonCode) === 480) {
                         return {
                             ok: true,
@@ -364,7 +364,7 @@ function createSubscriptionMyAccount(args) {
 /**
  * Delete Subscription for My Account.
  */
-// eslint-disable-next-line
+ 
 function deleteSubscriptionAccount(subscriptionID) {
     // var TriggeredAction = request.triggeredFormAction;
     if (empty(subscriptionID)) {
@@ -373,7 +373,7 @@ function deleteSubscriptionAccount(subscriptionID) {
     var SubscriptionFacade = require('*/cartridge/scripts/facade/SubscriptionFacade');
     var subscriptionResult = SubscriptionFacade.DeleteSubscription(subscriptionID);
     if (subscriptionResult.success && subscriptionResult.serviceResponse !== null) {
-        // eslint-disable-next-line
+         
         if (parseInt(subscriptionResult.serviceResponse.reasonCode) === 100) {
             return { ok: true, decision: subscriptionResult.serviceResponse.decision, reasonCode: subscriptionResult.serviceResponse.reasonCode };
         }

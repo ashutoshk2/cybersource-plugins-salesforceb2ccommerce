@@ -1,6 +1,6 @@
 'use strict';
 
-var crypto = require('crypto');
+var nodeCrypto = require('crypto');
 
 /**
  * function
@@ -100,8 +100,8 @@ function fillModalElement(verifyAddressUrl) {
     };
 
     // var algorithm = 'aes-256-cbc';
-    var key = crypto.randomBytes(32);
-    var iv = crypto.randomBytes(16);
+    var key = nodeCrypto.randomBytes(32);
+    var iv = nodeCrypto.randomBytes(16);
 
     /**
      * Function
@@ -109,7 +109,7 @@ function fillModalElement(verifyAddressUrl) {
      * @returns {*} obj
      */
     function encrypt(text) {
-        var cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+        var cipher = nodeCrypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
         var encrypted = cipher.update(text);
         encrypted = Buffer.concat([encrypted, cipher.final()]);
         return {

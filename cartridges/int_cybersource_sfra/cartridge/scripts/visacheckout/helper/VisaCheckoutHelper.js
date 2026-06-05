@@ -20,7 +20,7 @@ function createLineItemCtnrShippingAddress(lineItemCtnrAddress, decryptedData) {
 
     // address line 1 and line 2
     lineItemCtnrAddress.setAddress1(decryptedData.shipTo_Address1);
-    // eslint-disable-next-line
+     
     if (!empty(decryptedData.shipTo_Address2)) {
         lineItemCtnrAddress.setAddress2(decryptedData.shipTo_Address2);
     }
@@ -32,7 +32,7 @@ function createLineItemCtnrShippingAddress(lineItemCtnrAddress, decryptedData) {
     lineItemCtnrAddress.setCountryCode(decryptedData.shipTo_CountryCode);
 
     // phone number
-    // eslint-disable-next-line
+     
     if (!empty(decryptedData.shipTo_Phone)) {
         lineItemCtnrAddress.setPhone(decryptedData.shipTo_Phone);
     }
@@ -74,7 +74,7 @@ function isObjectEmpty(obj) {
     // otherwise we have an object, so loop through the properties to check for at least one non-null
     var retval = false;
 
-    // eslint-disable-next-line
+     
     Object.keys(obj).forEach(function (key) {
         if (typeof obj[key] === 'object') {
             retval = retval || isObjectEmpty(obj[key]);
@@ -115,7 +115,7 @@ function convertObjectToString(obj, inStr, numSpc) {
             // recursive call for object types
             if (typeof newObj === 'object') {
                 if (Array.isArray(newObj)) {
-                    // eslint-disable-next-line
+                     
                     var arrStr = convertArrayToString(newObj);
                     str += arrStr;
                 } else {
@@ -170,7 +170,7 @@ function convertArrayToString(arr) {
 * @returns {Object} status
 */
 function getButtonInitializeSettings(cart, requireDeliveryAddress) {
-    // eslint-disable-next-line
+     
     var logger = dw.system.Logger.getLogger('Cybersource');
 
     try {
@@ -179,7 +179,7 @@ function getButtonInitializeSettings(cart, requireDeliveryAddress) {
             var vinitObject = {};
 
             // get the current site
-            // eslint-disable-next-line
+             
             var currentSite = dw.system.Site.getCurrent();
 
             // load initialization settings from site preferences
@@ -187,7 +187,7 @@ function getButtonInitializeSettings(cart, requireDeliveryAddress) {
             vinitObject.externalProfileId = currentSite.getCustomPreferenceValue('cybVisaExternalProfileId');
 
             vinitObject.settings = {};
-            // eslint-disable-next-line
+             
             var visaLocale = (request.locale === 'default' || request.locale === 'en') ? 'en_US' : request.locale;
             vinitObject.settings.locale = visaLocale;
             vinitObject.settings.countryCode = visaLocale.substr(visaLocale.length - 2);
@@ -229,7 +229,7 @@ function getButtonInitializeSettings(cart, requireDeliveryAddress) {
                 vinitObject.paymentRequest.total = cart.merchandizeTotalNetPrice.value.toFixed(2);
             }
             var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
-            // eslint-disable-next-line
+             
             var signature = CommonHelper.signedDataUsingHMAC256(cart.getUUID(), dw.system.Site.getCurrent().getCustomPreferenceValue('cybVisaSecretKey'), null);
             return { success: true, signature: signature, VInitFormattedString: convertObjectToString(vinitObject, '', 0) };
         }
@@ -266,7 +266,7 @@ function getInitializeSettings(requireDeliveryAddress) {
 */
 function createLineItemCtnrBillingAddress(lineItemCtnrAddress, decryptedData) {
     // validate the lineItemCtnrAddress exists
-    // eslint-disable-next-line
+     
     var vcCurrentPage = session.privacy.cyb_CurrentPage;
     if (vcCurrentPage !== 'CybBilling') {
         if (decryptedData.billTo == null) {
@@ -275,14 +275,14 @@ function createLineItemCtnrBillingAddress(lineItemCtnrAddress, decryptedData) {
 
         // address line 1 and line 2
         lineItemCtnrAddress.setAddress1(decryptedData.billTo_Address1);
-        // eslint-disable-next-line
+         
         if (!empty(decryptedData.billTo_Address2)) {
             lineItemCtnrAddress.setAddress2(decryptedData.billTo_Address2);
         }
 
         // country, city, state, post code
         lineItemCtnrAddress.setCity(decryptedData.billTo_City);
-        // eslint-disable-next-line
+         
         if (!empty(decryptedData.billTo_StateCode)) {
             lineItemCtnrAddress.setStateCode(decryptedData.billTo_StateCode);
         }
@@ -290,13 +290,13 @@ function createLineItemCtnrBillingAddress(lineItemCtnrAddress, decryptedData) {
         lineItemCtnrAddress.setCountryCode(decryptedData.billTo_CountryCode);
 
         // phone number
-        // eslint-disable-next-line
+         
         if (!empty(decryptedData.billTo_Phone)) {
             lineItemCtnrAddress.setPhone(decryptedData.billTo_Phone);
         }
 
         // company name
-        // eslint-disable-next-line
+         
         if (!empty(decryptedData.billTo_Company)) {
             lineItemCtnrAddress.setCompanyName(decryptedData.billTo_Company);
         }
@@ -308,14 +308,14 @@ function createLineItemCtnrBillingAddress(lineItemCtnrAddress, decryptedData) {
     } else {
         // address line 1 and line 2
         lineItemCtnrAddress.setAddress1(lineItemCtnrAddress.address1);
-        // eslint-disable-next-line
+         
         if (!empty(lineItemCtnrAddress.address2)) {
             lineItemCtnrAddress.setAddress2(lineItemCtnrAddress.address2);
         }
 
         // country, city, state, post code
         lineItemCtnrAddress.setCity(lineItemCtnrAddress.city);
-        // eslint-disable-next-line
+         
         if (!empty(lineItemCtnrAddress.stateCode)) {
             lineItemCtnrAddress.setStateCode(lineItemCtnrAddress.stateCode);
         }
@@ -323,13 +323,13 @@ function createLineItemCtnrBillingAddress(lineItemCtnrAddress, decryptedData) {
         lineItemCtnrAddress.setCountryCode(lineItemCtnrAddress.countryCode);
 
         // phone number
-        // eslint-disable-next-line
+         
         if (!empty(decryptedData.billTo_Phone)) {
             lineItemCtnrAddress.setPhone(lineItemCtnrAddress.phone);
         }
 
         // company name
-        // eslint-disable-next-line
+         
         if (!empty(decryptedData.billTo_Company)) {
             lineItemCtnrAddress.setCompanyName(lineItemCtnrAddress.companyName);
         }
@@ -354,21 +354,21 @@ function getButtonDisplaySettings() {
     var Countries = require('*/cartridge/scripts/utils/Countries');
     var countryCode = Countries.getCurrent({
         CurrentRequest: {
-            // eslint-disable-next-line
+             
             locale: request.locale
         }
     }).countryCode;
     var PaymentMgr = require('dw/order/PaymentMgr');
-    // eslint-disable-next-line
+     
     var applicablePaymentMethods = PaymentMgr.getApplicablePaymentMethods(customer, countryCode, paymentAmount.value);
     var method = PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_VISA_CHECKOUT);
-    // eslint-disable-next-line
+     
     var isVisaCheckout = !!((!empty(applicablePaymentMethods) && method && applicablePaymentMethods.contains(method)));
     if (!isVisaCheckout) {
         return { error: true };
     }
     // get the current site
-    // eslint-disable-next-line
+     
     var currentSite = dw.system.Site.getCurrent();
 
     // image source url
@@ -390,7 +390,7 @@ function getButtonDisplaySettings() {
     var brandCards = (currentSite.getCustomPreferenceValue('cybVisaCardBrands') !== null) ? currentSite.getCustomPreferenceValue('cybVisaCardBrands') : null;
 
     // locale of current request
-    // eslint-disable-next-line
+     
     var locale = (request.locale === 'default' || request.locale === 'en') ? 'en_US' : request.locale;
 
     // tell Me More Link
@@ -414,10 +414,10 @@ function getButtonDisplaySettings() {
  */
 function payerAuthValidation(lineItemCtnrObj, paymentInstrument) {
     var orderNo = lineItemCtnrObj.orderNo !== null ? lineItemCtnrObj.orderNo : lineItemCtnrObj.getUUID();
-    // eslint-disable-next-line
+     
     var PAResponsePARes = request.httpParameterMap.PaRes.value;
     // var PAXID = request.httpParameterMap.PAXID.value;
-    // eslint-disable-next-line
+     
     var transactionId = request.httpParameterMap.TransactionId.value != null ? request.httpParameterMap.TransactionId.value : '';
 
     var VisaCheckoutFacade = require(CybersourceConstants.CS_CORE_SCRIPT + 'visacheckout/facade/VisaCheckoutFacade');
@@ -463,7 +463,7 @@ function payerAuthEnroll(lineItemCtnrObj, paymentInstrument, orderNo) {
         var PaymentInstrumentUtils = require('*/cartridge/scripts/utils/PaymentInstrumentUtils');
         PaymentInstrumentUtils.UpdatePaymentTransactionWithProofXML(paymentInstrument, serviceResponse.ProofXML);
     }
-    /* eslint-disable */
+     
     if (!empty(serviceResponse.AcsURL) && serviceResponse.PAReasonCode === 475) {
         session.privacy.AcsURL = serviceResponse.AcsURL;
         session.privacy.PAReq = serviceResponse.PAReq;
@@ -473,7 +473,7 @@ function payerAuthEnroll(lineItemCtnrObj, paymentInstrument, orderNo) {
         session.privacy.authenticationTransactionID = serviceResponse.authenticationTransactionID;
         return { payerauthentication: true, serviceResponse: serviceResponse };
     }
-    /* eslint-enable */
+     
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     return CardHelper.CardResponse(lineItemCtnrObj, paymentInstrument, serviceResponse);
 }

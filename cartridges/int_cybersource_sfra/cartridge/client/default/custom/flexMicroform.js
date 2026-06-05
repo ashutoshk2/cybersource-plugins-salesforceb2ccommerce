@@ -4,7 +4,8 @@
 
 $(document).ready(function () {
   var captureContext = $('#flextokenRespose').val();
-  var flex = new Flex(captureContext); // eslint-disable-line no-undef
+  var flex = new Flex(captureContext);  
+  // eslint-disable-next-line no-unused-vars
   var cardNumberplaceholder = $("#credit-card-content.cardNumber").attr(
     "data-cardNumber"
   );
@@ -52,14 +53,14 @@ $(document).ready(function () {
   })
 
   function parseJwt(token) {
-    // eslint-disable-line no-inner-declarations
+     
     var base64Url = token.split(".")[1];
     var base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
     var jsonPayload = decodeURIComponent(
       atob(base64)
         .split("")
         .map(function (c) {
-          // eslint-disable-line no-undef
+           
           return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
         })
         .join("")
@@ -69,7 +70,7 @@ $(document).ready(function () {
   }
 
   function flexTokenCreation() {
-    // eslint-disable-line no-inner-declarations
+     
     var expMonth = $("#expirationMonth").val();
     var expYear = $("#expirationYear").val();
     // Send in optional parameters from other parts of your payment form
@@ -116,12 +117,12 @@ $(document).ready(function () {
   }
   // check for card type function
   function assignCorrectCardType() {
-    // eslint-disable-line no-inner-declarations
+     
     var cardType = $("#cardType").val();
     if (cardType.charCodeAt(0) !== cardType.toUpperCase().charCodeAt(0)) {
       var correctCardType = "";
       switch (
-      cardType // eslint-disable-line default-case
+      cardType  
       ) {
         case "visa":
           correctCardType = "Visa";

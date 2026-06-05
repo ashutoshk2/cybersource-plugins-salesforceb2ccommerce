@@ -1492,7 +1492,7 @@ var Locale = require('dw/util/Locale');
  * @return {array} allowedCountries array of countries that have allowed locales
  */
 function getCountries() {
-    // eslint-disable-next-line
+     
     var site = dw.system.Site.getCurrent();
     var allowedLocales = site.getAllowedLocales();
     var allowedCountries = countries.filter(function (country) {

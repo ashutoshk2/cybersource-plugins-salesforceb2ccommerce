@@ -10,7 +10,6 @@ var Transaction = require('dw/system/Transaction');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var OrderMgr = require('dw/order/OrderMgr');
 var HookMgr = require('dw/system/HookMgr');
-var PaymentInstrumentUtils = require('*/cartridge/scripts/utils/PaymentInstrumentUtils');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
 var secureRender = secureResponseHelper.secureRender;
 
@@ -63,7 +62,7 @@ function savePaymentInstrumentToWallet(billingDataObj, currentBasket, customer) 
     }
     var savedCreditCards = customer.getProfile().getWallet().getPaymentInstruments(PaymentInstrument.METHOD_CREDIT_CARD);
     var ccNumber = billingData.paymentInformation.cardNumber.value;
-    // eslint-disable-next-line
+     
     for (var i = 0; i < savedCreditCards.length; i++) {
         var creditcard = savedCreditCards[i];
         var creditcardNo = creditcard.getCreditCardNumber();
@@ -96,7 +95,7 @@ function savePaymentInstrumentToWallet(billingDataObj, currentBasket, customer) 
             billingData.paymentInformation.expirationYear.value
         );
 
-        // eslint-disable-next-line
+         
         if (!tokenizationResult.error && !empty(tokenizationResult.subscriptionID)) {
             storedPaymentInstrument.setCreditCardToken(tokenizationResult.subscriptionID);
             storedPaymentInstrument.custom.isCSToken = true;
@@ -109,7 +108,6 @@ function savePaymentInstrumentToWallet(billingDataObj, currentBasket, customer) 
     }
 
     if (verifyDuplicates) {
-        var PaymentInstrumentUtils = require('*/cartridge/scripts/utils/PaymentInstrumentUtils');
         PaymentInstrumentUtils.removeDuplicates({
             PaymentInstruments: paymentInstruments,
             CreditCardFields: {
@@ -310,7 +308,7 @@ function handlePayPal(basket) {
     while (iter.hasNext()) {
         existingPI = iter.next();
         if (existingPI.paymentMethod.equals(PaymentInstrument.METHOD_GIFT_CERTIFICATE)) {
-            // eslint-disable-next-line
+             
             continue;
         } else if (existingPI.paymentMethod.equals('PAYPAL') || existingPI.paymentMethod.equals('PAYPAL_CREDIT')) {
             basket.removePaymentInstrument(existingPI);
@@ -322,11 +320,11 @@ function handlePayPal(basket) {
  * Function
  */
 function clearPaymentAttributes() {
-    /* eslint-disable */
+     
     delete session.privacy.isPaymentRedirectInvoked;
     delete session.privacy.paymentType;
     delete session.privacy.orderId;
-    /* eslint-enable */
+     
 }
 
 /**
@@ -384,7 +382,7 @@ function addOrUpdateToken(order, customerObj, res) {
         paymentInstrument = CardHelper.getNonGCPaymemtInstument(order);
     }
     CardHelper.addOrUpdateToken(paymentInstrument, customerObj);
-    // eslint-disable-next-line
+     
     session.privacy.orderId = order.orderNo;
     res.redirect(URLUtils.https('COPlaceOrder-SilentPostSubmitOrder'));
 }
@@ -438,7 +436,7 @@ function failOrder(args) {
     var Cybersource = require('*/cartridge/scripts/Cybersource');
     var orderResult = Cybersource.GetOrder(args.Order);
     if (orderResult.error) {
-        // eslint-disable-next-line
+         
         args.PlaceOrderError = orderResult.PlaceOrderError;
         return args;
     }
@@ -453,7 +451,7 @@ function failOrder(args) {
         };
     });
     if (failResult.error) {
-        // eslint-disable-next-line
+         
         args.PlaceOrderError = failResult.PlaceOrderError;
     }
     return args;

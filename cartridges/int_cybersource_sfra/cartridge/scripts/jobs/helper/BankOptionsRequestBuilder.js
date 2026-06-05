@@ -5,7 +5,7 @@ var BankOptionsRequestBuilder = (function () {
     var buildOptionsRequest = function (params) {
         var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
         var CybersourceHelper = libCybersource.getCybersourceHelper();
-        // eslint-disable-next-line
+         
         var csReference = new CybersourceHelper.getcsReference();
         var serviceRequest = new csReference.RequestMessage();
         serviceRequest.merchantID = params.merchantId;

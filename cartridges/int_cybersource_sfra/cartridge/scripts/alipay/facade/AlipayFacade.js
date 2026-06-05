@@ -1,7 +1,7 @@
 'use strict';
 
 /* API includes */
-// eslint-disable-next-line
+ 
 var Logger = dw.system.Logger.getLogger('Cybersource');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var CSServices = require('*/cartridge/scripts/init/SoapServiceInit');
@@ -16,7 +16,7 @@ function AlipayInitiatePaymentRequest(request) {
     // create service stubs
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
 
     // set alipay payment type to pass it as input in request
@@ -45,7 +45,7 @@ function AliPayRefundService(requestID, merchantRefCode, paymentType, amount, cu
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
 
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
 
@@ -60,7 +60,7 @@ function AliPayRefundService(requestID, merchantRefCode, paymentType, amount, cu
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'Credit', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -79,7 +79,7 @@ function AliPayRefundService(requestID, merchantRefCode, paymentType, amount, cu
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[AliPayFacade.js] response in AliPayRefundService response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in AliPayRefundService response: ' + serviceResponse };

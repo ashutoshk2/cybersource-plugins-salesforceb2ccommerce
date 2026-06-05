@@ -22,7 +22,7 @@ var logger = Logger.getLogger('CyberSource', 'ConversionDetailReport');
  */
 function parseJSONResponse(message, orderHashMap) {
     try {
-        // eslint-disable-next-line
+         
         if (!empty(message)) {
             logger.debug('Message - ' + message);
             var obj = JSON.parse(message);
@@ -79,9 +79,9 @@ function setDateTimeForParameter() {
     currentDate.setTimeZone('GMT');
     var Site = require('dw/system/Site');
     var lookBackPref = Site.getCurrent().getCustomPreferenceValue('CsOrderImportLookBack');
-    // eslint-disable-next-line
+     
     var lookbackTime = empty(lookBackPref) ? -24 : (-1 * lookBackPref);
-    // eslint-disable-next-line
+     
     currentDate.add(dw.util.Calendar.HOUR, lookbackTime);
     time.start = StringUtils.formatCalendar(currentDate, 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'');
 
@@ -97,7 +97,7 @@ function getTime() {
     var StringUtils = require('dw/util/StringUtils');
 
     try {
-        // eslint-disable-next-line
+         
         var date = StringUtils.formatCalendar(new dw.util.Calendar(), 'en_US', Calendar.LONG_DATE_PATTERN);
         return date;
     } catch (exception) {
@@ -120,7 +120,7 @@ function generateSignature(signedHeaders, keyID, sharedSecret, date, merchantId,
     var Bytes = require('dw/util/Bytes');
     var Mac = require('dw/crypto/Mac');
     var Encoding = require('dw/crypto/Encoding');
-    // eslint-disable-next-line
+     
     var host = dw.system.Site.getCurrent().getCustomPreferenceValue('SA_Flex_HostName');
 
     try {
@@ -148,7 +148,7 @@ function generateSignature(signedHeaders, keyID, sharedSecret, date, merchantId,
  * @param {*} responseObj responeObj
  */
 function handleErrorCases(responseObj) {
-    // eslint-disable-next-line
+     
     if (empty(responseObj)) {
         logger.error('Error in conversion detail report request :', 'RESPONSE_EMPTY');
         throw new Error('Error in conversion detail report : RESPONSE_EMPTY');
@@ -158,12 +158,10 @@ function handleErrorCases(responseObj) {
     } else if (responseObj.status === 'OK' && (responseObj.object === 'Invalid login credentials.' || responseObj.object === 'No merchant found for username.')) {
         logger.error('Error in conversion detail report request ( {0} )', responseObj.object);
         throw new Error('Error in conversion detail report : Invalid login credentials.');
-        // eslint-disable-next-line
+         
     } else if ('errorMessage' in responseObj && !empty(responseObj.errorMessage)) {
         //  Log all error messages.
         logger.error('Service Error: ' + responseObj.errorMessage);
-    } else { // eslint-disable-line no-empty
-
     }
 }
 
@@ -179,7 +177,7 @@ function orderStatusUpdate(jobParams) {
     //  Create hashmap of orders based on the query below
     var orderIterator = OrderMgr.searchOrders('confirmationStatus = {0} AND status != {1} AND status != {2}', 'orderNo asc', Order.CONFIRMATION_STATUS_NOTCONFIRMED, Order.ORDER_STATUS_FAILED, Order.ORDER_STATUS_CANCELLED);
     var orderHashMap = new HashMap();
-    // eslint-disable-next-line
+     
     if (!empty(orderIterator)) {
         while (orderIterator.hasNext()) {
             var order = orderIterator.next();
@@ -204,7 +202,7 @@ function orderStatusUpdate(jobParams) {
         var keyID = jobParams.SAFlexKeyID;
         var merchantId = jobParams.MerchantId;
 
-        // eslint-disable-next-line
+         
         var host = dw.system.Site.getCurrent().getCustomPreferenceValue('SA_Flex_HostName');
         // eslint-disable-next-line
         var targetOrigin = 'https://' + host;

@@ -12,7 +12,7 @@ var iDealBankOptionJob = (function () {
         */
         var removePreviousBankList = function (paymentType) {
             var existingBankList = CustomObjectMgr.queryCustomObjects('BTBankList', 'custom.paymentType = {0}', null, paymentType);
-            // eslint-disable-next-line
+             
             if (!empty(existingBankList)) {
                 while (existingBankList.hasNext()) {
                     var bank = existingBankList.next();
@@ -25,7 +25,7 @@ var iDealBankOptionJob = (function () {
         * Job execution end points.
         * @param merchantId, merchantKey and paymentType
         */
-        // eslint-disable-next-line
+         
         var run = function (jobParams, otherParams) {
             // var _request = request;
             var txn = require('dw/system/Transaction');
@@ -40,10 +40,10 @@ var iDealBankOptionJob = (function () {
                     requestWrapper.merchantCredentials = { merchantID: jobParams.merchantId, merchantKey: jobParams.merchantKey };
 
                     var serviceResponse = service.call(requestWrapper);
-                    // eslint-disable-next-line
+                     
                     if (!empty(serviceResponse) && serviceResponse.ok === true && !empty(serviceResponse.object.apOptionsReply.option)) {
                         removePreviousBankList(jobParams.paymentType);
-                        // eslint-disable-next-line
+                         
                         serviceResponse.object.apOptionsReply.option.forEach(function (bank, index) {
                             // var newbank = bank;
                             var newBankCustomObj = CustomObjectMgr.createCustomObject('BTBankList', UUIDUtils.createUUID());
@@ -52,10 +52,10 @@ var iDealBankOptionJob = (function () {
                             newBankCustomObj.custom.BankName = bank.name;
                         });
 
-                        // eslint-disable-next-line
+                         
                         return new dw.system.Status(dw.system.Status.OK);
                     }
-                    // eslint-disable-next-line
+                     
                     return new dw.system.Status(dw.system.Status.ERROR);
                 } catch (error) {
                     Logger.error('Error in iDealBankOPtionJob.js ' + error);

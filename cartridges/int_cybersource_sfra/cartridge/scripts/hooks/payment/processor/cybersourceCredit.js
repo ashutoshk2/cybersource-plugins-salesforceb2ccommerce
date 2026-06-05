@@ -33,14 +33,14 @@ exports.CreatePaymentToken = function (module) {
     return { error: false, subscriptionID: subscriptionID };
 };
 
-// eslint-disable-next-line
+ 
 exports.SilentPostAuthorize = function (orderNumber, paymentInstrument, paymentProcessor, payerauthArgs) {
     var SecureAcceptanceHelper = require(CybersourceConstants.SECUREACCEPTANCEHELPER);
     var OrderMgr = require('dw/order/OrderMgr');
     var order = OrderMgr.getOrder(orderNumber);
     var pi = paymentInstrument;
     var paymentMethod = pi.getPaymentMethod();
-    // eslint-disable-next-line
+     
     if (empty(paymentMethod)) {
         return { error: true };
     }
@@ -56,7 +56,7 @@ exports.SilentPostAuthorize = function (orderNumber, paymentInstrument, paymentP
  * @returns {*} obj
  */
 function SecureAcceptanceHandle(basket, paymentInformation) {
-    // eslint-disable-next-line
+     
     var PaymentMethod = session.forms.billing.paymentMethod.value;
     var BasketMgr = require('dw/order/BasketMgr');
     var cart = BasketMgr.getCurrentBasket();
@@ -132,7 +132,7 @@ function SecureAcceptanceHandle(basket, paymentInformation) {
             paymentInstrument.setCreditCardNumber(cardNumber);
             paymentInstrument.setCreditCardExpirationMonth(expirationMonth);
             paymentInstrument.setCreditCardExpirationYear(expirationYear);
-            // eslint-disable-next-line
+             
             if (empty(paymentInformation.creditCardToken)) {
                 paymentInstrument.setCreditCardType(CardHelper.getCardType(cardType));
                 // eslint-disable-next-line
@@ -145,7 +145,7 @@ function SecureAcceptanceHandle(basket, paymentInformation) {
             return true;
         });
     } else {
-        // eslint-disable-next-line
+         
         session.forms.billing.creditCardFields.securityCode.value = paymentInformation.securityCode.value;
         transStatus = Transaction.wrap(function () {
             CommonHelper.removeExistingPaymentInstruments(cart);
@@ -155,7 +155,7 @@ function SecureAcceptanceHandle(basket, paymentInformation) {
             paymentInstrument.setCreditCardType(cardType);
             paymentInstrument.setCreditCardExpirationMonth(expirationMonth);
             paymentInstrument.setCreditCardExpirationYear(expirationYear);
-            // eslint-disable-next-line
+             
             if (!empty(paymentInformation.creditCardToken)) {
                 paymentInstrument.setCreditCardToken(paymentInformation.creditCardToken);
             }
@@ -184,13 +184,9 @@ function SecureAcceptanceHandle(basket, paymentInformation) {
  */
 exports.Handle = function (basket, paymentInformation, paymentMethodID, req) {
     var CsSAType = Site.getCurrent().getCustomPreferenceValue('CsSAType').value;
-    // eslint-disable-next-line
+     
     // var PaymentMethod = server.forms.getForm('billing').paymentMethod.value;
     var PaymentMethod = session.forms.billing.paymentMethod.value;
-        var currentBasket = basket;
-        var cardErrors = {};
-        var serverErrors = [];
-        var creditCardStatus;
        
         // CYBERSOURCE ADDITION: Handle stored payment instruments
         if (paymentInformation && paymentInformation.storedPaymentUUID &&
@@ -213,7 +209,7 @@ exports.Handle = function (basket, paymentInformation, paymentMethodID, req) {
             }
         }
  
-    // eslint-disable-next-line
+     
     if (empty(PaymentMethod)) {
         return { error: true };
     }
@@ -229,7 +225,7 @@ exports.Handle = function (basket, paymentInformation, paymentMethodID, req) {
  * Create signature with requested input
  * This function takes order No and payment instrument as Input
  */
-// eslint-disable-next-line
+ 
 function SecureAcceptanceAuthorize(orderNumber, pi, pmntProcessor) {
     var CsSAType = Site.getCurrent().getCustomPreferenceValue('CsSAType').value;
     // var PaymentMgr = require('dw/order/PaymentMgr');
@@ -237,7 +233,7 @@ function SecureAcceptanceAuthorize(orderNumber, pi, pmntProcessor) {
     var paymentInstrument = pi;
     var paymentMethod = paymentInstrument.paymentMethod;
     var additionalArgs = {};
-    // eslint-disable-next-line
+     
     var saveCard = session.forms.billing.creditCardFields.saveCard.value;
     if (saveCard) {
         Transaction.wrap(function () {
@@ -249,17 +245,17 @@ function SecureAcceptanceAuthorize(orderNumber, pi, pmntProcessor) {
         paymentInstrument.paymentTransaction.paymentProcessor = paymentProcessor;
     });
     if (CsSAType.equals(CybersourceConstants.METHOD_SA_REDIRECT)) {
-        // eslint-disable-next-line
+         
         additionalArgs.subscriptionToken = session.forms.billing.creditCardFields.selectedCardID.value;
         var secureAcceptanceAdapter = require('*/cartridge/scripts/secureacceptance/adapter/SecureAcceptanceAdapter');
         var saRedirectRequest = secureAcceptanceAdapter.Authorize(orderNumber, paymentInstrument, paymentProcessor, additionalArgs);
         if (saRedirectRequest.success) {
             if (saRedirectRequest.requestData != null) {
-                // eslint-disable-next-line
+                 
                 session.privacy.isPaymentRedirectInvoked = true;
-                // eslint-disable-next-line
+                 
                 session.privacy.paymentType = 'SARedirect';
-                // eslint-disable-next-line
+                 
                 session.privacy.orderId = orderNumber;
                 var data = saRedirectRequest.requestData;
                 var formAction = saRedirectRequest.formAction;
@@ -274,12 +270,12 @@ function SecureAcceptanceAuthorize(orderNumber, pi, pmntProcessor) {
             return { error: true };
         }
     } else if (CsSAType.equals(CybersourceConstants.METHOD_SA_SILENTPOST)) {
-        // eslint-disable-next-line
+         
         additionalArgs.subscriptionToken = session.forms.billing.creditCardFields.selectedCardID.value;
         return require('*/cartridge/scripts/secureacceptance/adapter/SecureAcceptanceAdapter').Authorize(orderNumber, paymentInstrument, paymentProcessor, additionalArgs);
     } else {
         if (CsSAType.equals(CybersourceConstants.METHOD_SA_IFRAME)) {
-            // eslint-disable-next-line
+             
             session.privacy.orderId = orderNumber;
         }
         return require('*/cartridge/scripts/secureacceptance/adapter/SecureAcceptanceAdapter').Authorize(orderNumber, paymentInstrument, paymentProcessor, additionalArgs);
@@ -302,7 +298,7 @@ exports.Authorize = function (orderNumber, paymentInstrument, paymentProcessor, 
     var order = OrderMgr.getOrder(orderNumber);
     var pi = paymentInstrument;
     var paymentMethod = pi.getPaymentMethod();
-    // eslint-disable-next-line
+     
     if (empty(paymentMethod)) {
         return { error: true };
     }

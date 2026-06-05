@@ -13,7 +13,7 @@ var CybersourceHelper = libCybersource.getCybersourceHelper();
  */
 function BankTransferServiceInterface(paymentMethod, request) {
     // calling the service by passing Bank Transfer request
-    // eslint-disable-next-line
+     
     var commonFacade = require('*/cartridge/scripts/facade/CommonFacade');
     var serviceResponse = commonFacade.CallCYBService(paymentMethod, request);
     // return response object
@@ -26,7 +26,7 @@ function BankTransferServiceInterface(paymentMethod, request) {
  * @returns {*} obj
  */
 function buildRequestObject(saleObject, config) {
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     // create reference of request object
     var request = new csReference.RequestMessage();
@@ -43,20 +43,20 @@ function buildRequestObject(saleObject, config) {
     request.apPaymentType = saleObject.paymentType;
 
     var invoiceHeader = csReference.InvoiceHeader();
-    // eslint-disable-next-line
+     
     if (!empty(saleObject.bicNumber)) {
         var bankInfo = csReference.BankInfo();
         bankInfo.swiftCode = saleObject.bicNumber;
         request.bankInfo = bankInfo;
     }
     // set billTo object
-    // eslint-disable-next-line
+     
     if (saleObject.billTo != null) {
         request.billTo = libCybersource.copyBillTo(saleObject.billTo);
     }
     // set item object
     var items = [];
-    // eslint-disable-next-line
+     
     if (!empty(saleObject.items)) {
         var iter = saleObject.items.iterator();
         while (iter.hasNext()) {
@@ -75,7 +75,7 @@ function buildRequestObject(saleObject, config) {
 
     request.invoiceHeader = invoiceHeader;
 
-    // eslint-disable-next-line
+     
     if (empty(config.decision)) {
         CybersourceHelper.apDecisionManagerService(config.paymentMethod, request);
     } else {
@@ -126,13 +126,12 @@ function BankTransferSaleService(saleObject, paymentMethod) {
  * @returns {*} obj
  */
 function BanktransferRefundService(requestID, merchantRefCode, paymentType, amount, currency) {
-    // eslint-disable-next-line
+     
     var Logger = dw.system.Logger.getLogger('Cybersource');
     var CSServices = require('*/cartridge/scripts/init/SoapServiceInit');
-    var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
 
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
     var serviceRequest = new csReference.RequestMessage();
 
@@ -147,7 +146,7 @@ function BanktransferRefundService(requestID, merchantRefCode, paymentType, amou
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'Credit', serviceRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             serviceRequest = modifiedServiceRequest;
         }
@@ -166,7 +165,7 @@ function BanktransferRefundService(requestID, merchantRefCode, paymentType, amou
         return { error: true, errorMsg: e.message };
     }
 
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || serviceResponse.status !== 'OK') {
         Logger.error('[BankTransferFacade.js] response in BankTransferFacadeService response ( {0} )', serviceResponse);
         return { error: true, errorMsg: 'empty or error in BankTransferFacadeRefundService response: ' + serviceResponse };

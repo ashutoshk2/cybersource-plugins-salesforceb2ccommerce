@@ -26,40 +26,40 @@ function calculateTax(cart) {
             var result;
             var cartStateString;
 
-            // eslint-disable-next-line
+             
             if (empty(cart)) {
                 Logger.error('Please provide a Basket!');
                 status = new Status(Status.ERROR);
             }
-            // eslint-disable-next-line
+             
             if (!empty(cart) && !empty(cart.getAllProductLineItems()) && !empty(cart.defaultShipment) && !empty(cart.defaultShipment.shippingAddress)) {
                 result = CommonHelper.CreateCartStateString(cart);
-                // eslint-disable-next-line
+                 
                 session.privacy.updateBillingAddress = false;
-                // eslint-disable-next-line
+                 
                 if (result.success && !empty(result.CartStateString)) {
                     cartStateString = result.CartStateString;
-                    // eslint-disable-next-line
+                     
                     if (((!empty(session.privacy.SkipTaxCalculation) || !session.privacy.SkipTaxCalculation)) && typeof session.privacy.SkipTaxCalculation !== 'undefined') {
                         var TaxFacade = require('*/cartridge/scripts/facade/TaxFacade');
                         var taxationResponse = TaxFacade.TaxationRequest(cart);
                         status = new Status(Status.ERROR);
                         if (taxationResponse.success && taxationResponse.response !== null) {
-                            // eslint-disable-next-line
+                             
                             session.privacy.cartStateString = cartStateString;
-                            // eslint-disable-next-line
+                             
                             session.privacy.SkipTaxCalculation = true;
                             status = new Status(Status.OK);
                         }
-                        // eslint-disable-next-line
+                         
                         session.privacy.isTaxCalculationFailed = true;
-                        // eslint-disable-next-line
+                         
                         session.privacy.updateBillingAddress = true;
                     }
                 } else {
                     TaxHelper.UpdatePriceAdjustment(cart);// update price adjustment call
                 }
-                // eslint-disable-next-line
+                 
                 session.privacy.isTaxCalculationFailed = false;
             } else if (!empty(cart)) {
                 // Fallback to default SFRA tax calculation when shipping address is not yet available (cart/minicart)
@@ -67,7 +67,7 @@ function calculateTax(cart) {
                 return defaultCalculate.calculateTax(cart);
             }
             CommonHelper.UpdateTaxForGiftCertificate(cart);
-            // eslint-disable-next-line
+             
             session.privacy.SkipTaxCalculation = false;// update tax for gift certificate call
             status = new Status(Status.OK);
         } catch (e) {

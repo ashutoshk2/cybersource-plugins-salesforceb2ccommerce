@@ -8,7 +8,6 @@ var CsSAType = Site.getCurrent().getCustomPreferenceValue('CsSAType').value;
 var Transaction = require('dw/system/Transaction');
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
 var CybersourceHelper = require('*/cartridge/scripts/cybersource/libCybersource').getCybersourceHelper();
-var HookMgr = require('dw/system/HookMgr');
 var OrderMgr = require('dw/order/OrderMgr');
 var klarnaHelper = require('*/cartridge/scripts/klarna/helper/KlarnaHelper');
 var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
@@ -20,16 +19,14 @@ var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
  * @param {Object} order - Order object
  * @param {Object} options - Options object containing req, res, etc.
  */
-function postAuthorization(handlePaymentResult, order, options) { // eslint-disable-line no-unused-vars
+function postAuthorization(handlePaymentResult, order, options) {  
     var Logger = require('dw/system/Logger');
     Logger.debug('postAuthorization hook called with handlePaymentResult: ' + JSON.stringify(handlePaymentResult));
 
+    session.privacy.orderId = order.orderNo;
+
     var BasketMgr = require('dw/order/BasketMgr');
     var currentBasket = BasketMgr.getCurrentBasket();
-    var req = options.req;
-    var res = options.res;
-
-    session.privacy.orderId = order.orderNo;
 
     var paymentInstrument;
 
@@ -113,7 +110,7 @@ function postAuthorization(handlePaymentResult, order, options) { // eslint-disa
     if (session.privacy.CybersourceFraudDecision === 'REVIEW') {
         var Order = require('dw/order/Order');
         Transaction.wrap(function () {
-            // eslint-disable-next-line
+             
             order.setConfirmationStatus(Order.CONFIRMATION_STATUS_NOTCONFIRMED);
         });
 

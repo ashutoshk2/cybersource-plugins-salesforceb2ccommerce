@@ -26,7 +26,7 @@ $(document).ready(function () {
                             $form.spinner().stop();
                             formValidation($form, data);
                         } else {
-                            location.href = data.redirectUrl; // eslint-disable-line no-undef,no-restricted-globals
+                            location.href = data.redirectUrl;  
                         }
                     },
                     error: function (err) {

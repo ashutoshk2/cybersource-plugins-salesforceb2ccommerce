@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var server = require('server');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');

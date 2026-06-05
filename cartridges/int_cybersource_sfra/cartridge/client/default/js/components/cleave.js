@@ -41,7 +41,7 @@ base.serializeData = function (form) {
     serializedArray.forEach(function (item) {
         if (item.name.indexOf('cardNumber') > -1) {
             if ($('li[data-method-id="CREDIT_CARD"]').attr('data-sa-type') !== 'SA_FLEX') {
-                item.value = $('#cardNumber').data('cleave').getRawValue(); // eslint-disable-line
+                item.value = $('#cardNumber').data('cleave').getRawValue();  
             }
         }
     });

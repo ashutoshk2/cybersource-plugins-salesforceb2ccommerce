@@ -35,7 +35,7 @@ function saveBillingAddress() {
     if (isPayPalEnabled()) {
         var paymentForm = $('#dwfrm_billing').serialize();
         var url = $('.billing-information .addressSelector').attr('data-create-shipment-url');
-        /* eslint-disable */
+         
         $.ajax({
             method: 'POST',
             async: false,
@@ -46,7 +46,7 @@ function saveBillingAddress() {
             error: function (err) {
             }
         });
-        /* eslint-enable */
+         
     }
 }
 

@@ -23,7 +23,9 @@ var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
  * @param {*} order order
  */
 function HandleCheckStatusServiceResponse(order) {
+    // eslint-disable-next-line no-unused-vars
     var paymentInstrument = null;
+    // eslint-disable-next-line no-unused-vars
     var paymentType = '';
 
     // Get payment instrument to determine payment type
@@ -74,14 +76,14 @@ function HandleCheckStatusServiceResponse(order) {
 function checkPaymentStatusJob(jobsParam) {
     //  Get time X minutes ago, based on job parameter.
     var CreationDate = System.getCalendar();
-    // eslint-disable-next-line
+     
     CreationDate.add(dw.util.Calendar.MINUTE, -jobsParam.LagTime);
 
     // TO-DO: Job should have a parameter that limits the time this looks back to avoid large query results filled with old orders that wont be processed.
     // Find all non-confirmed, non-exported orders before the calculated lag time.
     var type = 'Order';
     var queryString = 'confirmationStatus={' + 0 + '} AND creationDate < {' + 1 + '} AND status !={' + 2 + '} AND status != {' + 3 + '}';
-    // eslint-disable-next-line
+     
     var sortString = 'creationDate asc';
     var orderIterator = SystemObjectMgr.querySystemObjects(type, queryString, sortString,
         Order.CONFIRMATION_STATUS_NOTCONFIRMED,
@@ -89,18 +91,20 @@ function checkPaymentStatusJob(jobsParam) {
         Order.ORDER_STATUS_CANCELLED,
         Order.ORDER_STATUS_FAILED);
 
+    // eslint-disable-next-line no-unused-vars
     var ordersProcessed = 0;
+    // eslint-disable-next-line no-unused-vars
     var paypalOrdersProcessed = 0;
 
     // Iterate over Order query result
-    // eslint-disable-next-line
+     
     if (!empty(orderIterator)) {
         while (orderIterator.hasNext()) {
             var order = orderIterator.next();
             var pIs = order.getPaymentInstruments();
 
             // For each payment processor in the order.
-            // eslint-disable-next-line
+             
             collections.forEach(pIs, function (pi) {
             // for each(var pi in pIs ){
                 var pp;
@@ -116,7 +120,7 @@ function checkPaymentStatusJob(jobsParam) {
                 // collections.forEach(ppList, function (paymentProcessor) {
                 // for each(var paymentProcessor in ppList){
                 for (var i = 0; i < ppList.length; i += 1) {
-                    // eslint-disable-next-line
+                     
                     if (!empty(pp) && ppList[i].equals(pp)) {
                         //  Call APCheck payment status service and update order status based on response
                         HandleCheckStatusServiceResponse(order);

@@ -32,7 +32,7 @@ function CallCYBService(paymentMethod, request) {
         return { error: true, errorMsg: e.message };
     }
     // log the response in case of error scenario
-    // eslint-disable-next-line
+     
     if (empty(serviceResponse) || !'OK'.equals(serviceResponse.status)) {
         Logger.error('[CommonFacade.js] Error : null response');
         return { error: true, errorMsg: serviceResponse.status };
@@ -68,7 +68,7 @@ function CheckPaymentStatusRequest(Order) {
     // create service stubs
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
-    // eslint-disable-next-line
+     
     var csReference = new CybersourceHelper.getcsReference();
 
     // set alipay payment type to pass it as input in request

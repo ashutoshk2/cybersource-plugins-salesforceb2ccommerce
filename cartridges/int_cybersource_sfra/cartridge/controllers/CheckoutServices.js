@@ -367,7 +367,7 @@ server.get('PayerAuthentication', server.middleware.https, function (req, res, n
 
 /* Route to handle paypal submission. This route is called only when either
     PayPal Express or PayPal billing agreement is called from either mini cart or cart page. */
-// eslint-disable-next-line
+ 
 function handlePayPal(req, res, next) {
     var billingFormErrors = {};
     var viewData = {};
@@ -461,7 +461,7 @@ function handlePayPal(req, res, next) {
 /**
  * Update shipping details in cart object
  */
-// eslint-disable-next-line
+ 
 function shippingUpdate(cart, shippingdetails) {
     var shipment = cart.defaultShipment;
     if (!empty(shipment.getShippingAddress())) {
@@ -511,7 +511,7 @@ function googlePayCheckoutError(req, res, next) {
     return next();
 }
 
-// eslint-disable-next-line
+
 server.post('GetGooglePayToken', csrfProtection.validateRequest, function (req, res, next) {
     var Encoding = require('dw/crypto/Encoding');
     var repsonse = JSON.parse(request.httpParameterMap.paymentData);
@@ -626,7 +626,7 @@ server.post('SubmitPaymentGP', csrfProtection.validateRequest, function (req, re
 
         res.setViewData(viewData);
 
-        this.on('route:BeforeComplete', function (req, res) { // eslint-disable-line no-shadow
+        this.on('route:BeforeComplete', function (req, res) {  
 
             var URLUtils = require('dw/web/URLUtils');
             var basketCalculationHelpers = require('*/cartridge/scripts/helpers/basketCalculationHelpers');

@@ -132,7 +132,7 @@ function CreateMockCybersourceBillToObject(InvalidFields, MissingFields) {
 
     billToObject.setFirstName('Peter');
     billToObject.setLastName('Pritchard');
-    // eslint-disable-next-line
+     
     if (!empty(InvalidFields) && InvalidFields.valueOf()) {
         billToObject.setStreet1('xxxxxxxxxxxxxx');
     } else {
@@ -141,7 +141,7 @@ function CreateMockCybersourceBillToObject(InvalidFields, MissingFields) {
     billToObject.setStreet2('');
     billToObject.setCity('Billerica');
     billToObject.setState('MA');
-    // eslint-disable-next-line
+     
     if (!empty(MissingFields) && MissingFields.valueOf()) {
         billToObject.setPostalCode('');
     } else {
@@ -169,7 +169,7 @@ function CreateMockCybersourceShipToObject(InvalidFields, MissingFields) {
 
     shipToObject.setFirstName('Peter');
     shipToObject.setLastName('Pritchard');
-    // eslint-disable-next-line
+     
     if (!empty(InvalidFields) && InvalidFields.valueOf()) {
         shipToObject.setStreet1('xxxxxxxxxxxxxx');
     } else {
@@ -178,7 +178,7 @@ function CreateMockCybersourceShipToObject(InvalidFields, MissingFields) {
     shipToObject.setStreet2('');
     shipToObject.setCity('Billerica');
     shipToObject.setState('MA');
-    // eslint-disable-next-line
+     
     if (!empty(MissingFields) && MissingFields.valueOf()) {
         shipToObject.setPostalCode('');
     } else {
@@ -251,7 +251,7 @@ function CreateCybersourceTaxationItems() {
             item.productSKU = 'PriceAdjustment';
             item.productCode = 'coupon';
         }
-        // eslint-disable-next-line
+         
         item.id = idcount++;
         items.push(item);
     }
@@ -283,7 +283,7 @@ function createTaxRequest() {
             if (!productInCart) {
                 basket.createProductLineItem(product, null, shipment);
             }
-            // eslint-disable-next-line
+             
             dw.system.HookMgr.callHook('dw.order.calculate', 'calculate', basket);
         }
     });
@@ -305,7 +305,7 @@ function createTaxRequest() {
         var defaultShippingMethod = ShippingMgr.getDefaultShippingMethod();
 
         defaultShipment.setShippingMethod(defaultShippingMethod);
-        // eslint-disable-next-line
+         
         dw.system.HookMgr.callHook('dw.order.calculate', 'calculate', basket);
         var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
         var TaxFacade = require(CybersourceConstants.CS_CORE_SCRIPT + 'unittesting/facade/TestFacade');

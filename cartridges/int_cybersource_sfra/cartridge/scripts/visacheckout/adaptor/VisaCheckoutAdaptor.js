@@ -38,7 +38,7 @@ function ButtonDisplay() {
  */
 function GetButtonInitializeSettings(Basket, IsDeliveryAddress) {
     var result = VisaCheckoutHelper.GetButtonInitializeSettings(Basket, IsDeliveryAddress);
-    // eslint-disable-next-line
+     
     session.forms.visaCheckout.clearFormElement();
     return result;
 }
@@ -56,12 +56,12 @@ function UpdateShipping(decryptedPaymentData) {
     var shippingAddress = {};
     var Transaction = require('dw/system/Transaction');
 
-    // eslint-disable-next-line
+     
     if (!empty(shipment.getShippingAddress())) {
         return { success: true };
     }
     try {
-        // eslint-disable-next-line
+         
         Transaction.wrap(function () {
             // Create or replace the shipping address
             shippingAddress = shipment.createShippingAddress();
@@ -100,7 +100,7 @@ function UpdateBilling(Basket, VisaCheckoutCallId, VisaCheckoutPaymentData) {
 
     try {
         // Retrieve the inputs
-        // eslint-disable-next-line
+         
         if (!empty(Basket) && !empty(VisaCheckoutPaymentData.MerchantReferenceCode) && Basket.getUUID().equals(VisaCheckoutPaymentData.MerchantReferenceCode)) {
             PaymentInstrumentUtils.UpdatePaymentInstrumentVisaDecrypt(Basket, VisaCheckoutPaymentData, VisaCheckoutCallId);
             result.success = true;
@@ -150,15 +150,15 @@ function DecryptPayload() {
         if (PaymentMgr.getPaymentMethod(Resource.msg('paymentmethodname.visacheckout', 'cybersource', null))?PaymentMgr.getPaymentMethod(CybersourceConstants.METHOD_VISA_CHECKOUT).isActive():false) {
             var basket = BasketMgr.getCurrentOrNewBasket();
             var decryptedPaymentData = {};
-            /* eslint-disable */
+             
             var callId = session.forms.visaCheckout.callId.htmlValue;
             var encryptedPaymentWrappedKey = session.forms.visaCheckout.encryptedPaymentWrappedKey.value;
             var encryptedPaymentData = session.forms.visaCheckout.encryptedPaymentData.value;
             var basketUUID = session.forms.visaCheckout.basketUUID.value;
             var signature = CommonHelper.signedDataUsingHMAC256(basket.getUUID(), Site.getCurrent().getCustomPreferenceValue('cybVisaSecretKey'));
-            /* eslint-enable */
+             
 
-            // eslint-disable-next-line
+             
             if (!empty(basket && basketUUID && encryptedPaymentData && encryptedPaymentWrappedKey && callId) && (basketUUID === signature)) {
                 Transaction.wrap(function () {
                     CommonHelper.removeExistingPaymentInstruments(basket);
@@ -168,7 +168,7 @@ function DecryptPayload() {
                 if (result.success && result.serviceResponse.ReasonCode === 100) {
                     decryptedPaymentData = result.serviceResponse;
 
-                    // eslint-disable-next-line
+                     
                     if (!empty(basket) && !empty(decryptedPaymentData.MerchantReferenceCode) && basket.getUUID().equals(decryptedPaymentData.MerchantReferenceCode)) {
                         result = UpdateBilling(basket, callId, decryptedPaymentData);
                         if (decryptedPaymentData.shipTo == null && decryptedPaymentData.billTo != null) {

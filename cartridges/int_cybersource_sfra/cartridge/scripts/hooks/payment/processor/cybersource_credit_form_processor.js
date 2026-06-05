@@ -18,10 +18,7 @@ function processForm(req, paymentForm, viewData) {
 
     // Flex response handling for credit cards
     if (CsSAType === Resource.msg('cssatype.SA_FLEX', 'cybersource', null) && !req.form.storedPaymentUUID) {
-        if (paymentForm.creditCardFields.flexresponse.value) {
-            // Store flex response for later processing if needed
-            var flexResponse = paymentForm.creditCardFields.flexresponse.value;
-        } else {
+        if (!paymentForm.creditCardFields.flexresponse.value) {
             logger.info('Flex response has no value when submitting payment');
         }
     }

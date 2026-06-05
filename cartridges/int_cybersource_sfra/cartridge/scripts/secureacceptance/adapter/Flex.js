@@ -14,7 +14,7 @@ function getTime() {
     var dateLocale = Site.getCurrent().getCustomPreferenceValue('SA_Flex_DateLocale');
 
     try {
-        // eslint-disable-next-line
+         
         var date = (request.locale.indexOf('en_') !== -1) ? StringUtils.formatCalendar(new dw.util.Calendar(), 'EEE, dd MMM yyyy HH:mm:ss z') : StringUtils.formatCalendar(new dw.util.Calendar(), (dateLocale || 'en_US'), Calendar.LONG_DATE_PATTERN);
         return date;
     } catch (exception) {
@@ -90,19 +90,19 @@ function CreateFlexKey() {
 
     var sharedSecret = Site.getCurrent().getCustomPreferenceValue('SA_Flex_SharedSecret');
     var keyID = Site.getCurrent().getCustomPreferenceValue('SA_Flex_KeyID');
-    // eslint-disable-next-line
+     
     var host = dw.system.Site.getCurrent().getCustomPreferenceValue('SA_Flex_HostName');
     var signature;
     var targetOrigin;
-    // eslint-disable-next-line
+     
     var merchantId = dw.system.Site.getCurrent().getCustomPreferenceValue('CsMerchantId');
 
-    // eslint-disable-next-line
+     
     if (request.isHttpSecure()) {
-        // eslint-disable-next-line
+         
         targetOrigin = 'https://' + request.httpHost;
     } else {
-        // eslint-disable-next-line
+         
         targetOrigin = 'http://' + request.httpHost;
     }
 
@@ -167,7 +167,6 @@ function CreateFlexKey() {
 function jwtDecode(jwt) {
 
     var response = jwt;
-    var Logger = require('dw/system/Logger');
     var Encoding = require('dw/crypto/Encoding');
 
     var encodedHeader = response.split('.')[0];
@@ -223,11 +222,10 @@ function getPublicKey(kid) {
 
     var sharedSecret = Site.getCurrent().getCustomPreferenceValue('SA_Flex_SharedSecret');
     var keyID = Site.getCurrent().getCustomPreferenceValue('SA_Flex_KeyID');
-    // eslint-disable-next-line
+     
     var host = dw.system.Site.getCurrent().getCustomPreferenceValue('SA_Flex_HostName');
     var signature;
-    var targetOrigin;
-    // eslint-disable-next-line
+     
     var merchantId = dw.system.Site.getCurrent().getCustomPreferenceValue('CsMerchantId');
 
     signedHeaders.put('host', host);

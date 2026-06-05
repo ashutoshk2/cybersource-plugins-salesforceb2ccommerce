@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var server = require('server');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
 var secureRender = secureResponseHelper.secureRender;
@@ -45,7 +45,6 @@ server.get('GetFingerprint', function (req, res, next) {
     var devicefingerprintTTL = Site.getCurrent().getCustomPreferenceValue('CsDeviceFingerprintTTL');
     var getDeviceFingerprint = false;
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
-    var CybersourceHelper = libCybersource.getCybersourceHelper();
 
     if (Site.getCurrent().getCustomPreferenceValue('CsDeviceFingerprintEnabled')) {
         if (empty(session.privacy.deviceFingerprintTime)) {

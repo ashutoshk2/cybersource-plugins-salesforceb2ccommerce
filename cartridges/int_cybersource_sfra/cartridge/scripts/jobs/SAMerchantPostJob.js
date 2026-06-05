@@ -172,7 +172,7 @@ function validateStoredSignature(responseObject) {
 function removeProcessedOrders() {
     var query = 'custom.processed = true';
     var coIterator = CustomObjectMgr.queryCustomObjects('SA_MerchantPost', query, null, null);
-    // eslint-disable-next-line
+     
     if (!empty(coIterator)) {
         Transaction.wrap(function () {
             while (coIterator.hasNext()) {
@@ -192,7 +192,7 @@ function updateOrderStatus(order) {
     if (orderStatus.code === 'OK') {
         order.setExportStatus(Order.EXPORT_STATUS_READY);
         order.setConfirmationStatus(Order.CONFIRMATION_STATUS_CONFIRMED);
-        /* eslint-disable */
+         
         var MailFrom = dw.system.Site.getCurrent().getCustomPreferenceValue('customerServiceEmail');
         var MailSubject = dw.web.Resource.msg('order.orderconfirmation-email.001', 'order', null) + '' + order.orderNo;
         var MailTemplate = 'mail/orderconfirmation';
@@ -208,7 +208,7 @@ function updateOrderStatus(order) {
                 }
             });
         }
-        /* eslint-enable */
+         
     } else {
         Logger.error('[SAmerchantPost.js] DECISION ACCEPT/REVIEW -  Placeorder Error for order:', order.orderNo);
         throw new Error('DECISION ACCEPT/REVIEW -  Placeorder Error for order');
@@ -245,13 +245,13 @@ function FailSAOrder(order, responseObject) {
 function updatePIDetails(order, responseObject, paymentInstrument) {
     var Decision = responseObject.Decision;
     if ((Decision === 'ACCEPT' && responseObject.ReasonCode === '100') || Decision === 'REVIEW') {
-        // eslint-disable-next-line
+         
         if (!empty(order) && !empty(responseObject)) {
             // Update Billing/Shipping details
             PaymentInstrumentUtils.UpdateOrderBillingShippingDetails(order, responseObject, false, false);
             // Update Transaction details
             PaymentInstrumentUtils.UpdatePaymentTransactionSecureAcceptanceAuthorize(order, responseObject);
-            // eslint-disable-next-line
+             
             var cardToken = !empty(responseObject.SubscriptionID) ? responseObject.SubscriptionID : responseObject.req_payment_token;
             // update card details
             PaymentInstrumentUtils.updatePaymentInstumenSACard(paymentInstrument, responseObject.req_card_expiry_date, responseObject.req_card_number, responseObject.req_card_type, cardToken, responseObject.req_bill_to_forename, responseObject.req_bill_to_surname);
@@ -273,14 +273,14 @@ function SAMerchantPostJob() {
     // get all SA order with below query status
     var query = 'custom.processed = false';
     var coIterator = CustomObjectMgr.queryCustomObjects('SA_MerchantPost', query, null, null);
-    // eslint-disable-next-line
+     
     if (!empty(coIterator)) {
         Transaction.wrap(function () {
             while (coIterator.hasNext()) {
                 var CO = coIterator.next();
                 var orderID = CO.custom.OrderID;
                 // Search all order which are in created state
-                // eslint-disable-next-line
+                 
                 var orders = OrderMgr.searchOrders('orderNo={0} AND status={1}', 'creationDate desc', orderID, dw.order.Order.ORDER_STATUS_CREATED);
                 try {
                     if (orders.count > 0) {

@@ -27,7 +27,7 @@ MockLineItemObject.prototype = {
     setGrossPrice: function (value) {
         this.grossPrice = value;
     },
-    // eslint-disable-next-line
+     
     getGrossPrice: function (value) {
         return this.grossPrice;
     },

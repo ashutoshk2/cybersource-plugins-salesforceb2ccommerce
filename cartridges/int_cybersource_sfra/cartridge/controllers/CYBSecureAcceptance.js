@@ -1,5 +1,5 @@
 'use strict';
-/* eslint-disable no-undef */
+ 
 var server = require('server');
 /*
  *Controller that handles the Cybersource Secure Acceptance Processing

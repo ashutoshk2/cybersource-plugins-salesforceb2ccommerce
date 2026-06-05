@@ -24,7 +24,7 @@ function migrateOldCardToken(PaymentInstruments) {
         collections.forEach(PaymentInstruments, function (pi) {
             var paymentInstruments = pi;
             //  for each (var paymentInstruments in PaymentInstruments) {
-            // eslint-disable-next-line
+             
             if (('isSubscription' in paymentInstruments.custom && paymentInstruments.custom.isSubscription) && ('maskedFourDigit' in paymentInstruments.custom && !empty(paymentInstruments.custom.maskedFourDigit)) && empty(paymentInstruments.creditCardToken)) {
                 paymentInstruments.creditCardToken = paymentInstruments.creditCardNumber;
             }

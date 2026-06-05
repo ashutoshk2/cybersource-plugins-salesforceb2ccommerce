@@ -26,7 +26,7 @@ function execute(args) {
         deviceType = 'tablet';
     }
 
-    // eslint-disable-next-line
+     
     args.device = deviceType;
     // eslint-disable-next-line
     return PIPELET_NEXT;

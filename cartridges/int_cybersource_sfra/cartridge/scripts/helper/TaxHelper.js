@@ -19,7 +19,7 @@ function CreateCybersourceTaxationItemsObject(Basket) {
     var idcount = 0;
 
     var shippingMethodTaxCode = null;
-    // eslint-disable-next-line
+     
     if (!empty(shippingMethod)) {
         shippingMethodTaxCode = shippingMethod.taxClassID;
     }
@@ -44,7 +44,7 @@ function CreateCybersourceTaxationItemsObject(Basket) {
     while (orderLevelIterator.hasNext()) {
         var oLevelPriceAdjustment = orderLevelIterator.next();
 
-        // eslint-disable-next-line
+         
         if (empty(orderLevelAdjustmentPrice)) {
             orderLevelAdjustmentPrice = oLevelPriceAdjustment.price;
         } else {
@@ -167,7 +167,7 @@ function getOrderLevelAdjustedLineItemPrice(lineItemPrice, orderLevelAdjustmentP
     var price = 0;
     var Money = require('dw/value/Money');
 
-    // eslint-disable-next-line
+     
     if (lineItemPrice != null && orderLevelAdjustmentPrice != null && basketSubTotalPrice != null && !empty(currencyCode)) {
         var ratioDivided = lineItemPrice.divide(basketSubTotalPrice.getValue());
 
@@ -177,7 +177,7 @@ function getOrderLevelAdjustedLineItemPrice(lineItemPrice, orderLevelAdjustmentP
 
         price = lineItemPrice.subtract(adjustedPrice);
 
-        // eslint-disable-next-line
+         
         if (!empty(quantity) && quantity > 1) {
             price = price.divide(quantity);
         }
@@ -251,7 +251,7 @@ function UpdatePriceAdjustment(Basket) {
             while (shipmentLineItems.hasNext()) {
                 var lineItem = shipmentLineItems.next();
 
-                // eslint-disable-next-line
+                 
                 if (lineItem instanceof dw.order.ProductLineItem) {
                     if (!lineItem.bonusProductLineItem) {
                         lineItem.updateTax(lineItem.taxRate, lineItem.proratedPrice);
@@ -260,11 +260,11 @@ function UpdatePriceAdjustment(Basket) {
                         // Resolution - update line item tax with 0 which will resolve the tax calculation N/A for bonus line items.
                         lineItem.updateTax(0);
                     }
-                    // eslint-disable-next-line
+                     
                 } else if (lineItem instanceof dw.order.ShippingLineItem) {
                     lineItem.updateTax(lineItem.taxRate, lineItem.adjustedNetPrice);
-                    // eslint-disable-next-line
-                } else if (lineItem instanceof dw.order.PriceAdjustment) { // eslint-disable-line no-unsafe-negation
+                     
+                } else if (lineItem instanceof dw.order.PriceAdjustment) {  
                     lineItem.updateTax(0);
                 } else {
                     lineItem.updateTax(lineItem.taxRate, lineItem.netPrice);

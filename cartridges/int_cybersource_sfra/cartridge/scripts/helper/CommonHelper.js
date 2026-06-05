@@ -236,7 +236,7 @@ function CreateCyberSourceBillToObjectUserData(formType) {
     var dob;
     var ipAddress;
 
-    // eslint-disable-next-line
+     
     switch (formType) {
         case 'subscription':
             title = session.forms.subscription.title.htmlValue;
@@ -317,7 +317,7 @@ function removeExistingPaymentInstruments(basket) {
     while (iter.hasNext()) {
         existingPI = iter.next();
         if (existingPI.paymentMethod.equals(PaymentInstrument.METHOD_GIFT_CERTIFICATE)) {
-            // eslint-disable-next-line
+             
             continue;
         } else {
             basket.removePaymentInstrument(existingPI);
@@ -340,7 +340,7 @@ function removeExistingPaymentInstrumentsExceptPaymentType(basket, paymentType) 
     while (iter.hasNext()) {
         existingPI = iter.next();
         if (existingPI.paymentMethod.equals(PaymentInstrument.METHOD_GIFT_CERTIFICATE) || existingPI.paymentMethod.equals(paymentType)) {
-            // eslint-disable-next-line
+             
             continue;
         } else {
             basket.removePaymentInstrument(existingPI);
@@ -728,7 +728,7 @@ function CreateCartStateString(Basket) {
 function getResponseString(obj) {
     var ret = '';
 
-    // eslint-disable-next-line
+     
     ret += 'reasonCode: ' + obj.reasonCode; totalDistrictTaxAmount;
     ret += '\n';
     ret += 'grandTotalAmount: ' + obj.taxReply.grandTotalAmount;
@@ -996,7 +996,7 @@ function UpdateTaxForGiftCertificate(Basket) {
                 while (shipmentLineItems.hasNext()) {
                     var lineItem = shipmentLineItems.next();
                     if (lineItem.tax.value > 0) {
-                        // eslint-disable-next-line
+                         
                         continue;
                     } else {
                         lineItem.updateTax(0);
@@ -1263,7 +1263,7 @@ function signedDataUsingHMAC256(dataToSign, secretKey, paymentType) {
 *  Function to create request object for Cybersource Session service
 *  param
 */
-// eslint-disable-next-line
+ 
 function getInitSessionRequest(sessionRequestObj, lineItemCntr) {
     var sessionRequest = sessionRequestObj;
     var CybersourceHelper = require('/cartridge/scripts/cybersource/libCybersource');
@@ -1379,7 +1379,7 @@ function getItemObject(typeofService, basket) {
             itemObject.setId(count);
         } else if (lineItem instanceof dw.order.ShippingLineItem) {
             if (typeofService === 'sessionService') {
-                // eslint-disable-next-line
+                 
                 continue;
             } else {
                 itemObject.setUnitPrice(StringUtils.formatNumber(Math.abs(lineItem.adjustedPrice.value), '0.00', locale));
@@ -1408,7 +1408,7 @@ function getItemObject(typeofService, basket) {
                 itemObject.setId(count);
             }
         } else if (lineItem instanceof dw.order.ProductShippingLineItem) {
-            // eslint-disable-next-line
+             
             continue;
         } else if (lineItem instanceof dw.order.PriceAdjustment) {
             itemObject.setUnitPrice(StringUtils.formatNumber(Math.abs(lineItem.basePrice.value < 0 ? 0 : lineItem.basePrice.value), '0.00', locale));
@@ -1589,7 +1589,7 @@ function CheckStatusServiceRequest(order) {
     if (!empty(response)) {
         PaymentInstrumentUtils.checkStatusOrderUpdate(Order, response, paymentType);
         if (response.decision === 'ACCEPT' && Number(response.reasonCode) === 100) {
-            // eslint-disable-next-line
+             
             switch (response.apCheckStatusReply.paymentStatus) {
                 case 'COMPLETED':
                 case 'authorized':
@@ -1683,7 +1683,7 @@ function sendMail(options) {
     var template = new Template(options.template);
     var content = template.render(context).text;
     mail.setContent(content, 'text/html', 'UTF-8');
-    // eslint-disable-next-line
+     
     return mail.send();
 }
 

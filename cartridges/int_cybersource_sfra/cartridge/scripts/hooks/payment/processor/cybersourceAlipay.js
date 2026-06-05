@@ -10,7 +10,7 @@ var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstan
 /**
  * This is where current implementation simply creates a payment method and returns 'success'.
 */
-// eslint-disable-next-line
+ 
 function Handle(basket, paymentInformation) {
     var CommonHelper = require(CybersourceConstants.CS_CORE_SCRIPT + 'helper/CommonHelper');
     // call method to handle the request
@@ -23,7 +23,7 @@ function Handle(basket, paymentInformation) {
  * setting the order no as the transaction ID. Customizations may use other processors and custom logic to authorize
  * credit card payment.
  */
-// eslint-disable-next-line
+ 
 function Authorize(orderNumber, paymentInstrument, paymentProcessor) {
     var OrderMgr = require('dw/order/OrderMgr');
     var Order = OrderMgr.getOrder(orderNumber);

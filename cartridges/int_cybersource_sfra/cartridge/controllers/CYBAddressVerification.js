@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 /**
  * Controller dedicated to an independent Cybersource Delivery Address Verification API call.
  * @module controllers/Cybersourceunittesting

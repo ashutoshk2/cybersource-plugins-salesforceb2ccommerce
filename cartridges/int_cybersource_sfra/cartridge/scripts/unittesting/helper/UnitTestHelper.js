@@ -39,7 +39,7 @@ function TestCCAuth() {
             }
         }
     } else {
-        // eslint-disable-next-line
+         
         var response = !empty(result.errorMsg) ? result.errorMsg : 'System Exception occured contact administrator';
         return { success: false, type: 'CC Auth', response: response };
     }
@@ -52,7 +52,7 @@ function TestCCAuth() {
 function TestTax() {
     var taxResponse = TestHelper.CreatTaxRequest();
 
-    // eslint-disable-next-line
+     
     if (!empty(taxResponse) && taxResponse.success) {
         return { success: true, type: 'Taxation', response: taxResponse.serviceResponse };
     }
@@ -83,7 +83,7 @@ function TestCaptureService(requestID, merchantRefCode, paymentType, paymentTota
         serviceResponse = CardFacade.CCCaptureRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency);
         // captureReplyTitle = 'Credit card Capture Reply';
     } else if (paymentType === 'visacheckout') {
-        // eslint-disable-next-line
+         
         var orderid = session.forms.genericTestInterfaceForm.orderRequestID.value;
         var VisaCheckoutFacade = require('*/cartridge/scripts/visacheckout/facade/VisaCheckoutFacade');
         serviceResponse = VisaCheckoutFacade.VCCaptureRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency, orderid);
@@ -95,7 +95,7 @@ function TestCaptureService(requestID, merchantRefCode, paymentType, paymentTota
         var MobileCheckoutFacade = require('*/cartridge/scripts/mobilepayments/facade/MobilePaymentFacade');
         serviceResponse = MobileCheckoutFacade.GPCaptureRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency);
     }
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse)) {
         return { success: true, type: 'CC Capture', response: serviceResponse };
     }
@@ -120,7 +120,7 @@ function TestCreditService(requestID, merchantRefCode, paymentType, paymentTotal
         var CardFacade = require('*/cartridge/scripts/facade/CardFacade');
         serviceResponse = CardFacade.CCCreditRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency);
     } else if (paymentType === 'visacheckout') {
-        // eslint-disable-next-line
+         
         orderid = session.forms.genericTestInterfaceForm.orderRequestID.value;
         var VisaCheckoutFacade = require('*/cartridge/scripts/visacheckout/facade/VisaCheckoutFacade');
         serviceResponse = VisaCheckoutFacade.VCCreditRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency, orderid);
@@ -135,11 +135,9 @@ function TestCreditService(requestID, merchantRefCode, paymentType, paymentTotal
     } else if (paymentType === 'MCH' || paymentType === 'IDL' || paymentType === 'SOF') {
         var BanktransferFacade = require('*/cartridge/scripts/banktransfer/facade/BankTransferFacade');
         serviceResponse = BanktransferFacade.BanktransferRefundService(requestID, merchantRefCode, paymentType, paymentTotal, currency);
-    } else if (paymentType === 'APY') {
-        serviceResponse = AliPayFacade.AliPayRefundService(requestID, merchantRefCode, paymentType, paymentTotal, currency);
     }
 
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse)) {
         return { success: true, type: 'CC Credit', response: serviceResponse };
     }
@@ -158,7 +156,7 @@ function TestCreditService(requestID, merchantRefCode, paymentType, paymentTotal
  */
 function TestAuthReversal(requestID, merchantRefCode, paymentType, amount, currency) {
     var serviceResponse;
-    // eslint-disable-next-line
+     
     var orderid = session.forms.genericTestInterfaceForm.orderRequestID.value;
     // capture the refund service response from test facade
     if (paymentType === 'CC') {
@@ -175,7 +173,7 @@ function TestAuthReversal(requestID, merchantRefCode, paymentType, amount, curre
         serviceResponse = MobileCheckoutFacade.GPAuthReversalService(requestID, merchantRefCode, paymentType, currency, amount);
     }
 
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse)) {
         return { success: true, type: 'CC Auth Reverse', response: serviceResponse };
     }
@@ -192,12 +190,12 @@ function TestCheckStatusService(merchantReferenceCode) {
     // get orderid from form field
     var Order = {};
     var serviceResponse;
-    // eslint-disable-next-line
+     
     if (!empty(merchantReferenceCode)) {
-        // eslint-disable-next-line
+         
         Order = dw.order.OrderMgr.getOrder(merchantReferenceCode);
     }
-    // eslint-disable-next-line
+     
     if (empty(Order)) {
         return { success: false, type: 'Check payment Status', response: 'No order found:' + merchantReferenceCode };
     }
@@ -217,7 +215,7 @@ function TestCheckStatusService(merchantReferenceCode) {
     var CommonFacade = require('*/cartridge/scripts/facade/CommonFacade');
     serviceResponse = CommonFacade.CheckPaymentStatusRequest(Order);
 
-    // eslint-disable-next-line
+     
     if (!empty(serviceResponse)) {
         return { success: true, type: 'Check payment Status', response: serviceResponse };
     }

@@ -229,7 +229,7 @@ function processPayment(paymentData) {
 
     var paymentForm = $('#dwfrm_billing').serialize();
 
-  function loadFormErrors(parentSelector, fieldErrors) { // eslint-disable-line
+  function loadFormErrors(parentSelector, fieldErrors) {  
         // Display error messages and highlight form fields with errors.
         $.each(fieldErrors, function (attr) {
             $('*[name=' + attr + ']', parentSelector)

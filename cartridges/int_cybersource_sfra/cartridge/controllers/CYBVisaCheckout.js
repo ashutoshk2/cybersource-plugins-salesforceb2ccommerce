@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var server = require('server');
 
 /*
@@ -22,7 +22,7 @@ var VisaCheckoutAdaptor = require(CybersourceConstants.CS_CORE_SCRIPT + 'visache
 /**
  * Load Visa Checkout Button via remote include where get th button settings from site preferences.
  */
-// eslint-disable-next-line
+ 
 server.get('Button', function (req, res, next) {
     try {
         var buttonsource = null;
@@ -112,7 +112,7 @@ function visaCheckoutError(req, res, next) {
 /**
  * Visa payload decrypt via cybersource and update the basket with billing and shipping details take user to review page or return back to cart page with error
  */
-// eslint-disable-next-line
+ 
 server.post('Decrypt', csrfProtection.generateToken, function (req, res, next) {
     var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
     var BasketMgr = require('dw/order/BasketMgr');

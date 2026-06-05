@@ -1,6 +1,6 @@
 'use strict';
 
-// eslint-disable-next-line
+ 
 var Logger = dw.system.Logger.getLogger('Cybersource');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var collections = require('*/cartridge/scripts/util/collections');
@@ -52,7 +52,7 @@ function getOrderObject(Basket) {
     var tokenObject = new TokenObject();
     // var orderdetailsObject = new OrderDetailsObject();
     var cartObject = new CartItemObject();
-    // eslint-disable-next-line
+     
     var creditCardForm = session.forms.billing.creditCardFields;
     var cardSecurityCode = creditCardForm.securityCode.value;
 
@@ -70,12 +70,12 @@ function getOrderObject(Basket) {
         }
     }
 
-    // eslint-disable-next-line
+     
     if (!empty(billingaddress) && !empty(basket)) {
         /* This if condition checks if billingAddress.address1 is present only for V.Me
             * create the billingObject using billingAddress else it will create billingObject using shippingAddress
             */
-        // eslint-disable-next-line
+         
         if (!empty(billingaddress.address1)) {
             billingObject.setFullName(billingaddress.fullName);
             billingObject.setFirstName(billingaddress.firstName);
@@ -105,7 +105,7 @@ function getOrderObject(Basket) {
 
     deleteEmptyProperties(billingObject);
 
-    // eslint-disable-next-line
+     
     if (!empty(shippingAddress)) {
         shippingObject.setFullName(shippingAddress.fullName);
         shippingObject.setFirstName(shippingAddress.firstName);

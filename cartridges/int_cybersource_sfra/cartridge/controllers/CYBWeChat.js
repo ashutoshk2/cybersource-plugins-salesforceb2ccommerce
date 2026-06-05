@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var server = require('server');
 var HookMgr = require('dw/system/HookMgr');
 var URLUtils = require('dw/web/URLUtils');

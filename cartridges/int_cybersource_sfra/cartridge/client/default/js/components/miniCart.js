@@ -122,7 +122,7 @@ module.exports = function () {
     });
     $('body').on('change', '.minicart .quantity', function () {
         if ($(this).parents('.bonus-product-line-item').length && $('.cart-page').length) {
-            // eslint-disable-next-line
+             
             location.reload();
         }
     });

@@ -12,7 +12,7 @@ var base = module.superModule;
 function getNonGiftCertificateAmount(basket) {
     var Money = require('dw/value/Money');
 
-    // eslint-disable-next-line
+     
     if (empty(basket)) {
         var Site = require('dw/system/Site');
         return new Money(0.0, Site.getCurrent().getDefaultCurrency());

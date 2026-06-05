@@ -24,7 +24,7 @@ function updateCartTotal(cart, itemMap, taxationResponse) {
         /* for each(var resItem in taxationResponse.taxReply.item)
         { */
         var lineItem = itemMap.get(resItem.id.toString());
-        // eslint-disable-next-line
+         
         var itemTax = new dw.value.Money(parseFloat(resItem.totalTaxAmount), cart.currencyCode);
         lineItem.setTax(itemTax);
         var taxRate = 0.00;
@@ -37,10 +37,10 @@ function updateCartTotal(cart, itemMap, taxationResponse) {
         //
         //* ****************************************************************//
 
-        // eslint-disable-next-line
+         
         if (lineItem instanceof dw.order.ProductLineItem) {
             if (!lineItem.bonusProductLineItem) {
-                // eslint-disable-next-line
+                 
                 if (!empty(lineItem.proratedPrice) && lineItem.proratedPrice.value !== 0) {
                     taxRate = itemTax.value / lineItem.proratedPrice.value;
                 }
@@ -50,15 +50,15 @@ function updateCartTotal(cart, itemMap, taxationResponse) {
                 // Resolution - update line item tax with 0 which will resolve the tax calculation N/A for bonus line items.
                 lineItem.updateTax(0);
             }
-            // eslint-disable-next-line
+             
         } else if (lineItem instanceof dw.order.ShippingLineItem) {
-            // eslint-disable-next-line
+             
             if (!empty(lineItem.adjustedNetPrice) && lineItem.adjustedNetPrice.value !== 0) {
                 taxRate = itemTax.value / lineItem.adjustedNetPrice.value;
             }
             lineItem.updateTax(taxRate, lineItem.adjustedNetPrice);
         } else {
-            // eslint-disable-next-line
+             
             if (!empty(lineItem.netPrice) && lineItem.netPrice.value !== 0) {
                 taxRate = itemTax.value / lineItem.netPrice.value;
             }
@@ -74,7 +74,7 @@ function updateCartTotal(cart, itemMap, taxationResponse) {
  * @returns {*} obj
  */
 function copyTaxService(taxService) {
-    // eslint-disable-next-line
+     
     var requestTaxService = csReference.TaxService();
     var value;
     Object.keys(taxService).forEach(function (name) {
@@ -94,7 +94,7 @@ function copyTaxService(taxService) {
  * @returns {*} obj
  */
 function copyShipFrom(shipFrom) {
-    // eslint-disable-next-line
+     
     var requestShipFrom = csReference.ShipFrom();
     var value;
     Object.keys(shipFrom).forEach(function (name) {
@@ -137,7 +137,7 @@ function addTaxRequest(lineItemCtnr, items) {
     var nexus = CybersourceHelper.getNexus();
     var noNexus = CybersourceHelper.getNoNexus();
 
-    /* eslint-disable */
+     
     if (!empty(nexus) && empty(noNexus)) {
         taxationRequest.taxService.nexus = nexus;
     } else if (!empty(noNexus) && empty(nexus)) {
@@ -147,7 +147,7 @@ function addTaxRequest(lineItemCtnr, items) {
         Logger.info('[libCybersource.js] Nexus and NoNexus lists both contain data. Defaulting to use Nexus list.  Ignoring NoNexus list.');
         taxationRequest.taxService.nexus = nexus;
     }
-    /* eslint-enable */
+     
     var itemsList = [];
     var length = items.length;
     var i = 0;
@@ -167,7 +167,7 @@ function addTaxRequest(lineItemCtnr, items) {
  */
 function TaxationRequest(cart) {
     // read pipeline dictionary input parameter
-    // eslint-disable-next-line
+     
     var Logger = dw.system.Logger.getLogger('Cybersource');
     var itemArray;
     var itemMap;
@@ -183,7 +183,7 @@ function TaxationRequest(cart) {
     var HookMgr = require('dw/system/HookMgr');
     if (HookMgr.hasHook('app.cybersource.modifyrequest')) {
         var modifiedServiceRequest = HookMgr.callHook('app.cybersource.modifyrequest', 'Tax', taxRequest);
-        // eslint-disable-next-line
+         
         if (!empty(modifiedServiceRequest)) {
             taxRequest = modifiedServiceRequest;
         }
@@ -196,7 +196,7 @@ function TaxationRequest(cart) {
         var i;
         requestWrapper.request = taxRequest;
         taxationResponse = service.call(requestWrapper);
-        // eslint-disable-next-line
+         
         if (empty(taxationResponse) || taxationResponse.status !== 'OK') {
             return { error: true, errorMsg: taxationResponse.status };
         }

@@ -69,7 +69,7 @@ if (IsCartridgeEnabled) {
         var billingForm = server.forms.getForm('billing');
         if (!empty(billingForm.creditCardFields.flexresponse.value)) {
             res.setViewData(result);
-            this.on('route:BeforeComplete', function (req, res) { // eslint-disable-line no-shadow
+            this.on('route:BeforeComplete', function (req, res) {  
                 var URLUtils = require('dw/web/URLUtils');
                 var CustomerMgr = require('dw/customer/CustomerMgr');
                 var Transaction = require('dw/system/Transaction');

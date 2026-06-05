@@ -436,13 +436,13 @@ function sessionService(lineItemCntr, args) {
 }
 
 function addBillingAgreementId(request, lineItemCntr) {
-    // eslint-disable-next-line
+     
     var collections = require('*/cartridge/scripts/util/collections');
     var isPayPalCredit = false;
     var isBillingAgreement = false;
     var paymentInstruments = lineItemCntr.paymentInstruments;
     // Iterate on All Payment Instruments and check if PayPal Credit Payment Method was used
-    // eslint-disable-next-line
+     
     collections.forEach(paymentInstruments, function (paymentInstrument) {
         /*
          * Check if payment method used is PayPal Credit

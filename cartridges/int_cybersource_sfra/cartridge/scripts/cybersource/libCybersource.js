@@ -13,15 +13,15 @@ var Site = require('dw/system/Site');
 
 // Helper method to export the helper
 function getCybersourceHelper() {
-    // eslint-disable-next-line
+     
     return CybersourceHelper;
 }
 
 function copyBillTo(billTo) {
-    // eslint-disable-next-line
+     
     var requestBillTo = new CybersourceHelper.getcsReference().BillTo();
     var value;
-    // eslint-disable-next-line
+     
     if (!empty(billTo)) {
         Object.keys(billTo).forEach(function (name) {
             if (name.indexOf('set') === -1 && name.indexOf('get') === -1) {
@@ -36,7 +36,7 @@ function copyBillTo(billTo) {
 }
 
 function copyShipTo(shipTo) {
-    // eslint-disable-next-line
+     
     var requestShipTo = new CybersourceHelper.getcsReference().ShipTo();
     var value;
     if (!empty(shipTo)) {
@@ -53,7 +53,7 @@ function copyShipTo(shipTo) {
 }
 
 function copyPurchaseTotals(purchase) {
-    // eslint-disable-next-line
+     
     var requestPurchaseTotals = new CybersourceHelper.getcsReference().PurchaseTotals();
     var value;
     if (!empty(purchase)) {
@@ -70,7 +70,7 @@ function copyPurchaseTotals(purchase) {
 }
 
 function copyCreditCard(card) {
-    // eslint-disable-next-line
+     
     var requestCard = new CybersourceHelper.getcsReference().Card();
     var value;
     if (card) {
@@ -87,7 +87,7 @@ function copyCreditCard(card) {
 }
 
 function copyItemFrom(item) {
-    // eslint-disable-next-line
+     
     var requestItem = new CybersourceHelper.getcsReference().Item();
     var value;
     Object.keys(item).forEach(function (name) {
@@ -114,7 +114,7 @@ function copyTaxAmounts(taxReply) {
 }
 
 function copyAp(ap) {
-    // eslint-disable-next-line
+     
     var requestAp = new CybersourceHelper.getcsReference().apPayer();
     var value;
     Object.keys(ap).forEach(function (name) {
@@ -133,7 +133,7 @@ function getPaymentType() {
 }
 
 function copyPos(pos) {
-    // eslint-disable-next-line
+     
     var requestPos = new CybersourceHelper.getcsReference().Pos();
     var value;
     Object.keys(pos).forEach(function (name) {
@@ -510,7 +510,7 @@ var CybersourceHelper = {
                     service);
                 break;
             default:
-                // eslint-disable-next-line
+                 
                 throw 'Undefined Cybersource Endpoint "' + endpoint + '"';
         }
     },
@@ -908,7 +908,7 @@ var CybersourceHelper = {
         } else if (isGooglePay && paymentInstrument.custom.GooglePayEncryptedData !== null) {
             serviceRequest.paymentSolution = '012';
             var requestEncryptedPayment = new CybersourceHelper.getcsReference().EncryptedPayment();
-            // eslint-disable-next-line
+             
             requestEncryptedPayment.data = paymentInstrument.custom.GooglePayEncryptedData;
             serviceRequest.encryptedPayment = requestEncryptedPayment;
         } else if (null !== creditCardForm && empty(creditCardForm.flexresponse.value) && isCreditCard) {
@@ -956,7 +956,7 @@ var CybersourceHelper = {
         } else if (isGooglePay && paymentInstrument.custom.GooglePayEncryptedData !== null) {
             serviceRequest.paymentSolution = '012';
             var requestEncryptedPayment = new CybersourceHelper.getcsReference().EncryptedPayment();
-            // eslint-disable-next-line
+             
             requestEncryptedPayment.data = paymentInstrument.custom.GooglePayEncryptedData;
             serviceRequest.encryptedPayment = requestEncryptedPayment;
         } else if (null !== creditCardForm && empty(creditCardForm.flexresponse.value) && isCreditCard) {
@@ -1093,7 +1093,7 @@ var CybersourceHelper = {
         } else if (isGooglePay && paymentInstrument.custom.GooglePayEncryptedData !== null) {
             request.paymentSolution = '012';
             var requestEncryptedPayment = new CybersourceHelper.getcsReference().EncryptedPayment();
-            // eslint-disable-next-line
+             
             requestEncryptedPayment.data = paymentInstrument.custom.GooglePayEncryptedData;
             request.encryptedPayment = requestEncryptedPayment;
         } else if (null !== creditCardForm && empty(creditCardForm.flexresponse.value) && isCreditCard) {
@@ -1129,7 +1129,7 @@ var CybersourceHelper = {
         }
     },
 
-    // eslint-disable-next-line
+     
     addPayerAuthReplyInfo: function (request, cavv, ucafAuthenticationData, ucafCollectionIndicator, eciRaw, commerceIndicator, xid, paresStatus, specificationVersion, directoryTrnsctnId, cavvAlgorithm, effectiveAuthenticationType, challengeCancelCode, authenticationStatusReason, acsTransactionID, authorizationPayload) {
         if (request.ccAuthService === null) {
             request.ccAuthService = new CybersourceHelper.getcsReference().CCAuthService();

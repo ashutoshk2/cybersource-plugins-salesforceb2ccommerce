@@ -1,6 +1,6 @@
 'use strict';
 
-/* eslint-disable no-undef */
+ 
 var totalServiceCalls = 1;
 
 /**
@@ -160,7 +160,7 @@ function weChatCheckStatus(serviceCalls, enforceError) {
                 }
             }
         },
-        // eslint-disable-next-line
+         
         error: function (err) {
             $('.modal').spinner().stop();
             // Sanitize URL to prevent open redirect
