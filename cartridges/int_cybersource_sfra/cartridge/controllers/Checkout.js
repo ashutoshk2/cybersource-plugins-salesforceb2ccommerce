@@ -111,41 +111,10 @@ server.append('Begin', function (req, res, next) {
 
 server.post('SetBillingAddress', csrfProtection.generateToken, server.middleware.https, function (req, res, next) {
     var BasketMgr = require('dw/order/BasketMgr');
-    var Transaction = require('dw/system/Transaction');
+    var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
     var paymentForm = server.forms.getForm('billing');
     var currentBasket = BasketMgr.getCurrentBasket();
-    var billingAddress = currentBasket.billingAddress;
-    Transaction.wrap(function () {
-        if (!billingAddress) {
-            billingAddress = currentBasket.createBillingAddress();
-        }
-        if (!empty(paymentForm.addressFields.firstName.value)) {
-            billingAddress.setFirstName(paymentForm.addressFields.firstName.value);
-        }
-        if (!empty(paymentForm.addressFields.lastName.value)) {
-            billingAddress.setLastName(paymentForm.addressFields.lastName.value);
-        }
-        if (!empty(paymentForm.addressFields.address1.value)) {
-            billingAddress.setAddress1(paymentForm.addressFields.address1.value);
-        }
-        if (!empty(paymentForm.addressFields.address2.value)) {
-            billingAddress.setAddress2(paymentForm.addressFields.address2.value);
-        }
-        if (!empty(paymentForm.addressFields.city.value)) {
-            billingAddress.setCity(paymentForm.addressFields.city.value);
-        }
-        if (!empty(paymentForm.addressFields.postalCode.value)) {
-            billingAddress.setPostalCode(paymentForm.addressFields.postalCode.value);
-        }
-
-        if (Object.prototype.hasOwnProperty.call(paymentForm.addressFields, 'states')) {
-            billingAddress.setStateCode(paymentForm.addressFields.states.stateCode.value);
-        }
-        if (!empty(paymentForm.addressFields.country.value)) {
-            billingAddress.setCountryCode(paymentForm.addressFields.country.value);
-        }
-    });
-    // Send secure JSON response with CSP headers
+    CommonHelper.applyBillingFormToBasket(currentBasket, paymentForm);
     secureJsonResponse(res, { error: false });
     next();
 });
@@ -167,13 +136,8 @@ server.prepend('Begin', function (req, res, next) {
     var hasplaceOrderError = !empty(placeOrderError);
 
     if (currentStage === 'payment' && (hasPaymentError || hasplaceOrderError)) {
-        // Clear any basket payment instruments if they exist
-        if (currentBasket && currentBasket.getPaymentInstruments().size() > 0) {
-            var instruments = currentBasket.getPaymentInstruments();
-            for (var i = 0; i < instruments.size(); i++) {
-                currentBasket.removePaymentInstrument(instruments[i]);
-            }
-        }
+        var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
+        CommonHelper.removeAllPaymentInstruments(currentBasket);
     }
 
     if (!currentBasket) {

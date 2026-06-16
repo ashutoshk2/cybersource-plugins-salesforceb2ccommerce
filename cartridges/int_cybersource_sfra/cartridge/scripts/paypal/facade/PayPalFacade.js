@@ -955,6 +955,73 @@ function reauthorizeServiceV2(lineItemCntr, paymentInstrument, authRequestID) {
     return payPalSerivceInterface(request);
 }
 
+/**
+ * Cancels an in-flight PayPal V2 session: optionally voids the order with
+ * CyberSource, then clears `paypalV2RequestID` and `paypalV2OrderAmount`
+ * from session.privacy. Safe to call when no V2 session is active.
+ * @param {Object} [opts] options
+ * @param {boolean} [opts.skipVoid=false] when true, only clears session keys
+ * @returns {Object} { voided: boolean, error: string|null }
+ */
+function cancelV2Session(opts) {
+    var Logger = require('dw/system/Logger').getLogger('Cybersource');
+    var skipVoid = !!(opts && opts.skipVoid);
+    var requestID = session.privacy.paypalV2RequestID;
+    var voided = false;
+    var error = null;
+    if (requestID && !skipVoid) {
+        try {
+            voidOrderServiceV2(requestID);
+            voided = true;
+        } catch (e) {
+            error = e.message;
+            Logger.error('[PayPalFacade-cancelV2Session] Failed to void: {0}', e.message);
+        }
+    }
+    session.privacy.paypalV2RequestID = null;
+    session.privacy.paypalV2OrderAmount = null;
+    return { voided: voided, error: error };
+}
+
+/**
+ * Reconciles PayPal V2 approved amount against the current basket total.
+ * If the basket has changed since approval, calls UpdateOrder to sync.
+ * If UpdateOrder fails or throws, voids the V2 session via cancelV2Session.
+ * @param {dw.order.LineItemCtnr} cart current basket
+ * @param {Object} [opts] options
+ * @param {string} [opts.orderRequestID] V2 request ID; defaults to session.privacy.paypalV2RequestID
+ * @param {string} [opts.fundingSource='paypal'] funding source for UpdateOrder
+ * @returns {Object} { status: 'noop'|'updated'|'voided', newAmount?: number, error?: string }
+ */
+function reconcileV2Amount(cart, opts) {
+    var Logger = require('dw/system/Logger').getLogger('Cybersource');
+    var approvedAmount = session.privacy.paypalV2OrderAmount;
+    if (!cart || approvedAmount === null || approvedAmount === undefined) {
+        return { status: 'noop' };
+    }
+    if (cart.totalGrossPrice.value === approvedAmount) {
+        return { status: 'noop' };
+    }
+    var orderRequestID = (opts && opts.orderRequestID) || session.privacy.paypalV2RequestID;
+    var fundingSource = (opts && opts.fundingSource) || 'paypal';
+    Logger.warn('[PayPalFacade-reconcileV2Amount] Basket total changed. Approved: {0}, Current: {1} - calling UpdateOrder',
+        approvedAmount, cart.totalGrossPrice.value);
+    try {
+        var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
+        var adapter = require(CybersourceConstants.PAYPAL_ADAPTOR);
+        var updateResult = adapter.UpdateOrder(cart, { orderRequestID: orderRequestID, fundingSource: fundingSource });
+        if (updateResult && updateResult.success) {
+            session.privacy.paypalV2OrderAmount = cart.totalGrossPrice.value;
+            return { status: 'updated', newAmount: cart.totalGrossPrice.value };
+        }
+        Logger.error('[PayPalFacade-reconcileV2Amount] UpdateOrder failed - voiding order');
+    } catch (e) {
+        Logger.error('[PayPalFacade-reconcileV2Amount] UpdateOrder exception: {0} - voiding order', e.message);
+    }
+    cancelV2Session();
+    return { status: 'voided' };
+}
+
 module.exports = {
     SessionService: sessionService,
     createOrderServiceV2: createOrderServiceV2,
@@ -968,5 +1035,7 @@ module.exports = {
     BillingAgreement: billagreementService,
     PayPalRefundService: PayPalRefundService,
     PayPalReversalService: PayPalReversalService,
-    PayPalCaptureService: PayPalCaptureService
+    PayPalCaptureService: PayPalCaptureService,
+    cancelV2Session: cancelV2Session,
+    reconcileV2Amount: reconcileV2Amount
 };

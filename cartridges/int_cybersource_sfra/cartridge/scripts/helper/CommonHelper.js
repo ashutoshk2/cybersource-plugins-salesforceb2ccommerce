@@ -5,6 +5,15 @@
 var Logger = require('dw/system/Logger').getLogger('Cybersource');
 var Site = require('dw/system/Site');
 var StringUtils = require('dw/util/StringUtils');
+var Bytes = require('dw/util/Bytes');
+var Mac = require('dw/crypto/Mac');
+var Encoding = require('dw/crypto/Encoding');
+var TaxMgr = require('dw/order/TaxMgr');
+var ProductLineItem = require('dw/order/ProductLineItem');
+var GiftCertificateLineItem = require('dw/order/GiftCertificateLineItem');
+var ShippingLineItem = require('dw/order/ShippingLineItem');
+var ProductShippingLineItem = require('dw/order/ProductShippingLineItem');
+var PriceAdjustment = require('dw/order/PriceAdjustment');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 
 /**
@@ -47,7 +56,7 @@ function setKlarnaDiscountAmount(processor, purchaseObject, basket, locale) {
     if (CybersourceConstants.KLARNA_PROCESSOR.equals(processor)) {
         for (i = 0; i < basket.allLineItems.length; i += 1) {
             var lineItem = basket.allLineItems[i];
-            if (lineItem instanceof dw.order.PriceAdjustment) {
+            if (lineItem instanceof PriceAdjustment) {
                 // set the adjustment amount
                 discountAmount += Math.abs(lineItem.grossPrice.value);
             }
@@ -365,7 +374,6 @@ function setTotalAmount(processor, itemObject, lineItemValue, locale) {
 function CreateCybersourceItemObject(Basket) {
     var basket = Basket;
     var locale = GetRequestLocale();
-    // var PaymentMgr = require('dw/order/PaymentMgr');
     //  lineItemCtnr.paymentInstrument field is deprecated.  Get default payment method.
     var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
     var paymentInstrument = CardHelper.getNonGCPaymemtInstument(basket);
@@ -385,7 +393,7 @@ function CreateCybersourceItemObject(Basket) {
         var lineItem = lineItems.next();
         var ItemObject = require('*/cartridge/scripts/cybersource/CybersourceItemObject');
         var itemObject = new ItemObject();
-        if (lineItem instanceof dw.order.ProductLineItem) {
+        if (lineItem instanceof ProductLineItem) {
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.basePrice.value, '000000.00', locale));
             itemObject.setQuantity(lineItem.quantityValue);
             itemObject.setProductCode('default');
@@ -400,7 +408,7 @@ function CreateCybersourceItemObject(Basket) {
             }
 
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.GiftCertificateLineItem) {
+        } else if (lineItem instanceof GiftCertificateLineItem) {
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.grossPrice.value, '000000.00', locale));
             itemObject.setQuantity(1);
             itemObject.setProductCode('GIFT_CERTIFICATE');
@@ -409,7 +417,7 @@ function CreateCybersourceItemObject(Basket) {
             itemObject.setTaxAmount(StringUtils.formatNumber(0, '000000.00', locale));
             setTotalAmount(processor, itemObject, lineItem.grossPrice.value, locale);
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.ShippingLineItem) {
+        } else if (lineItem instanceof ShippingLineItem) {
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.adjustedPrice.value, '000000.00', locale));
             itemObject.setQuantity(1);
             itemObject.setProductCode(lineItem.ID);
@@ -420,7 +428,7 @@ function CreateCybersourceItemObject(Basket) {
             }
             setTotalAmount(processor, itemObject, lineItem.adjustedGrossPrice.value, locale);
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.ProductShippingLineItem) {
+        } else if (lineItem instanceof ProductShippingLineItem) {
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.adjustedPrice.value, '000000.00', locale));
             itemObject.setQuantity(1);
             itemObject.setProductCode('SHIPPING_SURCHARGE');
@@ -429,7 +437,7 @@ function CreateCybersourceItemObject(Basket) {
             itemObject.setTaxAmount(StringUtils.formatNumber(lineItem.adjustedTax.value, '000000.00', locale));
             setTotalAmount(processor, itemObject, lineItem.adjustedGrossPrice.value, locale);
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.PriceAdjustment) {
+        } else if (lineItem instanceof PriceAdjustment) {
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.basePrice.value < 0 ? 0 : lineItem.basePrice.value, '000000.00', locale));
             itemObject.setQuantity(lineItem.quantity);
             itemObject.setProductCode('PRICE_ADJUSTMENT');
@@ -454,7 +462,7 @@ function CreateCybersourceItemObject(Basket) {
 function setKlarnaTaxAmount(itemObject, taxvalue, locale) {
     /* check if taxation policy is net, set the tax amount else set the tax
      amount to zero for gross policy */
-    if (dw.order.TaxMgr.taxationPolicy === dw.order.TaxMgr.TAX_POLICY_NET) {
+    if (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) {
         // set the tax value for net taxation policy
         itemObject.setTaxAmount(StringUtils.formatNumber(taxvalue, '000000.00', locale));
     } else {
@@ -465,7 +473,7 @@ function setKlarnaTaxAmount(itemObject, taxvalue, locale) {
 
 function setKlarnaTotalAmount(itemObject, totalAmount, taxvalue, locale) {
     /* set the total amount based on tax policy */
-    if (dw.order.TaxMgr.taxationPolicy === dw.order.TaxMgr.TAX_POLICY_NET) {
+    if (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) {
         // set totalamount for net taxation policy
         itemObject.setTotalAmount(StringUtils.formatNumber(totalAmount + taxvalue, '000000.00', locale));
     } else {
@@ -493,7 +501,7 @@ function CreateKlarnaItemObject(Basket) {
         var lineItem = lineItems.next();
         var ItemObject = require('*/cartridge/scripts/cybersource/CybersourceItemObject');
         var itemObject = new ItemObject();
-        if (lineItem instanceof dw.order.ProductLineItem) {
+        if (lineItem instanceof ProductLineItem) {
             // set product line item
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.basePrice.value, '000000.00', locale));
             itemObject.setQuantity(lineItem.quantityValue);
@@ -509,7 +517,7 @@ function CreateKlarnaItemObject(Basket) {
             }
 
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.ShippingLineItem) {
+        } else if (lineItem instanceof ShippingLineItem) {
             // set shipping line item
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.basePrice.value, '000000.00', locale));
             itemObject.setQuantity(1);
@@ -519,7 +527,7 @@ function CreateKlarnaItemObject(Basket) {
             setKlarnaTaxAmount(itemObject, lineItem.tax.value, locale);
             setTotalAmount(processor, itemObject, lineItem.grossPrice.value, locale);
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.ProductShippingLineItem) {
+        } else if (lineItem instanceof ProductShippingLineItem) {
             // set surcharge added on shipping item
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.basePrice.value, '000000.00', locale));
             itemObject.setQuantity(lineItem.quantity.value);
@@ -529,7 +537,7 @@ function CreateKlarnaItemObject(Basket) {
             setKlarnaTaxAmount(itemObject, lineItem.tax.value, locale);
             setTotalAmount(processor, itemObject, lineItem.grossPrice.value, locale);
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.PriceAdjustment) {
+        } else if (lineItem instanceof PriceAdjustment) {
             itemObject.setUnitPrice(StringUtils.formatNumber(lineItem.basePrice.value < 0 ? 0 : lineItem.basePrice.value, '000000.00', locale));
             itemObject.setQuantity(lineItem.quantity);
             itemObject.setProductCode('PRICE_ADJUSTMENT');
@@ -888,10 +896,6 @@ function Debug(OrderNo, request, response, Basket, billTo, shipTo, card, shipFro
     var shipToObject = shipTo;
     var cardObject = card;
     var purchaseObject = purchaseTotals;
-    // var itemArray = itemArray;
-    // var itemMap = itemMap;
-    // var shipFrom = shipFrom;
-    // var taxService = taxService;
     var basket = Basket;
     var orderno = OrderNo;
     var debug = Site.getCurrent().getCustomPreferenceValue('CsDebugCybersource');
@@ -1071,7 +1075,6 @@ function calculateNonGiftCertificateAmountPayPal(lineItemCtnr) {
         giftCertTotal = giftCertTotal.add(orderPI.getPaymentTransaction().getAmount());
     }
     // get the order total
-    // var orderTotal = totalAmount;
     // calculate the amount to charge for the payment instrument
     // this is the remaining open order total which has to be paid
     var amountOpen = totalAmount.subtract(giftCertTotal);
@@ -1088,7 +1091,6 @@ function calculatePurchaseTotal(lineItemCtnr, paypal) {
     var locale = GetRequestLocale();
     var PurchaseTotalsObject = require('*/cartridge/scripts/cybersource/CybersourcePurchaseTotalsObject');
     var purchaseObject = new PurchaseTotalsObject();
-    // var shippingAmount;
     purchaseObject.setCurrency(lineItemCtnr.currencyCode);
     var subTotal = lineItemCtnr.getAdjustedMerchandizeTotalPrice();
     var shipment = lineItemCtnr.defaultShipment;
@@ -1112,7 +1114,7 @@ function calculatePurchaseTotal(lineItemCtnr, paypal) {
             }
         }
 
-        if (dw.order.TaxMgr.taxationPolicy === dw.order.TaxMgr.TAX_POLICY_NET) {
+        if (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) {
             if (lineItemCtnr.totalTax.available && lineItemCtnr.totalTax.value > 0) {
                 //purchaseObject.setTaxAmount(StringUtils.formatNumber(lineItemCtnr.totalTax.value, '#.00', locale));
                 purchaseObject.setTaxAmount(StringUtils.formatNumber(lineItemCtnr.totalTax.value, '0.00', locale));//this change is due to tax getting mapped as .05 instead of 0.05
@@ -1147,7 +1149,6 @@ function validateBillingAddress() {
     var email = (session.forms.billing.creditCardFields.email.value);
     var phoneNumber = (session.forms.billing.creditCardFields.phone.value);
     var postalCode = (session.forms.billing.addressFields.postalCode.value);
-    // var state = (session.forms.billing.addressFields.states.stateCode.value);
     var street1 = (session.forms.billing.addressFields.address1.value);
     var errorMsg = [];
     var Resource = require('dw/web/Resource');
@@ -1247,14 +1248,14 @@ function GetSubscriptionToken(cardUUID, CustomerObj) {
 function signedDataUsingHMAC256(dataToSign, secretKey, paymentType) {
     var signature;
     var KeyRef = require('dw/crypto/KeyRef');
-    var mac = new dw.crypto.Mac(dw.crypto.Mac.HMAC_SHA_256);
+    var mac = new Mac(Mac.HMAC_SHA_256);
     var libCybersource = require('*/cartridge/scripts/cybersource/libCybersource');
     var CybersourceHelper = libCybersource.getCybersourceHelper();
     if (paymentType === 'KLI') {
         var privateKey = new KeyRef(CybersourceHelper.getklarnaPrivateKeyAlias());
-        signature = dw.crypto.Encoding.toBase64(mac.digest(dataToSign, privateKey));
+        signature = Encoding.toBase64(mac.digest(dataToSign, privateKey));
     } else {
-        signature = dw.crypto.Encoding.toBase64(mac.digest(dataToSign, new dw.util.Bytes(secretKey, 'UTF-8')));
+        signature = Encoding.toBase64(mac.digest(dataToSign, new Bytes(secretKey, 'UTF-8')));
     }
     return signature;
 }
@@ -1312,10 +1313,8 @@ function getItemObject(typeofService, basket) {
     var count = 1;
     var locale = GetRequestLocale();
     // START adjust order level promos
-    // var basketSubTotalPrice = basket.getAdjustedMerchandizeTotalPrice();
 
     var orderDiscount = new Money(0, basket.currencyCode);
-    // var subTotal = basket.adjustedMerchandizeTotalPrice;
     for (var i = 0; i < basket.priceAdjustments.length; i += 1) {
         var promo = basket.priceAdjustments[i];
         orderDiscount = orderDiscount.add(promo.price);
@@ -1342,7 +1341,7 @@ function getItemObject(typeofService, basket) {
         var lineItem = lineItems.next();
         var itemObject = new ItemObject();
         var actualQuantity = 0;
-        if (lineItem instanceof dw.order.ProductLineItem) {
+        if (lineItem instanceof ProductLineItem) {
             actualQuantity = lineItem.quantity.value;
             if (orderLevelAdjustmentPrice != null) {
                 orderLevelAdjustmentPrice = orderLevelAdjustmentPrice.multiply(-1);
@@ -1363,7 +1362,7 @@ function getItemObject(typeofService, basket) {
             } else {
                 adjustedLineItemTaxPrice = lineItem.adjustedTax;
             }
-            if (dw.order.TaxMgr.taxationPolicy === dw.order.TaxMgr.TAX_POLICY_NET) {
+            if (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) {
                 if (adjustedLineItemTaxPrice.available && adjustedLineItemTaxPrice.getValue() > 0) {
                     itemObject.setTaxAmount(StringUtils.formatNumber(Math.abs(adjustedLineItemTaxPrice.getValue()), '0.00', locale));
                 } else {
@@ -1377,7 +1376,7 @@ function getItemObject(typeofService, basket) {
             var lineItemTotal = lineItem.getAdjustedPrice();
             itemObject.setTotalAmount(StringUtils.formatNumber(lineItemTotal.getValue(), '0.00', locale));
             itemObject.setId(count);
-        } else if (lineItem instanceof dw.order.ShippingLineItem) {
+        } else if (lineItem instanceof ShippingLineItem) {
             if (typeofService === 'sessionService') {
                  
                 continue;
@@ -1390,7 +1389,7 @@ function getItemObject(typeofService, basket) {
 
                 // Calculate shipping tax first
                 var shippingTax = 0;
-                if (dw.order.TaxMgr.taxationPolicy === dw.order.TaxMgr.TAX_POLICY_NET) {
+                if (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) {
                     if (lineItem.adjustedTax.available && lineItem.adjustedTax.getValue() > 0) {
                         shippingTax = Math.abs(lineItem.adjustedTax.getValue());
                         itemObject.setTaxAmount(StringUtils.formatNumber(shippingTax, '0.00', locale));
@@ -1407,10 +1406,10 @@ function getItemObject(typeofService, basket) {
                 //itemObject.setProductDescription('Shipping and Handling');
                 itemObject.setId(count);
             }
-        } else if (lineItem instanceof dw.order.ProductShippingLineItem) {
+        } else if (lineItem instanceof ProductShippingLineItem) {
              
             continue;
-        } else if (lineItem instanceof dw.order.PriceAdjustment) {
+        } else if (lineItem instanceof PriceAdjustment) {
             itemObject.setUnitPrice(StringUtils.formatNumber(Math.abs(lineItem.basePrice.value < 0 ? 0 : lineItem.basePrice.value), '0.00', locale));
             itemObject.setQuantity(lineItem.quantity);
             itemObject.setProductCode('PRICE_ADJUSTMENT');
@@ -1667,7 +1666,6 @@ function ToHashMap(object) {
  */
 function sendMail(options) {
     var Mail = require('dw/net/Mail');
-    // var Site = require('dw/system/Site');
     var Template = require('dw/util/Template');
     if (!options.template || !options.recipient || !options.subject) {
         return;
@@ -1735,7 +1733,6 @@ function validatePayPalBillingAddress(checkStatusResponse, lineItemCntr) {
 function validatePayPalInstrument(basket, orderModel) {
     for (var i = 0; i < basket.paymentInstruments.length; i += 1) {
         var paymentInstrument = basket.paymentInstruments[i];
-        // var req = 'requestId' in paymentInstrument.paymentTransaction.custom && !empty(paymentInstrument.paymentTransaction.custom.requestId);
         if ((paymentInstrument.paymentMethod === 'PAYPAL' || paymentInstrument.paymentMethod === 'PAYPAL_CREDIT') && 'paymentTransaction' in paymentInstrument && 'requestId' in paymentInstrument.paymentTransaction.custom && !empty(paymentInstrument.paymentTransaction.custom.requestId)) {
             if (paymentInstrument.paymentMethod === 'PAYPAL_CREDIT' && paymentInstrument.paymentTransaction.amount.toFormattedString() === orderModel.totals.grandTotal) {
                 return true;
@@ -1905,6 +1902,156 @@ function JSONObjectToHashMap(jsonObject) {
     return map;
 }
 
+/**
+ * Copies billing-address fields from a submitted billing form onto the basket's
+ * billingAddress, creating one if missing. Wrapped in its own Transaction.
+ * @param {dw.order.LineItemCtnr} basket basket or order
+ * @param {Object} paymentForm SFRA billing form
+ */
+function applyBillingFormToBasket(basket, paymentForm) {
+    var Transaction = require('dw/system/Transaction');
+    Transaction.wrap(function () {
+        var billingAddress = basket.billingAddress;
+        if (!billingAddress) {
+            billingAddress = basket.createBillingAddress();
+        }
+        if (!empty(paymentForm.addressFields.firstName.value)) {
+            billingAddress.setFirstName(paymentForm.addressFields.firstName.value);
+        }
+        if (!empty(paymentForm.addressFields.lastName.value)) {
+            billingAddress.setLastName(paymentForm.addressFields.lastName.value);
+        }
+        if (!empty(paymentForm.addressFields.address1.value)) {
+            billingAddress.setAddress1(paymentForm.addressFields.address1.value);
+        }
+        if (!empty(paymentForm.addressFields.address2.value)) {
+            billingAddress.setAddress2(paymentForm.addressFields.address2.value);
+        }
+        if (!empty(paymentForm.addressFields.city.value)) {
+            billingAddress.setCity(paymentForm.addressFields.city.value);
+        }
+        if (!empty(paymentForm.addressFields.postalCode.value)) {
+            billingAddress.setPostalCode(paymentForm.addressFields.postalCode.value);
+        }
+        if (Object.prototype.hasOwnProperty.call(paymentForm.addressFields, 'states')) {
+            billingAddress.setStateCode(paymentForm.addressFields.states.stateCode.value);
+        }
+        if (!empty(paymentForm.addressFields.country.value)) {
+            billingAddress.setCountryCode(paymentForm.addressFields.country.value);
+        }
+    });
+}
+
+/**
+ * Finds the first payment instrument on a basket whose paymentMethod ID matches.
+ * @param {dw.order.LineItemCtnr} basket basket or order
+ * @param {string|string[]} methodIDs ID or array of IDs to match
+ * @returns {dw.order.PaymentInstrument|null} matching PI, or null
+ */
+function findPaymentInstrumentByMethod(basket, methodIDs) {
+    if (!basket) return null;
+    var ids = Array.isArray(methodIDs) ? methodIDs : [methodIDs];
+    var instruments = basket.getPaymentInstruments();
+    var found = null;
+    var collections = require('*/cartridge/scripts/util/collections');
+    collections.forEach(instruments, function (pi) {
+        if (!found && ids.some(function (id) { return pi.paymentMethod.equals(id); })) {
+            found = pi;
+        }
+    });
+    return found;
+}
+
+/**
+ * Removes all payment instruments from a basket. Wrapped in its own Transaction.
+ * @param {dw.order.LineItemCtnr} basket basket
+ */
+function removeAllPaymentInstruments(basket) {
+    if (!basket) return;
+    var Transaction = require('dw/system/Transaction');
+    Transaction.wrap(function () {
+        // Snapshot to array first so removal during iteration cannot skip entries.
+        var pis = basket.getPaymentInstruments().toArray();
+        for (var i = 0; i < pis.length; i++) {
+            basket.removePaymentInstrument(pis[i]);
+        }
+    });
+}
+
+/**
+ * Renders the cart page with an express-checkout error status (Google Pay / Visa Checkout / etc).
+ * @param {Object} req request
+ * @param {Object} res response
+ * @param {Object} options options { paymentMethodID, statusName, extraViewData }
+ */
+function renderExpressCheckoutError(req, res, options) {
+    var BasketMgr = require('dw/order/BasketMgr');
+    var Status = require('dw/system/Status');
+    var URLUtils = require('dw/web/URLUtils');
+    var Transaction = require('dw/system/Transaction');
+    var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
+    var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
+    var cart = BasketMgr.getCurrentBasket();
+    var paymentMethodID = options.paymentMethodID;
+    var statusName = options.statusName || 'ExpressCheckoutError';
+
+    if (empty(cart.getPaymentInstruments(paymentMethodID))) {
+        COHelpers.recalculateBasket(cart);
+        var viewData = {
+            cart: cart,
+            RegistrationStatus: false,
+            BasketStatus: new Status(Status.ERROR, statusName)
+        };
+        if (options.extraViewData) {
+            Object.keys(options.extraViewData).forEach(function (k) {
+                viewData[k] = options.extraViewData[k];
+            });
+        }
+        secureResponseHelper.secureRender(res, 'cart/cart', viewData);
+        return false;
+    }
+    Transaction.wrap(function () {
+        removeExistingPaymentInstruments(cart);
+    });
+    COHelpers.recalculateBasket(cart);
+    res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'VisaCheckoutError', true));
+    return true;
+}
+
+/**
+ * Writes the encrypted Google Pay token onto the first payment instrument
+ * of the supplied basket. Wraps the mutation in a Transaction.
+ * @param {dw.order.LineItemCtnr} basket basket
+ * @param {string} gpToken google pay tokenization data
+ * @param {boolean} isAuthenticated cardholder authentication status
+ */
+function applyGooglePayTokenToBasket(basket, gpToken, isAuthenticated) {
+    if (!basket) return;
+    var Transaction = require('dw/system/Transaction');
+    var Bytes = require('dw/util/Bytes');
+    var Encoding = require('dw/crypto/Encoding');
+    Transaction.wrap(function () {
+        var paymentInstruments = basket.getPaymentInstruments();
+        if (paymentInstruments.length > 0) {
+            paymentInstruments[0].custom.GooglePayEncryptedData = Encoding.toBase64(new Bytes(gpToken));
+            paymentInstruments[0].custom.isGooglePaycardHolderAuthenticated = isAuthenticated;
+        }
+    });
+}
+
+/**
+ * Resets the trio of session.privacy variables used by checkout flow:
+ * SkipTaxCalculation, cartStateString, and (optionally) CybersourceFraudDecision.
+ * @param {Object} [options] options { resetFraudDecision }
+ */
+function resetCheckoutSessionVars(options) {
+    if (options && options.resetFraudDecision) {
+        session.privacy.CybersourceFraudDecision = '';
+    }
+    session.privacy.SkipTaxCalculation = false;
+    session.privacy.cartStateString = null;
+}
+
 module.exports = {
     CreateCybersourceShipFromObject: CreateCybersourceShipFromObject,
     CreateCyberSourceBillToObject: CreateCyberSourceBillToObject,
@@ -1946,5 +2093,11 @@ module.exports = {
     updatePaypalAddressFields: updatePaypalAddressFields,
     decodeObj: decodeObj,
     convertHashMapToJSONString: convertHashMapToJSONString,
-    JSONObjectToHashMap: JSONObjectToHashMap
+    JSONObjectToHashMap: JSONObjectToHashMap,
+    applyBillingFormToBasket: applyBillingFormToBasket,
+    findPaymentInstrumentByMethod: findPaymentInstrumentByMethod,
+    removeAllPaymentInstruments: removeAllPaymentInstruments,
+    renderExpressCheckoutError: renderExpressCheckoutError,
+    resetCheckoutSessionVars: resetCheckoutSessionVars,
+    applyGooglePayTokenToBasket: applyGooglePayTokenToBasket
 };

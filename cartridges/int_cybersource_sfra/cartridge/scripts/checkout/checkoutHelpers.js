@@ -7,6 +7,7 @@
 var base = module.superModule;
 var renderTemplateHelper = require('*/cartridge/scripts/renderTemplateHelper');
 var Transaction = require('dw/system/Transaction');
+var Status = require('dw/system/Status');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var OrderMgr = require('dw/order/OrderMgr');
 var HookMgr = require('dw/system/HookMgr');
@@ -353,7 +354,6 @@ function handleSilentPostAuthorize(order, payerauthArgs) {
         paymentInstrument = CardHelper.getNonGCPaymemtInstument(order);
     }
     var authorizationResult;
-    // var result = {};
     var paymentProcessor = PaymentMgr.getPaymentMethod(paymentInstrument.paymentMethod).paymentProcessor;
     if (HookMgr.hasHook('app.payment.processor.' + paymentProcessor.ID.toLowerCase())) {
         authorizationResult = HookMgr.callHook(
@@ -441,9 +441,9 @@ function failOrder(args) {
         return args;
     }
     var order = orderResult.Order;
-    var PlaceOrderError = args.PlaceOrderError != null ? args.PlaceOrderError : new dw.system.Status(dw.system.Status.ERROR, 'confirm.error.declined', 'Payment Declined');
+    var PlaceOrderError = args.PlaceOrderError != null ? args.PlaceOrderError : new Status(Status.ERROR, 'confirm.error.declined', 'Payment Declined');
     session.privacy.SkipTaxCalculation = false;
-    var failResult = dw.system.Transaction.wrap(function () {
+    var failResult = Transaction.wrap(function () {
         OrderMgr.failOrder(order, true);
         return {
             error: true,
@@ -467,20 +467,13 @@ function failOrder(args) {
  */
 function reviewOrder(orderId, req, res, next) {
     var URLUtils = require('dw/web/URLUtils');
-    var BasketMgr = require('dw/order/BasketMgr');
-    var currentBasket = BasketMgr.getCurrentBasket();
     if (session.privacy.orderId && session.privacy.orderId !== orderId) {
         res.redirect(URLUtils.url('Cart-Show'));
         return next();
     }
     var order = OrderMgr.getOrder(orderId);
-    var fraudDetectionStatus = HookMgr.callHook('app.fraud.detection', 'fraudDetection', currentBasket);
-
-    if (fraudDetectionStatus.status === 'fail') {
-        Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-        // fraud detection failed
-        req.session.privacyCache.set('fraudDetectionStatus', true);
-        res.redirect(URLUtils.https('Error-ErrorCode', 'err', fraudDetectionStatus.errorCode));
+    var fraudResult = runFraudDetectionAndFail(order, order, req, res);
+    if (fraudResult.failed) {
         return next();
     }
 
@@ -508,23 +501,17 @@ function reviewOrder(orderId, req, res, next) {
  */
 function submitOrder(orderId, req, res, next) {
     var URLUtils = require('dw/web/URLUtils');
-    var BasketMgr = require('dw/order/BasketMgr');
-    var currentBasket = BasketMgr.getCurrentBasket();
     if (session.privacy.orderId && session.privacy.orderId !== orderId) {
         res.redirect(URLUtils.url('Cart-Show'));
         return next();
     }
     var order = OrderMgr.getOrder(orderId);
-    var fraudDetectionStatus = HookMgr.callHook('app.fraud.detection', 'fraudDetection', currentBasket);
     var Resource = require('dw/web/Resource');
-
-    if (fraudDetectionStatus.status === 'fail') {
-        Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-        // fraud detection failed
-        req.session.privacyCache.set('fraudDetectionStatus', true);
-        res.redirect(URLUtils.https('Error-ErrorCode', 'err', fraudDetectionStatus.errorCode));
+    var fraudResult = runFraudDetectionAndFail(order, order, req, res);
+    if (fraudResult.failed) {
         return next();
     }
+    var fraudDetectionStatus = fraudResult.fraudDetectionStatus;
 
     // Place the order
     var placeOrderResult = base.placeOrder(order, fraudDetectionStatus);
@@ -628,6 +615,134 @@ function submitApplePayOrder(order, req, res, next) {
     return next();
 }
 
+/**
+ * Resolves an order from req.form / req.querystring using orderID + orderToken,
+ * with a fallback to session.privacy.orderId. The token check is required for
+ * 3DS / payer-auth flows to prevent ownership bypass.
+ * @param {Object} req SFRA request
+ * @param {Object} [options] options
+ * @param {string[]} [options.idKeys] keys to try for orderID (default: ['orderID', 'OrderNo', 'orderNo'])
+ * @param {string[]} [options.tokenKeys] keys to try for orderToken (default: ['orderToken'])
+ * @returns {{ order: dw.order.Order|null, orderID: string|null, orderToken: string|null }}
+ */
+function resolveOrderFromRequest(req, options) {
+    var idKeys = (options && options.idKeys) || ['orderID', 'OrderNo', 'orderNo'];
+    var tokenKeys = (options && options.tokenKeys) || ['orderToken'];
+    var sources = [req.form, req.querystring].filter(function (s) { return s; });
+
+    function pick(keys) {
+        for (var s = 0; s < sources.length; s++) {
+            var src = sources[s];
+            for (var k = 0; k < keys.length; k++) {
+                var v = src[keys[k]];
+                if (v !== null && v !== undefined && v !== '') {
+                    return v;
+                }
+            }
+        }
+        return null;
+    }
+
+    var orderID = pick(idKeys);
+    var orderToken = pick(tokenKeys);
+    var order = null;
+
+    if (orderID) {
+        if (orderToken) {
+            order = OrderMgr.getOrder(orderID, orderToken);
+        } else if (session.privacy.orderId && session.privacy.orderId === orderID) {
+            order = OrderMgr.getOrder(orderID);
+        }
+    }
+    return { order: order, orderID: orderID, orderToken: orderToken };
+}
+
+/**
+ * Dispatches Handle hook for the given payment method, falling back to
+ * app.payment.processor.default when no specific hook is registered.
+ * @param {string} paymentMethodID payment method ID
+ * @returns {*} hook result
+ */
+function invokeHandleHook(paymentMethodID) {
+    var PaymentMgr = require('dw/order/PaymentMgr');
+    var HookMgr = require('dw/system/HookMgr');
+    var processor = PaymentMgr.getPaymentMethod(paymentMethodID).getPaymentProcessor();
+    var hookID = 'app.payment.processor.' + processor.ID.toLowerCase();
+    var args = Array.prototype.slice.call(arguments, 1);
+    if (HookMgr.hasHook(hookID)) {
+        return HookMgr.callHook.apply(HookMgr, [hookID, 'Handle'].concat(args));
+    }
+    return HookMgr.callHook('app.payment.processor.default', 'Handle');
+}
+
+/**
+ * Fails the order in a transaction, clears session.privacy.orderId, and
+ * redirects to Checkout-Begin at the requested stage with the supplied
+ * resource-message error. Consolidates the failure pattern repeated across
+ * payment-result branches.
+ * @param {dw.order.Order} order order to fail
+ * @param {Object} res response
+ * @param {Object} options { stage, errorParam, msgKey, msgBundle, resetSkipTax }
+ * @returns {void}
+ */
+function failOrderAndRedirect(order, res, options) {
+    var Transaction = require('dw/system/Transaction');
+    var OrderMgrLocal = require('dw/order/OrderMgr');
+    var URLUtilsLocal = require('dw/web/URLUtils');
+    var ResourceLocal = require('dw/web/Resource');
+    var stage = (options && options.stage) || 'payment';
+    var errorParam = (options && options.errorParam) || 'payerAuthError';
+    var msgKey = (options && options.msgKey) || 'error.technical';
+    var msgBundle = (options && options.msgBundle) || 'checkout';
+    if (order) {
+        Transaction.wrap(function () { OrderMgrLocal.failOrder(order, true); });
+    }
+    if (options && options.resetSkipTax) {
+        session.privacy.SkipTaxCalculation = false;
+    }
+    delete session.privacy.orderId;
+    res.redirect(URLUtilsLocal.https('Checkout-Begin', 'stage', stage, errorParam, ResourceLocal.msg(msgKey, msgBundle, null)));
+}
+
+/**
+ * Runs the app.fraud.detection hook and, when status is 'fail', fails the order,
+ * sets the privacyCache flag, optionally clears session.privacy.orderId, and
+ * redirects to Error-ErrorCode. Returns { failed, fraudDetectionStatus } so the
+ * caller can short-circuit and reuse the status object for placeOrder.
+ * @param {dw.order.Basket|dw.order.Order} subject hook subject (basket or order)
+ * @param {dw.order.Order} order order to fail on 'fail' status (may be null in pre-order flows)
+ * @param {Object} req SFRA request
+ * @param {Object} res SFRA response
+ * @param {Object} [options] options
+ * @param {boolean} [options.deleteOrderId=false] when true, also delete session.privacy.orderId
+ * @returns {{failed: boolean, fraudDetectionStatus: Object}} result
+ */
+function runFraudDetectionAndFail(subject, order, req, res, options) {
+    var URLUtilsLocal = require('dw/web/URLUtils');
+    var HookMgrLocal = require('dw/system/HookMgr');
+    var TransactionLocal = require('dw/system/Transaction');
+    var OrderMgrLocal = require('dw/order/OrderMgr');
+    var fraudDetectionStatus = HookMgrLocal.callHook('app.fraud.detection', 'fraudDetection', subject);
+    if (fraudDetectionStatus && fraudDetectionStatus.status === 'fail') {
+        if (order) {
+            TransactionLocal.wrap(function () { OrderMgrLocal.failOrder(order, true); });
+        }
+        if (req && req.session && req.session.privacyCache) {
+            req.session.privacyCache.set('fraudDetectionStatus', true);
+        }
+        if (options && options.deleteOrderId) {
+            delete session.privacy.orderId;
+        }
+        res.redirect(URLUtilsLocal.https('Error-ErrorCode', 'err', fraudDetectionStatus.errorCode));
+        return { failed: true, fraudDetectionStatus: fraudDetectionStatus };
+    }
+    return { failed: false, fraudDetectionStatus: fraudDetectionStatus };
+}
+
+base.runFraudDetectionAndFail = runFraudDetectionAndFail;
+base.failOrderAndRedirect = failOrderAndRedirect;
+base.invokeHandleHook = invokeHandleHook;
+base.resolveOrderFromRequest = resolveOrderFromRequest;
 base.savePaymentInstrumentToWallet = savePaymentInstrumentToWallet;
 base.handlePayments = handlePayments;
 base.validatePayment = validatePayment;

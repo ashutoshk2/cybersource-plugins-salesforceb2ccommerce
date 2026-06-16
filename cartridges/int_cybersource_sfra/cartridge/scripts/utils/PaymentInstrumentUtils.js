@@ -1,6 +1,8 @@
 'use strict';
 
 var Transaction = require('dw/system/Transaction');
+var Order = require('dw/order/Order');
+var PaymentInstrument = require('dw/order/PaymentInstrument');
 var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 /**
@@ -437,7 +439,7 @@ function MobilePaymentOrderUpdate(order, serviceResponse) {
             }
 
              
-            order.setConfirmationStatus(dw.order.Order.CONFIRMATION_STATUS_CONFIRMED);
+            order.setConfirmationStatus(Order.CONFIRMATION_STATUS_CONFIRMED);
             return true;
         });
 
@@ -467,7 +469,7 @@ function removeDuplicates(creditCardFields) {
         ccNumber = creditCardFields.cardNumber;
         fieldcardType = CardHelper.getCardType(creditCardFields.cardType);
          
-        paymentInstruments = wallet.getPaymentInstruments(dw.order.PaymentInstrument.METHOD_CREDIT_CARD).toArray().sort(function (a, b) {
+        paymentInstruments = wallet.getPaymentInstruments(PaymentInstrument.METHOD_CREDIT_CARD).toArray().sort(function (a, b) {
             return b.getCreationDate() - a.getCreationDate();
         });
     }
@@ -665,7 +667,6 @@ function cardSaveLimit(Profile) {
     var savedCCTimeNew = false;
     var savedCCTime = false;
     var addCardLimitError = false;
-    // var Site = require('dw/system/Site');
     var Transaction = require('dw/system/Transaction');
     var Logger = require('dw/system/Logger');
     var cyberSourceHelper = require('*/cartridge/scripts/cybersource/libCybersource').getCybersourceHelper();

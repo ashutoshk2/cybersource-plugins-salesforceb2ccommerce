@@ -1175,6 +1175,49 @@ function AuthorizeCreditCard(args) {
     });
 }
 
+/**
+ * Computes the SHA-256 digest of the supplied string and returns it formatted
+ * as `SHA-256=<base64>` for use as the HTTP Digest header.
+ * @param {string} digestString plaintext to hash
+ * @returns {string|Object} formatted digest, or { error, errorMsg } on failure
+ */
+function computeSha256Digest(digestString) {
+    var MessageDigest = require('dw/crypto/MessageDigest');
+    var Bytes = require('dw/util/Bytes');
+    var StringUtils = require('dw/util/StringUtils');
+    var Encoding = require('dw/crypto/Encoding');
+    try {
+        var digester = new MessageDigest(MessageDigest.DIGEST_SHA_256);
+        var digest = digester.digestBytes(new Bytes(digestString, 'UTF-8'));
+        return StringUtils.format('SHA-256={0}', Encoding.toBase64(digest));
+    } catch (exception) {
+        Logger.error('Error in computeSha256Digest: ' + exception.message);
+        return { error: true, errorMsg: exception.message };
+    }
+}
+
+/**
+ * Computes an HMAC-SHA-256 signature of the supplied string using a
+ * base64-encoded shared secret, returning the base64-encoded signature.
+ * @param {string} signatureString plaintext to sign
+ * @param {string} sharedSecret base64-encoded HMAC key
+ * @returns {string|Object} base64 signature, or { error, errorMsg } on failure
+ */
+function computeHmacSignature(signatureString, sharedSecret) {
+    var Bytes = require('dw/util/Bytes');
+    var Mac = require('dw/crypto/Mac');
+    var Encoding = require('dw/crypto/Encoding');
+    try {
+        var encryptor = new Mac(Mac.HMAC_SHA_256);
+        var secret = Encoding.fromBase64(sharedSecret);
+        var signatureDigest = encryptor.digest(new Bytes(signatureString.toString(), 'UTF-8'), secret);
+        return Encoding.toBase64(signatureDigest);
+    } catch (exception) {
+        Logger.error('Error in computeHmacSignature: ' + exception.message);
+        return { error: true, errorMsg: exception.message };
+    }
+}
+
 /** Exported functions * */
 module.exports = {
     AuthorizeCreditCard: AuthorizeCreditCard,
@@ -1189,5 +1232,7 @@ module.exports = {
     HandleDecision: HandleDecision,
     GetPaymemtInstument: GetPaymemtInstument,
     TestLineItemCtnrRequestData: TestLineItemCtnrRequestData,
-    BuildDataToSign: buildDataToSign
+    BuildDataToSign: buildDataToSign,
+    computeSha256Digest: computeSha256Digest,
+    computeHmacSignature: computeHmacSignature
 };

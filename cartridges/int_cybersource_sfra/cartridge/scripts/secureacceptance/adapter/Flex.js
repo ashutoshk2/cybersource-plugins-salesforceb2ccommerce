@@ -29,20 +29,8 @@ function getTime() {
  * @returns {Object} obj
  */
 function getDigest(digestString) {
-    var MessageDigest = require('dw/crypto/MessageDigest');
-    var Bytes = require('dw/util/Bytes');
-    var StringUtils = require('dw/util/StringUtils');
-    var Encoding = require('dw/crypto/Encoding');
-
-    try {
-        var digester = new MessageDigest(MessageDigest.DIGEST_SHA_256);
-        var digest = digester.digestBytes(new Bytes(digestString, 'UTF-8'));
-        var base64String = Encoding.toBase64(digest);
-        return StringUtils.format('SHA-256={0}', base64String);
-    } catch (exception) {
-        Logger.error('Error in Secure acceptance create request data' + exception.message);
-        return { error: true, errorMsg: exception.message };
-    }
+    var SecureAcceptanceHelper = require('*/cartridge/scripts/secureacceptance/helper/SecureAcceptanceHelper');
+    return SecureAcceptanceHelper.computeSha256Digest(digestString);
 }
 
 /**
@@ -53,24 +41,16 @@ function getDigest(digestString) {
  * @returns {Object} obj
  */
 function generateSignature(signedHeaders, keyID, sharedSecret) {
-    var Bytes = require('dw/util/Bytes');
-    var Mac = require('dw/crypto/Mac');
-    var Encoding = require('dw/crypto/Encoding');
     var collections = require('*/cartridge/scripts/util/collections');
+    var SecureAcceptanceHelper = require('*/cartridge/scripts/secureacceptance/helper/SecureAcceptanceHelper');
 
     try {
-        var encryptor = new Mac(Mac.HMAC_SHA_256);
-        var secret = Encoding.fromBase64(sharedSecret);
         var signatureString = '';
-        // var headerString = '';
         collections.forEach(signedHeaders.keySet(), function (key) {
-            // for each(var key in signedHeaders.keySet()){
             signatureString = signatureString + '\n' + key + ': ' + signedHeaders.get(key);
         });
         signatureString = signatureString.slice(1, signatureString.length);
-        var signatureDigest = encryptor.digest(new Bytes(signatureString.toString(), 'UTF-8'), secret);
-        var signature = Encoding.toBase64(signatureDigest);
-        return signature;
+        return SecureAcceptanceHelper.computeHmacSignature(signatureString, sharedSecret);
     } catch (exception) {
         Logger.error('Error in Secure acceptance create request data' + exception.message);
         return { error: true, errorMsg: exception.message };

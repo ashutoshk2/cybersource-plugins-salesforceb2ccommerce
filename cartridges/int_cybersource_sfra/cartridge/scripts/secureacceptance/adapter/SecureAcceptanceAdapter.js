@@ -4,6 +4,7 @@
 var Logger = require('dw/system/Logger');
 var URLUtils = require('dw/web/URLUtils');
 var Site = require('dw/system/Site');
+var Order = require('dw/order/Order');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 
 var secureAcceptanceHelper = require(CybersourceConstants.SECUREACCEPTANCEHELPER);
@@ -38,8 +39,6 @@ function Authorize(orderNumber, paymentInstrument, paymentProcessor, additionalA
     var OrderMgr = require('dw/order/OrderMgr');
     var CsSAType = Site.getCurrent().getCustomPreferenceValue('CsSAType').value;
     var order = OrderMgr.getOrder(orderNumber);
-    // var paymentInstrument = paymentInstrument;
-    // var paymentMethod = paymentInstrument.paymentMethod;
     var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
     var subscriptionToken = CommonHelper.GetSubscriptionToken(additionalArgs.subscriptionToken, customer);
     if (CsSAType.equals(CybersourceConstants.METHOD_SA_REDIRECT)) {
@@ -107,13 +106,13 @@ function OpenIframe(currentOrderNo) {
 */
 function updateSAResponse(responseParameterMap, order, paymentInstrument, customerObj) {
     var PaymentInstrumentUtils = require('*/cartridge/scripts/utils/PaymentInstrumentUtils');
-    var isOverrideShipping = dw.system.Site.getCurrent().getCustomPreferenceValue('CsSAOverrideShippingAddress');
-    var isOverrideBilling = dw.system.Site.getCurrent().getCustomPreferenceValue('CsSAOverrideBillingAddress');
+    var isOverrideShipping = Site.getCurrent().getCustomPreferenceValue('CsSAOverrideShippingAddress');
+    var isOverrideBilling = Site.getCurrent().getCustomPreferenceValue('CsSAOverrideBillingAddress');
     var responseObject = secureAcceptanceHelper.mapSecureAcceptanceResponse(responseParameterMap);
-    if (order.status.value === dw.order.Order.ORDER_STATUS_CREATED) {
+    if (order.status.value === Order.ORDER_STATUS_CREATED) {
         PaymentInstrumentUtils.UpdatePaymentTransactionSecureAcceptanceAuthorize(order, responseObject);
     }
-    if (((responseObject.Decision === 'ACCEPT') || (responseObject.Decision === 'REVIEW')) && (order.status.value === dw.order.Order.ORDER_STATUS_CREATED)) {
+    if (((responseObject.Decision === 'ACCEPT') || (responseObject.Decision === 'REVIEW')) && (order.status.value === Order.ORDER_STATUS_CREATED)) {
         PaymentInstrumentUtils.UpdateOrderBillingShippingDetails(order, responseObject, isOverrideShipping, isOverrideBilling);
         var subsToken = !empty(responseParameterMap.payment_token.stringValue) ? responseParameterMap.payment_token.stringValue : responseParameterMap.req_payment_token.stringValue;
         PaymentInstrumentUtils.updatePaymentInstumenSACard(paymentInstrument, responseParameterMap.req_card_expiry_date.stringValue,
@@ -130,9 +129,7 @@ function updateSAResponse(responseParameterMap, order, paymentInstrument, custom
  */
 
 function SAHandleResponse(httpParameterMap) {
-    // var secretKey = null;
     var paymentInstrument = null;
-    // var paymentMethod = null;
 
     if (!empty(httpParameterMap)) {
         var OrderMgr = require('dw/order/OrderMgr');
@@ -277,7 +274,6 @@ function SARedirectResponse(responseObject, order) {
             }
             break;
         case 'CANCEL':
-            // var currentBasket = COHelpers.reCreateBasket(order);
             return { nextStep: CybersourceConstants.SA_CANCEL, location: URLUtils.https('Cart-Show') };
         default:
 
@@ -291,11 +287,8 @@ function SARedirectResponse(responseObject, order) {
  * @input  httpParameterMap : this map as value of signed fields we get from cybersource.
  */
 function SAResponse(currentRequestParameterMap) {
-    // var Order = require('dw/order/Order');
-    // var Status = require('dw/system/Status');
     var OrderMgr = require('dw/order/OrderMgr');
     var redirectResponse;
-    // var Transaction = require('dw/system/Transaction');
     var result = SAHandleResponse(currentRequestParameterMap);
     if (result.success && !empty(result.responseObject)) {
         var orderNo = currentRequestParameterMap.req_reference_number.stringValue;

@@ -8,9 +8,9 @@ var server = require('server');
  */
 
 /* API Includes */
-var logger = dw.system.Logger.getLogger('Cybersource');
+var Logger = require('dw/system/Logger');
+var logger = Logger.getLogger('Cybersource');
 var Transaction = require('dw/system/Transaction');
-// var Resource = require('dw/web/Resource');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
@@ -73,39 +73,26 @@ function shippingUpdate(cart, decryptedPaymentData) {
  * @returns {*} obj
  */
 function visaCheckoutError(req, res, next) {
-    var URLUtils = require('dw/web/URLUtils');
-    var BasketMgr = require('dw/order/BasketMgr');
-    var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
     var CommonHelper = require(CybersourceConstants.CS_CORE_SCRIPT + 'helper/CommonHelper');
+    var BasketMgr = require('dw/order/BasketMgr');
     var cart = BasketMgr.getCurrentBasket();
-    // basket uuid check for security handling
-    if (empty(cart.getPaymentInstruments(CybersourceConstants.METHOD_VISA_CHECKOUT))) {
-        session.privacy.SkipTaxCalculation = false;
-        session.privacy.cartStateString = null;
+    var extraViewData;
+    if (cart && empty(cart.getPaymentInstruments(CybersourceConstants.METHOD_VISA_CHECKOUT))) {
+        CommonHelper.resetCheckoutSessionVars();
         var VInitFormattedString = '';
         var signature = '';
-        var result = VisaCheckoutHelper.Initialize();
-        if (result.success) {
-            VInitFormattedString = result.VInitFormattedString;
-            signature = result.signature;
+        var initResult = VisaCheckoutHelper.Initialize();
+        if (initResult.success) {
+            VInitFormattedString = initResult.VInitFormattedString;
+            signature = initResult.signature;
         }
-        COHelpers.recalculateBasket(cart);
-
-        var Status = require('dw/system/Status');
-        secureRender(res, 'cart/cart', {
-            cart: cart,
-            RegistrationStatus: false,
-            BasketStatus: new Status(Status.ERROR, 'VisaCheckoutError'),
-            VInitFormattedString: VInitFormattedString,
-            Signature: signature
-        });
-    } else {
-        Transaction.wrap(function () {
-            CommonHelper.removeExistingPaymentInstruments(cart);
-        });
-        COHelpers.recalculateBasket(cart);
-        res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'VisaCheckoutError', true));
+        extraViewData = { VInitFormattedString: VInitFormattedString, Signature: signature };
     }
+    CommonHelper.renderExpressCheckoutError(req, res, {
+        paymentMethodID: CybersourceConstants.METHOD_VISA_CHECKOUT,
+        statusName: 'VisaCheckoutError',
+        extraViewData: extraViewData
+    });
     return next();
 }
 
@@ -140,11 +127,10 @@ server.post('Decrypt', csrfProtection.generateToken, function (req, res, next) {
 server.get('InitializeVisaToken', server.middleware.https, function (req, res, next) {
     var BasketMgr = require('dw/order/BasketMgr');
     var currentBasket = BasketMgr.getCurrentBasket();
-    var VisaCheckout = require('*/cartridge/scripts/visacheckout/helper/VisaCheckoutHelper');
     var visaCheckoutForm = server.forms.getForm('visaCheckout');
     var VInitFormattedString = '';
     var signature = '';
-    var result = VisaCheckout.Initialize();
+    var result = VisaCheckoutHelper.Initialize();
     if (result.success) {
         VInitFormattedString = result.VInitFormattedString;
         signature = result.signature;
@@ -154,7 +140,6 @@ server.get('InitializeVisaToken', server.middleware.https, function (req, res, n
     // TO handle the visa checkout click even on cart and billing page from mini cart
     session.privacy.cyb_CurrentPage = '';
     session.privacy.cyb_CurrentPage = 'CybCart';
-    // var viewData = res.getViewData();
     var visaToken = {
         VInitFormattedString: VInitFormattedString,
         Signature: signature,

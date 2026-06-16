@@ -3,7 +3,9 @@
  
 var server = require('server');
 var BasketMgr = require('dw/order/BasketMgr');
+var PaymentMgr = require('dw/order/PaymentMgr');
 var Transaction = require('dw/system/Transaction');
+var ArrayList = require('dw/util/ArrayList');
 
 var klarnaFacade = require('*/cartridge/scripts/klarna/facade/KlarnaFacade');
 var klarnaHelper = require('*/cartridge/scripts/klarna/helper/KlarnaHelper');
@@ -124,7 +126,6 @@ server.post('GetSession', csrfProtection.generateToken, function (req, res, next
         returnObject.sessionToken = response.apSessionsReply.processorToken;
         //  Save token to session in case customer leaves billing page and goes back.
         klarnaHelper.setLargeSessionToken('klarna_client_token', response.apSessionsReply.processorToken);
-        // returnObject.reconciliationID = response.apSessionsReply.reconciliationID;
     } else {
         returnObject.error = true;
         returnObject.decision = response.decision;
@@ -167,7 +168,7 @@ server.post('UpdateSession', csrfProtection.generateToken, function (req, res, n
 
     //  Use Klarna languge set in payment method custom attribute.
     var language = CommonHelper.GetRequestLocale();
-    var paymentMethod = dw.order.PaymentMgr.getPaymentMethod(basket.getPaymentInstruments()[0].paymentMethod);
+    var paymentMethod = PaymentMgr.getPaymentMethod(basket.getPaymentInstruments()[0].paymentMethod);
     if (!empty(paymentMethod) && paymentMethod.custom !== null && 'klarnaLocale' in paymentMethod.custom) {
         if (!empty(paymentMethod.custom.klarnaLocale.value)) {
             language = paymentMethod.custom.klarnaLocale.value;
@@ -207,7 +208,6 @@ server.post('UpdateSession', csrfProtection.generateToken, function (req, res, n
         returnObject.sessionToken = response.apSessionsReply.processorToken;
         //  Save token to session in case customer leaves billing page and goes back.
         klarnaHelper.setLargeSessionToken('klarna_client_token', response.apSessionsReply.processorToken);
-        // returnObject.reconciliationID = response.apSessionsReply.reconciliationID;
     } else {
         returnObject.error = true;
         returnObject.decision = response.decision;
@@ -294,7 +294,7 @@ server.post('KlarnaAuthorizationCallback', function (req, res, next) {
         var applicableShippingMethods = ShippingHelper.getApplicableShippingMethods(shipment, klarnaHelper.convAddressObj(shipment.shippingAddress));
         var hasShippingMethodSet = !!shipment.shippingMethod;
 
-        applicableShippingMethods = new dw.util.ArrayList(applicableShippingMethods);
+        applicableShippingMethods = new ArrayList(applicableShippingMethods);
         // If a shipping method is set, check if it is still valid
         if (hasShippingMethodSet) {
             hasShippingMethodSet = collections.find(applicableShippingMethods, function (item) {
@@ -328,19 +328,7 @@ server.post('KlarnaAuthorizationCallback', function (req, res, next) {
     var paymentMethodID = CybersourceConstants.KLARNA_PAYMENT_METHOD;
 
     // Handle the selection of this payment method - calculate if any payment promotions are available
-    var result;
-    var processor = PaymentMgr.getPaymentMethod(paymentMethodID).getPaymentProcessor();
-    if (HookMgr.hasHook('app.payment.processor.' + processor.ID.toLowerCase())) {
-        result = HookMgr.callHook('app.payment.processor.' + processor.ID.toLowerCase(),
-            'Handle',
-            currentBasket,
-            null,
-            paymentMethodID,
-            req
-        );
-    } else {
-        result = HookMgr.callHook('app.payment.processor.default', 'Handle');
-    }
+    var result = COHelpers.invokeHandleHook(paymentMethodID, currentBasket, null, paymentMethodID, req);
     if (result.error) {
         secureJsonResponse(res, {
             success: false,

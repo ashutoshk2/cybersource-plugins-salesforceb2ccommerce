@@ -12,6 +12,7 @@ var secureJsonResponse = secureResponseHelper.secureJsonResponse;
  * @module controllers/CYBPaypal
  */
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
+var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
 
 server.post(
     'SessionCallback',
@@ -57,27 +58,15 @@ server.post(
             basketCalculationHelpers.calculateTotals(cart);
         });
 
-        var PaymentMgr = require('dw/order/PaymentMgr');
-        var processor = PaymentMgr.getPaymentMethod(paymentMethod).getPaymentProcessor();
-        var HookMgr = require('dw/system/HookMgr');
-        if (HookMgr.callHook('app.payment.processor.' + processor.ID.toLowerCase(), 'Handle', cart, paymentMethod, requestID, payerID, paymentId)
-            .error) {
+        var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
+        if (COHelpers.invokeHandleHook(paymentMethod, cart, paymentMethod, requestID, payerID, paymentId).error) {
             result.success = false;
         }
         if (result.success) {
-            var paymentInstruments = cart.paymentInstruments; var
-                pi;
             var paymentID = args.paymentID !== null ? args.paymentID : result.transactionProcessorID;
             payerID = args.payerID !== null ? args.payerID : result.payerID;
             requestID = args.requestId !== null ? args.requestId : result.requestID;
-            // Iterate on All Payment Instruments and select PayPal
-            collections.forEach(paymentInstruments, function (paymentInstrument) {
-                // for each(var paymentInstrument in paymentInstruments ){
-                if (paymentInstrument.paymentMethod.equals(CybersourceConstants.METHOD_PAYPAL)
-                    || paymentInstrument.paymentMethod.equals(CybersourceConstants.METHOD_PAYPAL_CREDIT)) {
-                    pi = paymentInstrument;
-                }
-            });
+            var pi = CommonHelper.findPaymentInstrumentByMethod(cart, [CybersourceConstants.METHOD_PAYPAL, CybersourceConstants.METHOD_PAYPAL_CREDIT]);
             Transaction.wrap(function () {
                 // set the request ID for payment instrument
                 pi.paymentTransaction.custom.requestId = requestID;
@@ -93,7 +82,6 @@ server.post(
                 }
             });
         }
-        // var Transaction = require('dw/system/Transaction');
 
         if (result.success) {
             var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
@@ -196,11 +184,7 @@ server.get(
         if (result.shippingAddressMissing) { session.privacy.paypalShippingIncomplete = true; } else { session.privacy.paypalShippingIncomplete = false; }
         if (result.billingAddressMissing) { session.privacy.paypalBillingIncomplete = true; } else { session.privacy.paypalBillingIncomplete = false; }
 
-        Transaction.wrap(function () {
-            basketCalculationHelpers.calculateTotals(cart);
-            // V2: Re-apply tax rounding — calculateTotals triggers the tax hook which recalculates from scratch
-            TaxHelper.RoundUpBasketTaxesForV2(cart);
-        });
+        TaxHelper.recalculateAndRoundV2(cart);
 
         // Only proceed if check-status returned ACCEPT
         if (!result.success) {
@@ -210,67 +194,23 @@ server.get(
         }
 
         // Verify basket total hasn't changed since buyer approved on PayPal.
-        // If it has, call UpdateOrder to sync the PayPal order with the current basket
-        // instead of voiding (avoids forcing the buyer to re-approve on PayPal).
-        var approvedAmount = session.privacy.paypalV2OrderAmount;
-        if (approvedAmount !== null && approvedAmount !== undefined
-            && cart.totalGrossPrice.value !== approvedAmount) {
-            Logger.warn('[CYBPaypal-PaypalV2Callback] Basket total changed since PayPal approval. Approved: {0}, Current: {1} - calling UpdateOrder',
-                approvedAmount, cart.totalGrossPrice.value);
-            try {
-                var updateArgs = {
-                    orderRequestID: requestID,
-                    fundingSource: fundingSource
-                };
-                var updateResult = adapter.UpdateOrder(cart, updateArgs);
-                if (updateResult.success) {
-                    session.privacy.paypalV2OrderAmount = cart.totalGrossPrice.value;
-                    Logger.debug('[CYBPaypal-PaypalV2Callback] UpdateOrder succeeded - new amount: {0}', cart.totalGrossPrice.value);
-                } else {
-                    Logger.error('[CYBPaypal-PaypalV2Callback] UpdateOrder failed - voiding order');
-                    var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
-                    paypalFacade.VoidOrderServiceV2(requestID);
-                    session.privacy.paypalV2RequestID = null;
-                    session.privacy.paypalV2OrderAmount = null;
-                    res.redirect(URLUtils.https('Cart-Show'));
-                    return next();
-                }
-            } catch (updateErr) {
-                Logger.error('[CYBPaypal-PaypalV2Callback] UpdateOrder exception: {0} - voiding order', updateErr.message);
-                try {
-                    var paypalFacadeVoid = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
-                    paypalFacadeVoid.VoidOrderServiceV2(requestID);
-                } catch (voidErr) {
-                    Logger.error('[CYBPaypal-PaypalV2Callback] Failed to void: {0}', voidErr.message);
-                }
-                session.privacy.paypalV2RequestID = null;
-                session.privacy.paypalV2OrderAmount = null;
-                res.redirect(URLUtils.https('Cart-Show'));
-                return next();
-            }
+        var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
+        var reconcileResult = paypalFacade.reconcileV2Amount(cart, { orderRequestID: requestID, fundingSource: fundingSource });
+        if (reconcileResult.status === 'voided') {
+            res.redirect(URLUtils.https('Cart-Show'));
+            return next();
         }
 
         // Create / update PayPal payment instrument via hook
-        var PaymentMgr = require('dw/order/PaymentMgr');
-        var processor = PaymentMgr.getPaymentMethod(paymentMethod).getPaymentProcessor();
-        var HookMgr = require('dw/system/HookMgr');
-        if (HookMgr.callHook('app.payment.processor.' + processor.ID.toLowerCase(), 'Handle', cart, paymentMethod, requestID, payerID, token)
-            .error) {
+        var COHelpersV2 = require('*/cartridge/scripts/checkout/checkoutHelpers');
+        if (COHelpersV2.invokeHandleHook(paymentMethod, cart, paymentMethod, requestID, payerID, token).error) {
             Logger.error('[CYBPaypal-PaypalV2Callback] Handle hook returned error');
             res.redirect(URLUtils.https('Cart-Show'));
             return next();
         }
 
         // Persist transaction data on the payment instrument
-        var paymentInstruments = cart.paymentInstruments;
-        var pi;
-
-        collections.forEach(paymentInstruments, function (paymentInstrument) {
-            if (paymentInstrument.paymentMethod.equals(CybersourceConstants.METHOD_PAYPAL)
-                || paymentInstrument.paymentMethod.equals(CybersourceConstants.METHOD_PAYPAL_CREDIT)) {
-                pi = paymentInstrument;
-            }
-        });
+        var pi = CommonHelper.findPaymentInstrumentByMethod(cart, [CybersourceConstants.METHOD_PAYPAL, CybersourceConstants.METHOD_PAYPAL_CREDIT]);
 
         Transaction.wrap(function () {
             pi.paymentTransaction.custom.requestId = requestID;
@@ -294,9 +234,9 @@ server.get(
         var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
         Transaction.wrap(function () {
             ShippingHelper.selectShippingMethod(cart.defaultShipment, cart.defaultShipment.shippingMethodID);
-            basketCalculationHelpers.calculateTotals(cart);
-            // V2: Re-apply tax rounding after recalculation
-            TaxHelper.RoundUpBasketTaxesForV2(cart);
+        });
+        TaxHelper.recalculateAndRoundV2(cart);
+        Transaction.wrap(function () {
             COHelpers.calculatePaymentTransaction(cart);
         });
 
@@ -370,7 +310,6 @@ server.post(
         var BasketMgr = require('dw/order/BasketMgr');
         var Site = require('dw/system/Site');
         var Transaction = require('dw/system/Transaction');
-        var collections = require('*/cartridge/scripts/util/collections');
 
         try {
             var cart = BasketMgr.getCurrentBasket();
@@ -397,44 +336,13 @@ server.post(
 
             // Apply billing form values to basket (if billing form was submitted)
             var paymentForm = server.forms.getForm('billing');
-            Transaction.wrap(function () {
-                var billingAddress = cart.billingAddress;
-                if (!billingAddress) {
-                    billingAddress = cart.createBillingAddress();
-                }
-                if (!empty(paymentForm.addressFields.firstName.value)) {
-                    billingAddress.setFirstName(paymentForm.addressFields.firstName.value);
-                }
-                if (!empty(paymentForm.addressFields.lastName.value)) {
-                    billingAddress.setLastName(paymentForm.addressFields.lastName.value);
-                }
-                if (!empty(paymentForm.addressFields.address1.value)) {
-                    billingAddress.setAddress1(paymentForm.addressFields.address1.value);
-                }
-                if (!empty(paymentForm.addressFields.address2.value)) {
-                    billingAddress.setAddress2(paymentForm.addressFields.address2.value);
-                }
-                if (!empty(paymentForm.addressFields.city.value)) {
-                    billingAddress.setCity(paymentForm.addressFields.city.value);
-                }
-                if (!empty(paymentForm.addressFields.postalCode.value)) {
-                    billingAddress.setPostalCode(paymentForm.addressFields.postalCode.value);
-                }
-                if (Object.prototype.hasOwnProperty.call(paymentForm.addressFields, 'states')) {
-                    billingAddress.setStateCode(paymentForm.addressFields.states.stateCode.value);
-                }
-                if (!empty(paymentForm.addressFields.country.value)) {
-                    billingAddress.setCountryCode(paymentForm.addressFields.country.value);
-                }
-            });
+            var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
+            CommonHelper.applyBillingFormToBasket(cart, paymentForm);
 
             // Remove any existing payment instruments and create PayPal payment instrument
-            var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
             var paymentAmount = CommonHelper.CalculateNonGiftCertificateAmountPaypal(cart);
+            CommonHelper.removeAllPaymentInstruments(cart);
             Transaction.wrap(function () {
-                collections.forEach(cart.getPaymentInstruments(), function (item) {
-                    cart.removePaymentInstrument(item);
-                });
                 cart.createPaymentInstrument(paymentMethod, paymentAmount);
             });
 
@@ -492,14 +400,9 @@ server.post(
     function (req, res, next) {
         var Logger = require('dw/system/Logger').getLogger('Cybersource');
         try {
-            var requestID = session.privacy.paypalV2RequestID;
-            if (requestID) {
-                var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
-                paypalFacade.VoidOrderServiceV2(requestID);
-                session.privacy.paypalV2RequestID = null;
-                session.privacy.paypalV2OrderAmount = null;
-            }
-            secureJsonResponse(res, { success: true });
+            var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
+            var result = paypalFacade.cancelV2Session();
+            secureJsonResponse(res, { success: !result.error });
         } catch (e) {
             Logger.error('[CYBPaypal-VoidOrder] Exception: {0}', e.message);
             secureJsonResponse(res, { success: false });

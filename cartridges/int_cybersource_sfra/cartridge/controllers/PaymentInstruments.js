@@ -5,13 +5,13 @@ var page = module.superModule;
 var server = require('server');
 
 var Site = require('dw/system/Site');
+var PaymentInstrument = require('dw/order/PaymentInstrument');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 var userLoggedIn = require('*/cartridge/scripts/middleware/userLoggedIn');
 var consentTracking = require('*/cartridge/scripts/middleware/consentTracking');
 
 var IsCartridgeEnabled = Site.getCurrent().getCustomPreferenceValue('IsCartridgeEnabled');
 
-var CardHelper = require('*/cartridge/scripts/helper/CardHelper');
 var PaymentInstrumentUtils = require('*/cartridge/scripts/utils/PaymentInstrumentUtils');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
 var secureRender = secureResponseHelper.secureRender;
@@ -24,10 +24,10 @@ if (IsCartridgeEnabled) {
         var URLUtils = require('dw/web/URLUtils');
         var Resource = require('dw/web/Resource');
         var AccountModel = require('*/cartridge/models/account');
-        var enableTokenization = dw.system.Site.getCurrent().getCustomPreferenceValue('CsTokenizationEnable').value;
+        var enableTokenization = Site.getCurrent().getCustomPreferenceValue('CsTokenizationEnable').value;
         if (enableTokenization.equals('YES')) {
             var wallet = customer.getProfile().getWallet();
-            var paymentInstruments = wallet.getPaymentInstruments(dw.order.PaymentInstrument.METHOD_CREDIT_CARD);
+            var paymentInstruments = wallet.getPaymentInstruments(PaymentInstrument.METHOD_CREDIT_CARD);
             if (('SubscriptionError' in session.privacy) && !empty(session.privacy.SubscriptionError)) {
                 subscriptionError = session.privacy.SubscriptionError;
                 session.privacy.SubscriptionError = null;
@@ -60,7 +60,6 @@ if (IsCartridgeEnabled) {
         var formErrors = require('*/cartridge/scripts/formErrors');
         var HookMgr = require('dw/system/HookMgr');
         var PaymentMgr = require('dw/order/PaymentMgr');
-        var dwOrderPaymentInstrument = require('dw/order/PaymentInstrument');
         var verifyDuplicates = false;
         var tokenizationResult = { subscriptionID: '', error: '' };
         var paymentForm = server.forms.getForm('creditCard');
@@ -79,8 +78,8 @@ if (IsCartridgeEnabled) {
                     req.currentCustomer.profile.customerNo
                 );
 
-                var processor = PaymentMgr.getPaymentMethod(dwOrderPaymentInstrument.METHOD_CREDIT_CARD).getPaymentProcessor();
-                var enableTokenization = dw.system.Site.getCurrent().getCustomPreferenceValue('CsTokenizationEnable').value;
+                var processor = PaymentMgr.getPaymentMethod(PaymentInstrument.METHOD_CREDIT_CARD).getPaymentProcessor();
+                var enableTokenization = Site.getCurrent().getCustomPreferenceValue('CsTokenizationEnable').value;
                 if (enableTokenization.equals('YES') && HookMgr.hasHook('app.payment.processor.' + processor.ID.toLowerCase())) {
                     verifyDuplicates = true;
                     tokenizationResult = HookMgr.callHook('app.payment.processor.' + processor.ID.toLowerCase(), 'CreatePaymentToken', 'account');
@@ -95,7 +94,7 @@ if (IsCartridgeEnabled) {
                         if (verifyDuplicates) {
                             PaymentInstrumentUtils.removeDuplicates(formInfo);
                         }
-                        var paymentInstrument = wallet.createPaymentInstrument(dwOrderPaymentInstrument.METHOD_CREDIT_CARD);
+                        var paymentInstrument = wallet.createPaymentInstrument(PaymentInstrument.METHOD_CREDIT_CARD);
                         PaymentInstrumentUtils.savePaymentInstrument({ PaymentInstrument: paymentInstrument, CreditCardFields: formInfo });
     
                         paymentInstrument.custom.isCSToken = true;
@@ -170,7 +169,7 @@ if (IsCartridgeEnabled) {
             );
 
             var wallet = customer.getProfile().getWallet();
-            var enableTokenization = dw.system.Site.getCurrent().getCustomPreferenceValue('CsTokenizationEnable').value;
+            var enableTokenization = Site.getCurrent().getCustomPreferenceValue('CsTokenizationEnable').value;
 
             if (!empty(paymentToDelete)) {
                 subscriptionID = paymentToDelete.raw.creditCardToken;

@@ -374,10 +374,26 @@ function roundUpBasketTaxesForV2(basket) {
     });
 }
 
+/**
+ * Recalculates basket totals via basketCalculationHelpers, then re-applies
+ * V2 tax rounding (calculateTotals triggers the tax hook which recalculates
+ * from scratch and undoes the rounding). Wrapped in a single Transaction.
+ * @param {dw.order.LineItemCtnr} basket basket
+ */
+function recalculateAndRoundV2(basket) {
+    var Transaction = require('dw/system/Transaction');
+    var basketCalculationHelpers = require('*/cartridge/scripts/helpers/basketCalculationHelpers');
+    Transaction.wrap(function () {
+        basketCalculationHelpers.calculateTotals(basket);
+        roundUpBasketTaxesForV2(basket);
+    });
+}
+
 module.exports = {
     CreateCyberSourceTaxRequestObject: CreateCyberSourceTaxRequestObject,
     UpdatePriceAdjustment: UpdatePriceAdjustment,
     CreateCybersourceTaxationPurchaseTotalsObject: CreateCybersourceTaxationPurchaseTotalsObject,
     CreateCybersourceTaxationItemsObject: CreateCybersourceTaxationItemsObject,
-    RoundUpBasketTaxesForV2: roundUpBasketTaxesForV2
+    RoundUpBasketTaxesForV2: roundUpBasketTaxesForV2,
+    recalculateAndRoundV2: recalculateAndRoundV2
 };

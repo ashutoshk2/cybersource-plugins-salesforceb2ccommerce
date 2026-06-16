@@ -6,11 +6,12 @@ var HookMgr = require('dw/system/HookMgr');
 var URLUtils = require('dw/web/URLUtils');
 var Resource = require('dw/web/Resource');
 var OrderMgr = require('dw/order/OrderMgr');
+var Order = require('dw/order/Order');
 var Transaction = require('dw/system/Transaction');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
 var WeChatAdaptor = require('*/cartridge/scripts/wechat/adapter/WeChatAdaptor');
-var collections = require('*/cartridge/scripts/util/collections');
+var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
 var secureJsonResponse = secureResponseHelper.secureJsonResponse;
@@ -38,22 +39,30 @@ server.post('WeChatStatus', csrfProtection.validateAjaxRequest, function (req, r
         });
         return next();
     }
-    var paymentInstruments = order.paymentInstruments;
-    var pi;
-    // Iterate on All Payment Instruments and select PayPal
-    collections.forEach(paymentInstruments, function (paymentInstrument) {
-        if (paymentInstrument.paymentMethod.equals(CybersourceConstants.WECHAT_PAYMENT_METHOD)) {
-            pi = paymentInstrument;
-        }
-    });
+    var pi = CommonHelper.findPaymentInstrumentByMethod(order, CybersourceConstants.WECHAT_PAYMENT_METHOD);
     var result = WeChatAdaptor.CheckStatusServiceRequest(orderNo, pi);
-    HookMgr.callHook('app.fraud.detection', 'fraudDetection', order);
+    var fraudDetectionStatus = HookMgr.callHook('app.fraud.detection', 'fraudDetection', order);
     var redirectUrl = '';
+
+    if (fraudDetectionStatus && fraudDetectionStatus.status === 'fail' && result.submit) {
+        Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
+        if (req.session && req.session.privacyCache) {
+            req.session.privacyCache.set('fraudDetectionStatus', true);
+        }
+        secureJsonResponse(res, {
+            placedOrder: null,
+            submit: false,
+            error: true,
+            pending: false,
+            redirectUrl: URLUtils.https('Error-ErrorCode', 'err', fraudDetectionStatus.errorCode).toString()
+        });
+        return next();
+    }
 
     if (result.submit) {
         // place order
         Transaction.wrap(function () {
-            order.setPaymentStatus(dw.order.Order.PAYMENT_STATUS_PAID);
+            order.setPaymentStatus(Order.PAYMENT_STATUS_PAID);
             pi.paymentTransaction.custom.AmountPaid = Number(order.totalGrossPrice);
         });
 
@@ -61,9 +70,7 @@ server.post('WeChatStatus', csrfProtection.validateAjaxRequest, function (req, r
         session.privacy.paypalBillingIncomplete = '';
         COHelpers.sendConfirmationEmail(order, req.locale.id);
         //  Reset decision session variable
-        session.privacy.CybersourceFraudDecision = '';
-        session.privacy.SkipTaxCalculation = false;
-        session.privacy.cartStateString = null;
+        CommonHelper.resetCheckoutSessionVars({ resetFraudDecision: true });
         // Reset usingMultiShip after successful Order placement
         req.session.privacyCache.set('usingMultiShipping', false);
         redirectUrl = URLUtils.url('COPlaceOrder-SubmitOrderConformation', 'ID', order.orderNo, 'token', order.orderToken).toString();

@@ -5,6 +5,7 @@ var server = require('server');
 
 var OrderMgr = require('dw/order/OrderMgr');
 var URLUtils = require('dw/web/URLUtils');
+var Resource = require('dw/web/Resource');
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
@@ -12,16 +13,12 @@ var secureRender = secureResponseHelper.secureRender;
 
  
 server.use('Submit', csrfProtection.generateToken, function (req, res, next) {
-    var order;
-    var orderID = req.querystring.orderID || req.querystring.order_id;
-    var orderToken = req.querystring.orderToken || req.querystring.order_token;
-    if (!empty(orderID)) {
-        if (!empty(orderToken)) {
-            order = OrderMgr.getOrder(orderID, orderToken);
-        } else if (orderID === session.privacy.orderId) {
-            order = OrderMgr.getOrder(session.privacy.orderId);
-        }
-    } else {
+    var resolved = COHelpers.resolveOrderFromRequest(req, {
+        idKeys: ['orderID', 'order_id'],
+        tokenKeys: ['orderToken', 'order_token']
+    });
+    var order = resolved.order;
+    if (!order && empty(resolved.orderID) && session.privacy.orderId) {
         order = OrderMgr.getOrder(session.privacy.orderId);
     }
     if (!order) {
@@ -30,7 +27,6 @@ server.use('Submit', csrfProtection.generateToken, function (req, res, next) {
     }
     var Provider = require('*/cartridge/scripts/Provider');
     var providerParam = req.querystring.provider;
-    // var processorTransactionId;
     COHelpers.clearPaymentAttributes();
 
     //  lineItemCtnr.paymentInstrument field is deprecated.  Get default payment method.
@@ -57,7 +53,7 @@ server.use('Submit', csrfProtection.generateToken, function (req, res, next) {
             } if (providerResult.error) {
                 var args = { Order: providerResult.Order };
                 COHelpers.failOrder(args);
-                res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'payerAuthError', dw.web.Resource.msg('payerauthentication.carderror', 'cybersource', null)));
+                res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'payerAuthError', Resource.msg('payerauthentication.carderror', 'cybersource', null)));
                 return next();
             } if (providerResult.cancelfail) {
                 var ReasonCode = request.httpParameterMap.SecureAcceptanceError.stringValue;

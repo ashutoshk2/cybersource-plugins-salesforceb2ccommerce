@@ -10,6 +10,7 @@
 var server = require('server');
 var System = require('dw/system/System');
 var URLUtils = require('dw/web/URLUtils');
+var OrderMgr = require('dw/order/OrderMgr');
 var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
 var secureResponseHelper = require('*/cartridge/scripts/helpers/secureResponseHelper');
 var secureRender = secureResponseHelper.secureRender;
@@ -187,7 +188,7 @@ server.get('TestCaptureService', function (req, res, next) {
         // render the refund service form
         secureRender(res, 'services/captureServiceForm', {
             captureServiceForm: captureServiceForm,
-            continueUrl: dw.web.URLUtils.https('CYBServicesTesting-CaptureService').toString()
+            continueUrl: URLUtils.https('CYBServicesTesting-CaptureService').toString()
         });
         return next();
     }
@@ -235,7 +236,6 @@ server.post('CaptureService', function (req, res, next) {
         captureReply = 'apCaptureReply';
         
     } else if (paymentType === 'googlepay') {
-        // var orderid = session.forms.genericTestInterfaceForm.orderRequestID.value;
         var MobileCheckoutFacade = require('*/cartridge/scripts/mobilepayments/facade/MobilePaymentFacade');
         serviceResponse = MobileCheckoutFacade.GPCaptureRequest(requestID, merchantRefCode, paymentType, paymentTotal, currency);
         captureReplyTitle = 'GooglePay Capture Reply';
@@ -270,7 +270,7 @@ server.get('TestCreditService', function (req, res, next) {
     // render the refund service form
     secureRender(res, 'services/CCCreditServiceForm', {
         creditServiceForm: creditServiceForm,
-        continueUrl: dw.web.URLUtils.https('CYBServicesTesting-CreditService').toString()
+        continueUrl: URLUtils.https('CYBServicesTesting-CreditService').toString()
     });
     return next();
 });
@@ -444,7 +444,7 @@ server.get('TestCheckStatusService', function (req, res, next) {
         // render the refund service form
         secureRender(res, 'services/checkStatusServiceForm', {
             checkStatusServiceForm: checkStatusServiceForm,
-            continueUrl: dw.web.URLUtils.https('CYBServicesTesting-CheckStatusService').toString()
+            continueUrl: URLUtils.https('CYBServicesTesting-CheckStatusService').toString()
         });
         return next();
     }
@@ -464,11 +464,10 @@ server.post('CheckStatusService', server.middleware.https, function (req, res, n
     var Order = {}; var serviceResponse; var apCheckStatusTitle; var
         apCheckStatusReply;
     if (!empty(session.forms.genericTestInterfaceForm.merchantReferenceCode.value)) {
-        Order = dw.order.OrderMgr.getOrder(session.forms.genericTestInterfaceForm.merchantReferenceCode.value);
+        Order = OrderMgr.getOrder(session.forms.genericTestInterfaceForm.merchantReferenceCode.value);
     }
     var PaymentInstrument = require('dw/order/PaymentInstrument');
     collections.forEach(Order.paymentInstruments, function (paymentInstrument) {
-        // for each(var paymentInstrument in Order.paymentInstruments){
         if (!paymentInstrument.paymentMethod.equals(PaymentInstrument.METHOD_GIFT_CERTIFICATE)) {
             paymentType = paymentInstrument.paymentTransaction.custom.apPaymentType;
         }

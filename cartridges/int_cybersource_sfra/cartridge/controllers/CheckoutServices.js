@@ -5,6 +5,7 @@ var page = module.superModule;
 var server = require('server');
 
 var Site = require('dw/system/Site');
+var Bytes = require('dw/util/Bytes');
 var csrfProtection = require('*/cartridge/scripts/middleware/csrf');
 var userLoggedIn = require('*/cartridge/scripts/middleware/userLoggedIn');
 var consentTracking = require('*/cartridge/scripts/middleware/consentTracking');
@@ -37,44 +38,17 @@ server.post('ValidatePayPalBillingAddress', csrfProtection.validateRequest, serv
     pplPhoneandEmailForm.phone = server.forms.getForm('billing').paypalBillingFields.paypalPhone;
     pplFormErrors = COHelpers.validatePPLForm(pplPhoneandEmailForm);
 
-    // Update address fields as and when the fields are edited
     var Transaction = require('dw/system/Transaction');
     var BasketMgr = require('dw/order/BasketMgr');
+    var CommonHelper = require('*/cartridge/scripts/helper/CommonHelper');
     var currentBasket = BasketMgr.getCurrentBasket();
-    var billingAddress = currentBasket.billingAddress;
-    var defaultShipment; var
-        shippingAddress;
-    defaultShipment = currentBasket.getDefaultShipment();
-    shippingAddress = defaultShipment.getShippingAddress();
-    Transaction.wrap(function () {
-        if (!billingAddress) {
-            billingAddress = currentBasket.createBillingAddress();
-        }
-        if (!empty(paymentForm.addressFields.firstName.value)) {
-            billingAddress.setFirstName(paymentForm.addressFields.firstName.value);
-        }
-        if (!empty(paymentForm.addressFields.lastName.value)) {
-            billingAddress.setLastName(paymentForm.addressFields.lastName.value);
-        }
-        if (!empty(paymentForm.addressFields.address1.value)) {
-            billingAddress.setAddress1(paymentForm.addressFields.address1.value);
-        }
-        if (!empty(paymentForm.addressFields.address2.value)) {
-            billingAddress.setAddress2(paymentForm.addressFields.address2.value);
-        }
-        if (!empty(paymentForm.addressFields.city.value)) {
-            billingAddress.setCity(paymentForm.addressFields.city.value);
-        }
-        if (!empty(paymentForm.addressFields.postalCode.value)) {
-            billingAddress.setPostalCode(paymentForm.addressFields.postalCode.value);
-        }
+    var defaultShipment = currentBasket.getDefaultShipment();
+    var shippingAddress = defaultShipment.getShippingAddress();
 
-        if (Object.prototype.hasOwnProperty.call(paymentForm.addressFields, 'states')) {
-            billingAddress.setStateCode(paymentForm.addressFields.states.stateCode.value);
-        }
-        if (!empty(paymentForm.addressFields.country.value)) {
-            billingAddress.setCountryCode(paymentForm.addressFields.country.value);
-        }
+    CommonHelper.applyBillingFormToBasket(currentBasket, paymentForm);
+
+    Transaction.wrap(function () {
+        var billingAddress = currentBasket.billingAddress;
         if (!empty(paymentForm.paypalBillingFields.paypalEmail.value)) {
             currentBasket.setCustomerEmail(paymentForm.paypalBillingFields.paypalEmail.value);
         }
@@ -125,17 +99,8 @@ if (IsCartridgeEnabled) {
         // Void any active PayPal V2 order when customer switches to a different payment method
         // This releases the authorization hold on their PayPal account and frees merchant order capacity
         if (session.privacy.paypalV2RequestID) {
-            try {
-                var Site = require('dw/system/Site');
-                if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2')) {
-                    var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
-                    paypalFacade.VoidOrderServiceV2(session.privacy.paypalV2RequestID);
-                }
-            } catch (e) {
-                require('dw/system/Logger').getLogger('Cybersource').warn('[CheckoutServices] Failed to void PayPal V2 order on payment switch: {0}', e.message);
-            }
-            session.privacy.paypalV2RequestID = null;
-            session.privacy.paypalV2OrderAmount = null;
+            var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
+            paypalFacade.cancelV2Session({ skipVoid: !Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2') });
         }
 
         return next();
@@ -158,18 +123,9 @@ server.post('SilentPostAuthorize', server.middleware.https, function (req, res, 
     var Resource = require('dw/web/Resource');
     var Transaction = require('dw/system/Transaction');
     var Logger = require('dw/system/Logger');
-    var order;
-    var orderID = req.form.orderID || req.form.OrderNo;
-    var orderToken = req.form.orderToken;
-
-    // Accept either a matching orderToken or a matching session.privacy.orderId.
-    if (orderID) {
-        if (orderToken) {
-            order = OrderMgr.getOrder(orderID, orderToken);
-        } else if (session.privacy.orderId && session.privacy.orderId === orderID) {
-            order = OrderMgr.getOrder(orderID);
-        }
-    }
+    var resolved = COHelpers.resolveOrderFromRequest(req);
+    var order = resolved.order;
+    var orderID = resolved.orderID;
 
     if (!order) {
         Logger.error('[CheckoutServices-SilentPostAuthorize] Order ownership validation failed for orderID: ' + (orderID || 'null'));
@@ -262,57 +218,16 @@ if (IsCartridgeEnabled) {
             }
         }
 
-        // PayPal V2: Verify basket total still matches the amount the PayPal order was created/updated for.
-        // Catches changes made between callback and Place Order (e.g. user adds items in another tab).
-        // If mismatch: call UpdateOrder to sync, only void as last resort.
+        // PayPal V2: Verify basket total still matches the approved amount.
         if (currentBasket && session.privacy.paypalV2OrderAmount !== null
             && session.privacy.paypalV2OrderAmount !== undefined) {
-            var Resource = require('dw/web/Resource');
-            var Logger = require('dw/system/Logger').getLogger('Cybersource');
-            var basketCalculationHelpers = require('*/cartridge/scripts/helpers/basketCalculationHelpers');
             var TaxHelper = require('*/cartridge/scripts/helper/TaxHelper');
-            var Transaction = require('dw/system/Transaction');
-            Transaction.wrap(function () {
-                basketCalculationHelpers.calculateTotals(currentBasket);
-                // Re-apply V2 tax rounding — calculateTotals recalculates taxes from scratch,
-                // undoing the rounding. Must re-round before comparing against stored amount
-                // (which was stored after rounding).
-                TaxHelper.RoundUpBasketTaxesForV2(currentBasket);
-            });
-            if (currentBasket.totalGrossPrice.value !== session.privacy.paypalV2OrderAmount) {
-                Logger.warn('[CheckoutServices-PlaceOrder] PayPal V2 amount mismatch. Approved: {0}, Current: {1} - calling UpdateOrder',
-                    session.privacy.paypalV2OrderAmount, currentBasket.totalGrossPrice.value);
-                var updateSucceeded = false;
-                try {
-                    var Site = require('dw/system/Site');
-                    if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2') && session.privacy.paypalV2RequestID) {
-                        var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
-                        var adapter = require(CybersourceConstants.PAYPAL_ADAPTOR);
-                        var updateArgs = {
-                            orderRequestID: session.privacy.paypalV2RequestID,
-                            fundingSource: 'paypal'
-                        };
-                        var updateResult = adapter.UpdateOrder(currentBasket, updateArgs);
-                        if (updateResult.success) {
-                            session.privacy.paypalV2OrderAmount = currentBasket.totalGrossPrice.value;
-                            updateSucceeded = true;
-                            Logger.debug('[CheckoutServices-PlaceOrder] UpdateOrder succeeded - new amount: {0}', currentBasket.totalGrossPrice.value);
-                        }
-                    }
-                } catch (updateErr) {
-                    Logger.error('[CheckoutServices-PlaceOrder] UpdateOrder exception: {0}', updateErr.message);
-                }
-                // If UpdateOrder failed, void and send user back to payment
-                if (!updateSucceeded) {
-                    Logger.error('[CheckoutServices-PlaceOrder] UpdateOrder failed - voiding order');
-                    try {
-                        var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
-                        paypalFacade.VoidOrderServiceV2(session.privacy.paypalV2RequestID);
-                    } catch (voidErr) {
-                        Logger.error('[CheckoutServices-PlaceOrder] Failed to void: {0}', voidErr.message);
-                    }
-                    session.privacy.paypalV2RequestID = null;
-                    session.privacy.paypalV2OrderAmount = null;
+            TaxHelper.recalculateAndRoundV2(currentBasket);
+            if (Site.getCurrent().getCustomPreferenceValue('CsEnablePayPalV2') && session.privacy.paypalV2RequestID) {
+                var paypalFacadeReconcile = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
+                var reconcile = paypalFacadeReconcile.reconcileV2Amount(currentBasket);
+                if (reconcile.status === 'voided') {
+                    var Resource = require('dw/web/Resource');
                     secureJsonResponse(res, {
                         error: true,
                         errorStage: { stage: 'payment' },
@@ -330,15 +245,14 @@ if (IsCartridgeEnabled) {
     server.append('PlaceOrder', server.middleware.https, function (req, res, next) {
 
         var klarnaHelper = require('*/cartridge/scripts/klarna/helper/KlarnaHelper');
+        var paypalFacade = require('*/cartridge/scripts/paypal/facade/PayPalFacade');
         session.privacy.paypalShippingIncomplete = '';
         session.privacy.paypalBillingIncomplete = '';
-        session.privacy.paypalV2RequestID = null;
-        session.privacy.paypalV2OrderAmount = null;
+        paypalFacade.cancelV2Session({ skipVoid: true });
 
         //  Reset decision session variable
-        session.privacy.CybersourceFraudDecision = '';
-        session.privacy.SkipTaxCalculation = false;
-        session.privacy.cartStateString = null;
+        var CommonHelperReset = require('*/cartridge/scripts/helper/CommonHelper');
+        CommonHelperReset.resetCheckoutSessionVars({ resetFraudDecision: true });
         klarnaHelper.clearKlarnaSessionVariables();
 
         return next();
@@ -372,7 +286,6 @@ function handlePayPal(req, res, next) {
     var billingFormErrors = {};
     var viewData = {};
     var Transaction = require('dw/system/Transaction');
-    // var URLUtils = require('dw/web/URLUtils');
     var BasketMgr = require('dw/order/BasketMgr');
     var paymentForm = server.forms.getForm('billing');
 
@@ -443,7 +356,6 @@ function handlePayPal(req, res, next) {
         var currentLocale = Locale.getLocale(req.locale.id);
         var basketModel = new OrderModel(currentBasket, { usingMultiShipping: usingMultiShipping, countryCode: currentLocale.country, containerView: 'basket' });
         var accountModel = new AccountModel(req.currentCustomer);
-        // var paypalInstrument = COHelpers.getPayPalInstrument(currentBasket);
         var renderedStoredPaymentInstrument = COHelpers.getRenderedPaymentInstruments(
             req,
             accountModel
@@ -482,32 +394,12 @@ function shippingUpdate(cart, shippingdetails) {
  * GooglePay Checkout returned error back to merchant site, further return user back to user journey starting page, either cart or billing page
  */
 function googlePayCheckoutError(req, res, next) {
-    var BasketMgr = require('dw/order/BasketMgr');
     var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
     var CommonHelper = require(CybersourceConstants.CS_CORE_SCRIPT + 'helper/CommonHelper');
-    var Transaction = require('dw/system/Transaction');
-    var URLUtils = require('dw/web/URLUtils');
-    var cart = BasketMgr.getCurrentBasket();
-
-    // var paymentForm = server.forms.getForm('billing');
-
-    // basket uuid check for security handling
-    if (empty(cart.getPaymentInstruments(CybersourceConstants.METHOD_GooglePay))) {
-        COHelpers.recalculateBasket(cart);
-
-        var Status = require('dw/system/Status');
-        secureRender(res, 'cart/cart', {
-            cart: cart,
-            RegistrationStatus: false,
-            BasketStatus: new Status(Status.ERROR, 'GoogleCheckoutError')
-        });
-    } else {
-        Transaction.wrap(function () {
-            CommonHelper.removeExistingPaymentInstruments(cart);
-        });
-        COHelpers.recalculateBasket(cart);
-        res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'VisaCheckoutError', true));
-    }
+    CommonHelper.renderExpressCheckoutError(req, res, {
+        paymentMethodID: CybersourceConstants.METHOD_GooglePay,
+        statusName: 'GoogleCheckoutError'
+    });
     return next();
 }
 
@@ -539,13 +431,8 @@ server.post('GetGooglePayToken', csrfProtection.validateRequest, function (req, 
             // calculate cart and redirect to summary page
             COHelpers.recalculateBasket(cart);
             var GPtoken = repsonse.paymentMethodData.tokenizationData.token;
-            Transaction.wrap(function () {
-                var paymentInstruments = cart.getPaymentInstruments();
-                if (paymentInstruments.length > 0) {
-                    paymentInstruments[0].custom.GooglePayEncryptedData = Encoding.toBase64(new dw.util.Bytes(GPtoken));
-                    paymentInstruments[0].custom.isGooglePaycardHolderAuthenticated = isAuthenticated;
-                }
-            });
+            var CommonHelperGP = require('*/cartridge/scripts/helper/CommonHelper');
+            CommonHelperGP.applyGooglePayTokenToBasket(cart, GPtoken, isAuthenticated);
         } else {
             logger.error('Error in google Checkout payment: problem in billing details');
             googlePayCheckoutError(req, res, next);
@@ -678,19 +565,12 @@ server.post('SubmitPaymentGP', csrfProtection.validateRequest, function (req, re
                 }
             });
 
-            // var processor = PaymentMgr.getPaymentMethod(paymentMethodID).getPaymentProcessor();
-
             //    Add hook to call google payment
             var mobileAdaptor = require('*/cartridge/scripts/mobilepayments/adapter/MobilePaymentsAdapter');
             result = mobileAdaptor.UpdateBilling(currentBasket, cardInfo, paymentData.email);
 
-            Transaction.wrap(function () {
-                var paymentInstruments = currentBasket.getPaymentInstruments();
-                if (paymentInstruments.length > 0) {
-                    paymentInstruments[0].custom.GooglePayEncryptedData = Encoding.toBase64(new dw.util.Bytes(GPtoken));
-                    paymentInstruments[0].custom.isGooglePaycardHolderAuthenticated = isAuthenticated;
-                }
-            });
+            var CommonHelperGP2 = require('*/cartridge/scripts/helper/CommonHelper');
+            CommonHelperGP2.applyGooglePayTokenToBasket(currentBasket, GPtoken, isAuthenticated);
             // Calculate the basket
             Transaction.wrap(function () {
                 basketCalculationHelpers.calculateTotals(currentBasket);
@@ -788,7 +668,6 @@ if (IsCartridgeEnabled) {
                     if (templateData.requestData) {
                         templateData.requestData = CommonHelper.JSONObjectToHashMap(templateData.requestData);
                     }
-                    // Logger.debug('Successfully parsed templateData with keys: ' + Object.keys(templateData).join(', '));
                 } catch (parseError) {
                     Logger.error('Error parsing templateData JSON: ' + String(parseError));
                     Logger.error('Raw templateDataString: ' + templateDataString);
@@ -822,8 +701,6 @@ if (IsCartridgeEnabled) {
 server.post('PayerAuthSetup', csrfProtection.generateToken, function (req, res, next) {
 
     var Resource = require('dw/web/Resource');
-    var Site = require('dw/system/Site');
-    // var currentBasket = BasketMgr.getCurrentBasket();
     var URLUtils = require('dw/web/URLUtils');
     var CybersourceConstants = require('*/cartridge/scripts/utils/CybersourceConstants');
     var CardFacade = require('*/cartridge/scripts/facade/CardFacade');
@@ -832,30 +709,14 @@ server.post('PayerAuthSetup', csrfProtection.generateToken, function (req, res, 
     var OrderMgr = require('dw/order/OrderMgr');
 
     var Logger = require('dw/system/Logger');
-    var order;
-    var orderID;
-    var orderToken;
-    if (req.form.orderID) {
-        orderID = req.form.orderID;
-    }
-    else if (req.form.OrderNo) {
-        orderID = req.form.OrderNo;
-    }
-    else if (req.querystring.orderID) {
-        orderID = req.querystring.orderID;
-    }
-    orderToken = req.form.orderToken || req.querystring.orderToken;
+    var resolved = COHelpers.resolveOrderFromRequest(req);
+    var order = resolved.order;
+    var orderID = resolved.orderID;
 
     if (!orderID) {
         Logger.error('[CheckoutServices-PayerAuthSetup] Missing orderID');
         res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'payerAuthError', Resource.msg('error.technical', 'checkout', null)));
         return next();
-    }
-
-    if (orderToken) {
-        order = OrderMgr.getOrder(orderID, orderToken);
-    } else if (session.privacy.orderId && session.privacy.orderId === orderID) {
-        order = OrderMgr.getOrder(orderID);
     }
 
     if (!order) {
@@ -909,7 +770,6 @@ server.post('PayerAuthSubmit', csrfProtection.generateToken, function (req, res,
     var Resource = require('dw/web/Resource');
     var Transaction = require('dw/system/Transaction');
     var URLUtils = require('dw/web/URLUtils');
-    // var hooksHelper = require('*/cartridge/scripts/helpers/hooks');
     var addressHelpers = require('*/cartridge/scripts/helpers/addressHelpers');
     var OrderMgr = require('dw/order/OrderMgr');
     var payerauthArgs = {};
@@ -924,17 +784,9 @@ server.post('PayerAuthSubmit', csrfProtection.generateToken, function (req, res,
     }
 
     var Logger = require('dw/system/Logger');
-    var order;
-    var orderID = req.form.orderID || req.form.OrderNo;
-    var orderToken = req.form.orderToken;
-
-    if (orderID) {
-        if (orderToken) {
-            order = OrderMgr.getOrder(orderID, orderToken);
-        } else if (session.privacy.orderId && session.privacy.orderId === orderID) {
-            order = OrderMgr.getOrder(orderID);
-        }
-    }
+    var resolved = COHelpers.resolveOrderFromRequest(req);
+    var order = resolved.order;
+    var orderID = resolved.orderID;
 
     if (!order) {
         Logger.error('[CheckoutServices-PayerAuthSubmit] Order ownership validation failed for orderID: ' + (orderID || 'null'));
@@ -953,24 +805,17 @@ server.post('PayerAuthSubmit', csrfProtection.generateToken, function (req, res,
 
     // Handle different payment result scenarios
     if (handlePaymentResult.error) {
-        Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-        delete session.privacy.orderId;
-        res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'payerAuthError', Resource.msg('error.technical', 'checkout', null)));
+        COHelpers.failOrderAndRedirect(order, res, { stage: 'payment', errorParam: 'payerAuthError', msgKey: 'error.technical', msgBundle: 'checkout' });
         return next();
     }
 
     if (handlePaymentResult.declined) {
-        session.privacy.SkipTaxCalculation = false;
-        Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-        delete session.privacy.orderId;
-        res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'placeOrder', 'placeOrderError', Resource.msg('sa.billing.payment.error.declined', 'cybersource', null)));
+        COHelpers.failOrderAndRedirect(order, res, { stage: 'placeOrder', errorParam: 'placeOrderError', msgKey: 'sa.billing.payment.error.declined', msgBundle: 'cybersource', resetSkipTax: true });
         return next();
     }
 
     if (handlePaymentResult.rejected) {
-        Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-        delete session.privacy.orderId;
-        res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'payerAuthError', Resource.msg('payerauthentication.carderror', 'cybersource', null)));
+        COHelpers.failOrderAndRedirect(order, res, { stage: 'payment', errorParam: 'payerAuthError', msgKey: 'payerauthentication.carderror', msgBundle: 'cybersource' });
         return next();
     }
     if (handlePaymentResult.sca) {
@@ -990,30 +835,21 @@ server.post('PayerAuthSubmit', csrfProtection.generateToken, function (req, res,
 
     // Handle authorized or review status
     if (handlePaymentResult.authorized || handlePaymentResult.review) {
-        var HookMgr = require('dw/system/HookMgr');
         var BasketMgr = require('dw/order/BasketMgr');
         var currentBasket = BasketMgr.getCurrentBasket();
 
         // Run fraud detection
-        var fraudDetectionStatus = HookMgr.callHook('app.fraud.detection', 'fraudDetection', currentBasket);
-        if (fraudDetectionStatus.status === 'fail') {
-            Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-
-            // fraud detection failed
-            req.session.privacyCache.set('fraudDetectionStatus', true);
-
-            delete session.privacy.orderId;
-            res.redirect(URLUtils.https('Error-ErrorCode', 'err', fraudDetectionStatus.errorCode));
+        var fraudResult = COHelpers.runFraudDetectionAndFail(currentBasket, order, req, res, { deleteOrderId: true });
+        if (fraudResult.failed) {
             return next();
         }
+        var fraudDetectionStatus = fraudResult.fraudDetectionStatus;
 
         if (handlePaymentResult.authorized) {
             // Place the order
             var placeOrderResult = COHelpers.placeOrder(order, fraudDetectionStatus);
             if (placeOrderResult.error) {
-                Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-                delete session.privacy.orderId;
-                res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'placeOrder', 'placeOrderError', Resource.msg('error.technical', 'checkout', null)));
+                COHelpers.failOrderAndRedirect(order, res, { stage: 'placeOrder', errorParam: 'placeOrderError', msgKey: 'error.technical', msgBundle: 'checkout' });
                 return next();
             }
         }
@@ -1049,9 +885,7 @@ server.post('PayerAuthSubmit', csrfProtection.generateToken, function (req, res,
     }
 
     // Default case - unexpected result
-    Transaction.wrap(function () { OrderMgr.failOrder(order, true); });
-    delete session.privacy.orderId;
-    res.redirect(URLUtils.https('Checkout-Begin', 'stage', 'payment', 'payerAuthError', Resource.msg('error.technical', 'checkout', null)));
+    COHelpers.failOrderAndRedirect(order, res, { stage: 'payment', errorParam: 'payerAuthError', msgKey: 'error.technical', msgBundle: 'checkout' });
     return next();
 });
 
